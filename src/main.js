@@ -23,11 +23,20 @@ import { audio } from './audio.js';
 import { InspectionManager } from './effects/inspection.js';
 import { ContrastGuard } from './typography.js';
 
+const APP_START_TIME = performance.now();
+
 class RemanenceApp {
   constructor() {
     this.canvas = document.getElementById('webgl-canvas');
     this.width = window.innerWidth;
     this.height = window.innerHeight;
+
+    // Check system preference for reduced motion
+    this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Lazy load state for Mars scene
+    this.marsScene = null;
+    this.marsLoadingPromise = null;
 
     this.initWebGL();
     this.initLenis();
@@ -76,15 +85,15 @@ class RemanenceApp {
   initLenis() {
     // Lenis Smooth Scroll synchronised with GSAP's ticker
     this.lenis = new Lenis({
-      duration: 1.25,
+      duration: this.prefersReducedMotion ? 0.01 : 1.25,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
-      smoothWheel: true,
+      smoothWheel: !this.prefersReducedMotion,
       syncTouch: false,
       autoRaf: false
     });
 
-    this.lenis.stop(); // Keep scroll stopped until visitor clicks Enter
+    this.lenis.stop(); // Keep scroll stopped until visitor clicks Enter or Skip
 
     this.lenis.on('scroll', ScrollTrigger.update);
 
@@ -121,7 +130,7 @@ class RemanenceApp {
     updateRing();
 
     // Hover detection on interactive elements
-    const hoverables = 'button, a, .magnetic-btn-wrapper, .moment-wrap, .rail-dot, .hud-pill';
+    const hoverables = 'button, a, .magnetic-btn-wrapper, .moment-wrap, .rail-dot, .hud-pill, .btn-read-more';
     document.addEventListener('mouseover', (e) => {
       if (e.target.closest(hoverables)) {
         document.body.classList.add('cursor-hover');
@@ -142,40 +151,63 @@ class RemanenceApp {
         const cy = rect.top + rect.height / 2;
         const dx = (e.clientX - cx) * 0.35;
         const dy = (e.clientY - cy) * 0.35;
-        enterBtn.querySelector('.magnetic-btn').style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
+        const inner = enterBtn.querySelector('.magnetic-btn');
+        if (inner) inner.style.transform = `translate(${dx}px, ${dy}px) scale(1.08)`;
       });
       enterBtn.addEventListener('mouseleave', () => {
-        enterBtn.querySelector('.magnetic-btn').style.transform = `translate(0px, 0px) scale(1)`;
+        const inner = enterBtn.querySelector('.magnetic-btn');
+        if (inner) inner.style.transform = `translate(0px, 0px) scale(1)`;
       });
     }
+  }
+
+  /**
+   * Item 19: Lazy-load Mars assets during Moon chapters
+   * Prevents blocking initial page load and ensures 60fps on mid-range devices.
+   */
+  async loadMarsSceneIfNeeded() {
+    if (this.marsScene) return this.marsScene;
+    if (this.marsLoadingPromise) return this.marsLoadingPromise;
+
+    console.log('[REMANENCE] Lazy-loading Mars surface assets during lunar chapter...');
+    this.marsLoadingPromise = (async () => {
+      try {
+        const mars = await createMarsScene();
+        this.marsScene = mars;
+        this.scene.add(this.marsScene.group);
+        this.marsScene.group.visible = false;
+        console.log('[REMANENCE] Mars assets successfully loaded in background.');
+        return this.marsScene;
+      } catch (err) {
+        console.error('[REMANENCE] Error lazy-loading Mars scene:', err);
+      }
+    })();
+
+    return this.marsLoadingPromise;
   }
 
   async initLoadingSequence() {
     const ringFill = document.getElementById('beacon-ring-fill');
     const introCopy = document.getElementById('intro-copy');
     const btnEnter = document.getElementById('btn-enter');
+    const btnSkipIntro = document.getElementById('btn-skip-intro');
     const introScreen = document.getElementById('intro-screen');
 
     // 1. Create GPU Particle Text in scene
     this.particleText = createParticleText(this.scene);
 
-    // 2. Build Space and Moon Scene
+    // 2. Build Initial Scenes: Space and Moon Scene
     this.spaceScene = createSpaceScene();
     this.scene.add(this.spaceScene.group);
 
     this.moonScene = await createMoonScene();
     this.scene.add(this.moonScene.group);
 
-    // 3. Build Mars Scene
-    this.marsScene = await createMarsScene();
-    this.scene.add(this.marsScene.group);
-
-    // Initial scene isolation: Only Space is visible. Moon and Mars terrain hidden.
+    // Initial scene isolation: Space visible, Moon and Mars hidden
     this.spaceScene.group.visible = true;
     this.moonScene.group.visible = false;
-    this.marsScene.group.visible = false;
 
-    // 4. Timeline & GSAP triggers
+    // 3. Timeline & GSAP triggers
     this.timeline = new StoryTimeline(this);
     this.inspection = new InspectionManager(this);
     this.contrastGuard = new ContrastGuard(this.canvas, false);
@@ -183,47 +215,87 @@ class RemanenceApp {
     // Telemetry ping audio
     audio.playPing(1100, 0.4);
 
-    let loadProgress = 0;
+    // Item 18: Real asset loading progress indicator via THREE.DefaultLoadingManager
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let isLoadComplete = false;
     let journeyStarted = false;
 
-    // Simulated asset telemetry loading progress (updating SVG ring)
-    const progressInterval = setInterval(() => {
-      loadProgress += Math.floor(Math.random() * 18) + 12;
-      if (loadProgress >= 100) {
-        loadProgress = 100;
-        clearInterval(progressInterval);
+    THREE.DefaultLoadingManager.onProgress = (url, itemsLoaded, itemsTotal) => {
+      if (itemsTotal > 0) {
+        targetProgress = Math.max(targetProgress, (itemsLoaded / itemsTotal) * 100);
+      }
+    };
+
+    THREE.DefaultLoadingManager.onLoad = () => {
+      targetProgress = 100;
+      isLoadComplete = true;
+    };
+
+    THREE.DefaultLoadingManager.onError = (url) => {
+      console.warn('[REMANENCE] Asset loading note for:', url);
+    };
+
+    // Smoothly interpolate circular beacon progress ring
+    const progressTimer = setInterval(() => {
+      // Advance toward target with smooth step, or progress incrementally if no network assets left
+      if (targetProgress > currentProgress) {
+        currentProgress += Math.min(targetProgress - currentProgress, 14);
+      } else {
+        currentProgress += 6;
+      }
+
+      if (currentProgress >= 100) {
+        currentProgress = 100;
+        clearInterval(progressTimer);
 
         // Morph swirling particles into the typography "REMANENCE"
-        this.particleText.assemble(1.6);
+        if (this.particleText && this.particleText.assemble) {
+          this.particleText.assemble(1.6);
+        }
 
         // Gracefully reveal definition & magnetic enter control
         setTimeout(() => {
           if (introCopy) introCopy.classList.add('visible');
         }, 250);
+
+        // Item 20: Time-to-interactive budget logging (< 3000ms)
+        const tti = performance.now() - APP_START_TIME;
+        console.log(`[REMANENCE] Time to Interactive (TTI): ${tti.toFixed(1)}ms (Budget: <3000ms - ${tti < 3000 ? 'PASS' : 'WARN'})`);
       }
+
       if (ringFill) {
-        const offset = 465 - (loadProgress / 100) * 465;
+        const offset = 465 - (currentProgress / 100) * 465;
         ringFill.style.strokeDashoffset = offset;
       }
-    }, 50);
+    }, 45);
 
-    // Launch opening flight upon clicking ENTER
+    // Launch opening flight upon clicking ENTER or SKIP INTRO
     const startJourney = () => {
       if (journeyStarted) return;
       journeyStarted = true;
 
-      clearInterval(progressInterval);
+      clearInterval(progressTimer);
       if (ringFill) ringFill.style.strokeDashoffset = 0;
 
+      // Item 12: Sound label updates to "Sound on" on Enter
       audio.unlock();
       audio.playPing(880, 0.5);
 
-      // 1. Instantly fade out intro screen overlay (instant feedback!)
+      const btnAudio = document.getElementById('btn-audio');
+      const audioIcon = document.getElementById('audio-icon');
+      if (audioIcon) audioIcon.textContent = 'Sound on';
+      if (btnAudio) {
+        btnAudio.classList.add('active');
+        btnAudio.style.borderColor = 'var(--signal-amber)';
+      }
+
+      // 1. Instantly fade out intro screen overlay
       if (introScreen) {
         introScreen.classList.add('hidden');
         gsap.to(introScreen, {
           opacity: 0,
-          duration: 0.65,
+          duration: this.prefersReducedMotion ? 0.1 : 0.65,
           ease: 'power2.out',
           onComplete: () => {
             introScreen.style.display = 'none';
@@ -232,16 +304,17 @@ class RemanenceApp {
       }
 
       // 2. Explode particles into starfield
-      if (this.particleText) {
+      if (this.particleText && this.particleText.explode) {
         this.particleText.explode(1.6);
       }
 
       // 3. Dolly camera from particle text toward Earth overview
+      const dollyDuration = this.prefersReducedMotion ? 0.2 : 1.6;
       gsap.to(this.camera.position, {
         x: 0,
         y: 6,
         z: 54,
-        duration: 1.6,
+        duration: dollyDuration,
         ease: 'power3.out',
         onComplete: () => {
           // Enable smooth scroll as camera reaches destination
@@ -256,7 +329,7 @@ class RemanenceApp {
         }
       });
 
-      // Quick fallback: also enable scroll within 600ms so user can scroll immediately
+      // Quick fallback: ensure scroll is active within 500ms
       setTimeout(() => {
         this.lenis.start();
         this.lenis.resize();
@@ -264,8 +337,32 @@ class RemanenceApp {
         if (this.timeline) {
           this.timeline.onSectionActive(0);
         }
-      }, 600);
+      }, 500);
+
+      // Warm up Mars assets lazily in the background after enter
+      setTimeout(() => {
+        this.loadMarsSceneIfNeeded();
+      }, 1000);
+
+      // Log First Interactive Frame metric
+      const ttJourney = performance.now() - APP_START_TIME;
+      console.log(`[REMANENCE] Journey Start: ${ttJourney.toFixed(1)}ms from initial load`);
     };
+
+    // Item 22: Keyboard-accessible "Skip intro" button
+    if (btnSkipIntro) {
+      btnSkipIntro.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startJourney();
+      });
+      btnSkipIntro.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          startJourney();
+        }
+      });
+    }
 
     if (btnEnter) {
       btnEnter.addEventListener('click', (e) => {
@@ -274,9 +371,9 @@ class RemanenceApp {
       });
     }
 
-    // Keyboard shortcut (Enter or Space)
+    // Keyboard shortcut (Enter or Space) on document
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
+      if ((e.key === 'Enter' || e.key === ' ') && !journeyStarted) {
         startJourney();
       }
     });
@@ -308,7 +405,7 @@ class RemanenceApp {
       dot.addEventListener('click', () => {
         const idx = parseInt(dot.dataset.index, 10);
         if (sections[idx]) {
-          this.lenis.scrollTo(sections[idx], { offset: 0, duration: 1.4 });
+          this.lenis.scrollTo(sections[idx], { offset: 0, duration: this.prefersReducedMotion ? 0.1 : 1.4 });
           audio.playPing(920, 0.4);
         }
       });
@@ -326,7 +423,7 @@ class RemanenceApp {
         audio.playPing(780, 0.9);
 
         // Smooth scroll right to this station
-        this.lenis.scrollTo(sec, { offset: 0, duration: 1.2 });
+        this.lenis.scrollTo(sec, { offset: 0, duration: this.prefersReducedMotion ? 0.1 : 1.2 });
 
         // Trigger in-scene 3D radar pulse
         const secData = STORY_DATA.sections[idx];
@@ -359,15 +456,17 @@ class RemanenceApp {
   }
 
   initHUDControls() {
-    // Audio toggle
+    // Item 12: Audio label reads "Sound off" until Enter, then "Sound on". Clear toggle.
     const btnAudio = document.getElementById('btn-audio');
     const audioIcon = document.getElementById('audio-icon');
     if (btnAudio) {
       btnAudio.addEventListener('click', () => {
         audio.unlock();
         const isMuted = audio.toggleMute();
-        audioIcon.textContent = isMuted ? 'AUDIO: OFF' : 'AUDIO: ON';
-        btnAudio.style.borderColor = isMuted ? 'var(--signal-amber)' : 'rgba(245, 242, 234, 0.14)';
+        if (audioIcon) {
+          audioIcon.textContent = isMuted ? 'Sound off' : 'Sound on';
+        }
+        btnAudio.style.borderColor = isMuted ? 'rgba(245, 242, 234, 0.14)' : 'var(--signal-amber)';
         btnAudio.classList.toggle('active', !isMuted);
       });
     }

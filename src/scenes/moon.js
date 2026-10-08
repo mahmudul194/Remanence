@@ -120,11 +120,22 @@ export async function createMoonScene() {
   group.add(apolloLM);
   machines.apollo11 = apolloLM;
 
+  const alsep = await getOrCreateModel('alsep');
+  alsep.position.set(14, 0.05, -20);
+  alsep.rotation.y = 0.4;
+  group.add(alsep);
+  machines.alsep = alsep;
+
   const lrv = await getOrCreateModel('lrv_rover');
   lrv.position.set(38, 0.1, -55);
   lrv.rotation.y = -0.6;
   group.add(lrv);
   machines.lrv = lrv;
+
+  const hammerFeather = await getOrCreateModel('hammer_feather');
+  hammerFeather.position.set(30, 0.05, -72);
+  group.add(hammerFeather);
+  machines.hammer_feather = hammerFeather;
 
   const surveyor = await getOrCreateModel('surveyor');
   surveyor.position.set(-40, -3.2, -95);

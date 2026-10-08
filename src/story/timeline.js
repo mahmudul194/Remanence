@@ -33,21 +33,24 @@ export class StoryTimeline {
   }
 
   initCurves() {
-    // Exact 3D trajectory waypoints (13 Camera positions)
+    // Exact 3D trajectory waypoints (16 Stations)
     const camPoints = [
       new THREE.Vector3(0, 6, 54),          // 0: Hero / Opening (Earth orbit)
       new THREE.Vector3(0, 6, 50),          // 1: Earth overview
       new THREE.Vector3(3.8, -8.3, -174),   // 2: Apollo 11 Lunar Module
-      new THREE.Vector3(41.5, -8.7, -231),  // 3: Lunar Roving Vehicle
-      new THREE.Vector3(-36.8, -12.4, -270),// 4: Surveyor 3 in crater
-      new THREE.Vector3(12, 38, 240),       // 5: Interplanetary Transit Void
-      new THREE.Vector3(3.5, -8.2, 656),    // 6: Viking 1 on Mars
-      new THREE.Vector3(40.5, -8.8, 714),   // 7: Pathfinder & Sojourner
-      new THREE.Vector3(-33.5, -9.1, 779),  // 8: Spirit in Troy Sand
-      new THREE.Vector3(14.5, -8.4, 848),   // 9: Opportunity in Twilight
-      new THREE.Vector3(-26.2, -8.8, 914),  // 10: Ingenuity at Valinor Hills
-      new THREE.Vector3(16.5, -9.2, -132),  // 11: Finale - Retroreflector Laser
-      new THREE.Vector3(26.0, 4.0, -100)    // 12: Archive & Sources wide view
+      new THREE.Vector3(18.5, -8.6, -195),  // 3: ALSEP Station
+      new THREE.Vector3(41.5, -8.7, -231),  // 4: Lunar Roving Vehicle
+      new THREE.Vector3(32.0, -9.0, -248),  // 5: Hammer & Feather
+      new THREE.Vector3(-36.8, -12.4, -270),// 6: Surveyor 3 in crater
+      new THREE.Vector3(12, 38, 240),       // 7: Interplanetary Transit Void
+      new THREE.Vector3(-18.5, -8.4, 620),  // 8: Mars Descent Debris
+      new THREE.Vector3(3.5, -8.2, 656),    // 9: Viking 1 on Mars
+      new THREE.Vector3(40.5, -8.8, 714),   // 10: Pathfinder & Sojourner
+      new THREE.Vector3(-33.5, -9.1, 779),  // 11: Spirit in Troy Sand
+      new THREE.Vector3(14.5, -8.4, 848),   // 12: Opportunity in Twilight
+      new THREE.Vector3(-26.2, -8.8, 914),  // 13: Ingenuity at Valinor Hills
+      new THREE.Vector3(16.5, -9.2, -132),  // 14: Finale - Retroreflector Laser
+      new THREE.Vector3(26.0, 4.0, -100)    // 15: Archive & Sources wide view
     ];
 
     // Look-at focal targets for each station
@@ -55,16 +58,19 @@ export class StoryTimeline {
       new THREE.Vector3(0, 0, 0),           // 0: Center Earth
       new THREE.Vector3(0, 0, 0),           // 1: Center Earth
       new THREE.Vector3(0, -8.8, -180),     // 2: Apollo 11 Descent Stage
-      new THREE.Vector3(38, -9.6, -235),    // 3: LRV Rover body
-      new THREE.Vector3(-40, -13.2, -275),  // 4: Surveyor 3
-      new THREE.Vector3(40, -10, 420),      // 5: Mars approaching in distance
-      new THREE.Vector3(0, -9.2, 650),      // 6: Viking 1 body
-      new THREE.Vector3(38, -9.6, 710),     // 7: Pathfinder & Sojourner
-      new THREE.Vector3(-36, -10.2, 775),   // 8: Spirit wheels in sand
-      new THREE.Vector3(12, -9.6, 845),     // 9: Opportunity rover
-      new THREE.Vector3(-28, -9.6, 910),    // 10: Ingenuity rotor hub
-      new THREE.Vector3(15, -9.8, -135),    // 11: Retroreflector array
-      new THREE.Vector3(15, -9.8, -135)     // 12: Retroreflector array & Moon horizon
+      new THREE.Vector3(14, -9.2, -200),    // 3: ALSEP Station
+      new THREE.Vector3(38, -9.6, -235),    // 4: LRV Rover body
+      new THREE.Vector3(30, -9.6, -252),    // 5: Hammer & Feather
+      new THREE.Vector3(-40, -13.2, -275),  // 6: Surveyor 3
+      new THREE.Vector3(40, -10, 420),      // 7: Mars approaching in distance
+      new THREE.Vector3(-15, -9.2, 625),    // 8: Mars Descent Debris
+      new THREE.Vector3(0, -9.2, 650),      // 9: Viking 1 body
+      new THREE.Vector3(38, -9.6, 710),     // 10: Pathfinder & Sojourner
+      new THREE.Vector3(-36, -10.2, 775),   // 11: Spirit wheels in sand
+      new THREE.Vector3(12, -9.6, 845),     // 12: Opportunity rover
+      new THREE.Vector3(-28, -9.6, 910),    // 13: Ingenuity rotor hub
+      new THREE.Vector3(15, -9.8, -135),    // 14: Retroreflector array
+      new THREE.Vector3(15, -9.8, -135)     // 15: Retroreflector array & Moon horizon
     ];
 
     this.camCurve = new THREE.CatmullRomCurve3(camPoints, false, 'catmullrom', 0.2);
@@ -115,7 +121,6 @@ export class StoryTimeline {
         end: 'bottom 25%',
         scrub: true,
         onUpdate: (self) => {
-          // Bell curve: smoothly rises, peaks in middle of Opportunity, then fades out completely
           const intensity = Math.sin(self.progress * Math.PI);
           if (this.app.marsScene && this.app.marsScene.setStormDarkness) {
             this.app.marsScene.setStormDarkness(intensity);
@@ -150,6 +155,23 @@ export class StoryTimeline {
         }
       });
     }
+
+    this.initReadMoreToggles();
+  }
+
+  initReadMoreToggles() {
+    const buttons = document.querySelectorAll('.btn-read-more');
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const panel = btn.closest('.machine-panel');
+        if (!panel) return;
+        const isExpanded = panel.classList.toggle('is-expanded');
+        btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        btn.textContent = isExpanded ? 'Read less −' : 'Read more +';
+        ScrollTrigger.refresh();
+      });
+    });
   }
 
   updateCameraFlight(progress) {
@@ -187,26 +209,19 @@ export class StoryTimeline {
   }
 
   updateSceneVisibility(t) {
-    if (!this.app.spaceScene || !this.app.moonScene || !this.app.marsScene) return;
-
-    // Spline parameter t spans 0.0 to 1.0
-    // 0.0 - 0.13: Earth intro & overview
-    // 0.14 - 0.40: Moon Apollo landing sites
-    // 0.41 - 0.50: Transit Void (Earth & Mars in deep space)
-    // 0.51 - 0.94: Mars surface stations
-    // 0.95 - 1.00: Finale Retroreflectors & Archive on Moon
+    if (!this.app.spaceScene || !this.app.moonScene) return;
 
     let showSpace = false;
     let showMoon = false;
     let showMars = false;
 
-    if (t < 0.135) {
+    if (t < 0.125) {
       showSpace = true;
-    } else if (t < 0.405) {
+    } else if (t < 0.445) {
       showMoon = true;
-    } else if (t < 0.505) {
+    } else if (t < 0.515) {
       showSpace = true;
-    } else if (t < 0.955) {
+    } else if (t < 0.925) {
       showMars = true;
     } else {
       showMoon = true;
@@ -218,7 +233,7 @@ export class StoryTimeline {
     if (this.app.moonScene.group.visible !== showMoon) {
       this.app.moonScene.group.visible = showMoon;
     }
-    if (this.app.marsScene.group.visible !== showMars) {
+    if (this.app.marsScene && this.app.marsScene.group.visible !== showMars) {
       this.app.marsScene.group.visible = showMars;
     }
   }
@@ -231,32 +246,39 @@ export class StoryTimeline {
     if (!sectionData) return;
 
     // 0. Explicit Scene Isolation by Section
-    const isEarth = (index <= 1 || index === 5);
-    const isMoon = ((index >= 2 && index <= 4) || index >= 11);
-    const isMars = (index >= 6 && index <= 10);
+    const isEarth = (index <= 1 || index === 7);
+    const isMoon = ((index >= 2 && index <= 6) || index >= 14);
+    const isMars = (index >= 8 && index <= 13);
     if (this.app.spaceScene) this.app.spaceScene.group.visible = isEarth;
     if (this.app.moonScene) this.app.moonScene.group.visible = isMoon;
     if (this.app.marsScene) this.app.marsScene.group.visible = isMars;
 
+    // Trigger lazy loading of Mars if user reaches the Moon
+    if (index >= 2 && this.app.loadMarsSceneIfNeeded) {
+      this.app.loadMarsSceneIfNeeded();
+    }
+
     // 1. Signal Glitch Burst between stories
     if (index > 1) {
-      this.postfx.triggerGlitch(0.28);
+      this.postfx.triggerGlitch(0.25);
       audio.playGlitch();
     }
 
     // 2. Audio Atmosphere Adaptation
     if (index <= 1) {
       audio.setAtmosphere('earth');
-    } else if (index >= 2 && index <= 4) {
+    } else if (index >= 2 && index <= 6) {
       audio.setAtmosphere('moon');
-    } else if (index === 5) {
+    } else if (index === 7) {
       audio.setAtmosphere('transit');
       audio.playHeartbeat();
-    } else if (index >= 6 && index <= 8) {
+    } else if (index >= 8 && index <= 11) {
       audio.setAtmosphere('mars');
-    } else if (index === 9) {
+    } else if (index === 12) {
       audio.setAtmosphere('storm');
-    } else if (index >= 10) {
+    } else if (index === 13) {
+      audio.setAtmosphere('mars');
+    } else if (index >= 14) {
       audio.setAtmosphere('finale');
       if (sectionData.laserActive) {
         audio.playLaserPulse();
@@ -287,21 +309,21 @@ export class StoryTimeline {
       }
     }
 
-    // 3.6 Update Navbar Chapter Indicator & Scene Dimmer
+    // 3.6 Update Navbar Chapter Indicator (Clean plain language, no //)
     const chapterEl = document.getElementById('chapter-indicator');
     if (chapterEl) {
       const chNum = String(index).padStart(2, '0');
-      const machineName = sectionData.machine || sectionData.title || 'ORIGIN';
-      chapterEl.textContent = `CH.${chNum} // ${machineName.toUpperCase()}`;
+      const machineName = sectionData.title || sectionData.machineTitle || 'Origin';
+      chapterEl.textContent = `Chapter ${chNum} · ${machineName}`;
       chapterEl.classList.add('active');
     }
 
     const dimmer = document.getElementById('scene-dimmer');
     if (dimmer) {
-      dimmer.classList.toggle('active', index >= 1 && index <= 11);
+      dimmer.classList.toggle('active', index >= 1 && index <= 14);
     }
 
-    // 4. Update Mission Control HUD telemetry
+    // 4. Update Mission Control HUD telemetry (Clean text)
     this.updateHUD(sectionData);
 
     // 5. Trigger Letter-by-Letter Typewriter / Masked word animation on active moment
@@ -335,16 +357,19 @@ export class StoryTimeline {
   }
 
   getMachineForSection(id) {
-    if (!this.app.moonScene || !this.app.marsScene) return null;
+    if (!this.app.moonScene) return null;
     switch (id) {
       case 'apollo11': return this.app.moonScene.machines.apollo11;
+      case 'alsep': return this.app.moonScene.machines.alsep;
       case 'lrv': return this.app.moonScene.machines.lrv;
+      case 'hammer_feather': return this.app.moonScene.machines.hammer_feather;
       case 'surveyor3': return this.app.moonScene.machines.surveyor;
-      case 'viking1': return this.app.marsScene.machines.viking1;
-      case 'pathfinder': return this.app.marsScene.machines.pathfinder;
-      case 'spirit': return this.app.marsScene.machines.spirit;
-      case 'opportunity': return this.app.marsScene.machines.opportunity;
-      case 'ingenuity': return this.app.marsScene.machines.ingenuity;
+      case 'descent_debris': return this.app.marsScene ? this.app.marsScene.machines.descent_debris : null;
+      case 'viking1': return this.app.marsScene ? this.app.marsScene.machines.viking1 : null;
+      case 'pathfinder': return this.app.marsScene ? this.app.marsScene.machines.pathfinder : null;
+      case 'spirit': return this.app.marsScene ? this.app.marsScene.machines.spirit : null;
+      case 'opportunity': return this.app.marsScene ? this.app.marsScene.machines.opportunity : null;
+      case 'ingenuity': return this.app.marsScene ? this.app.marsScene.machines.ingenuity : null;
       case 'retroreflector': return this.app.moonScene.machines.retroreflector;
       default: return null;
     }
@@ -356,10 +381,10 @@ export class StoryTimeline {
     const dsnEl = document.getElementById('hud-dsn');
 
     if (coordsEl && data.coordinates) coordsEl.textContent = data.coordinates;
-    if (targetEl && (data.machine || data.title)) targetEl.textContent = (data.machine || data.title).toUpperCase();
+    if (targetEl && (data.machineTitle || data.title)) targetEl.textContent = `${data.machineTitle || data.title}`;
     if (dsnEl) {
-      dsnEl.textContent = data.status === 'SILENT' ? 'DSN: CARRIER LOST' : `DSN: ${data.status || 'TRACKING'}`;
-      dsnEl.className = data.status === 'SILENT' ? 'meta-value status-silent' : 'meta-value status-active';
+      dsnEl.textContent = data.status === 'Silent' ? 'Silent' : 'Active';
+      dsnEl.className = data.status === 'Silent' ? 'meta-value status-silent' : 'meta-value status-active';
     }
   }
 

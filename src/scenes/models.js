@@ -573,6 +573,195 @@ export function createRetroreflector() {
   return group;
 }
 
+/**
+ * 9. Apollo Lunar Surface Experiments Package (ALSEP) Central Station
+ */
+export function createALSEP() {
+  const group = new THREE.Group();
+  group.name = 'alsep_station';
+
+  // Central Station Electronics Box
+  const boxGeo = new THREE.BoxGeometry(0.85, 0.55, 0.7);
+  const box = new THREE.Mesh(boxGeo, materials.goldKapton);
+  box.position.y = 0.35;
+  group.add(box);
+
+  // White Specular Thermal Radiator Top
+  const radiatorGeo = new THREE.BoxGeometry(0.82, 0.04, 0.68);
+  const radiator = new THREE.Mesh(radiatorGeo, materials.whitePaint);
+  radiator.position.y = 0.64;
+  group.add(radiator);
+
+  // Helical S-band Telemetry Antenna Mast
+  const mastGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.9);
+  const mast = new THREE.Mesh(mastGeo, materials.aluminum);
+  mast.position.set(0.25, 1.05, 0);
+  group.add(mast);
+
+  const helixGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.3, 12, 1, true);
+  const helix = new THREE.Mesh(helixGeo, materials.aluminum);
+  helix.position.set(0.25, 1.45, 0);
+  group.add(helix);
+
+  // SNAP-27 Radioisotope Thermoelectric Generator (RTG) Cask
+  const rtgGroup = new THREE.Group();
+  rtgGroup.position.set(-1.2, 0.25, 0.4);
+
+  const rtgCaskGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.48, 12);
+  const rtgCask = new THREE.Mesh(rtgCaskGeo, materials.darkMetal);
+  rtgGroup.add(rtgCask);
+
+  // RTG Cooling Fins
+  for (let i = 0; i < 6; i++) {
+    const finGeo = new THREE.BoxGeometry(0.02, 0.44, 0.54);
+    const fin = new THREE.Mesh(finGeo, materials.aluminum);
+    fin.rotation.y = (i * Math.PI) / 6;
+    rtgGroup.add(fin);
+  }
+
+  // Connecting Cable Ribbon
+  const cableGeo = new THREE.PlaneGeometry(0.12, 1.1);
+  cableGeo.rotateX(-Math.PI / 2);
+  const cable = new THREE.Mesh(cableGeo, materials.darkMetal);
+  cable.position.set(-0.6, 0.02, 0.2);
+  cable.rotation.y = -0.3;
+  group.add(cable);
+  group.add(rtgGroup);
+
+  // Passive Seismic Experiment (PSE) Package with Mylar Skirt
+  const pseGeo = new THREE.CylinderGeometry(0.25, 0.38, 0.22, 16);
+  const pse = new THREE.Mesh(pseGeo, materials.aluminum);
+  pse.position.set(0.9, 0.12, -0.6);
+  group.add(pse);
+
+  // Telemetry Beacon
+  const beacon = createBeacon(0xffb84d, 1.8);
+  beacon.position.set(0.25, 1.55, 0);
+  group.add(beacon);
+  group.userData.beacon = beacon;
+
+  return group;
+}
+
+/**
+ * 10. The Hammer and the Feather (Apollo 15 Galileo Experiment Site)
+ */
+export function createHammerFeather() {
+  const group = new THREE.Group();
+  group.name = 'hammer_feather';
+
+  // Apollo Lunar Geology Hammer
+  const hammerGroup = new THREE.Group();
+  hammerGroup.position.set(0.3, 0.06, 0);
+  hammerGroup.rotation.set(0.1, 0.4, 0.05);
+
+  const handleGeo = new THREE.CylinderGeometry(0.022, 0.022, 0.45);
+  handleGeo.rotateZ(Math.PI / 2);
+  const handle = new THREE.Mesh(handleGeo, materials.aluminum);
+  hammerGroup.add(handle);
+
+  const headGeo = new THREE.BoxGeometry(0.14, 0.06, 0.06);
+  const head = new THREE.Mesh(headGeo, materials.darkMetal);
+  head.position.set(0.22, 0, 0);
+  hammerGroup.add(head);
+  group.add(hammerGroup);
+
+  // The Falcon Feather (White gyrfalcon feather)
+  const featherGroup = new THREE.Group();
+  featherGroup.position.set(-0.35, 0.03, 0.15);
+  featherGroup.rotation.set(-0.05, -0.6, 0.1);
+
+  const vaneGeo = new THREE.PlaneGeometry(0.08, 0.32);
+  vaneGeo.rotateX(-Math.PI / 2);
+  const vaneMat = new THREE.MeshStandardMaterial({
+    color: 0xf5f2ea,
+    roughness: 0.95,
+    metalness: 0.02,
+    side: THREE.DoubleSide
+  });
+  const vane = new THREE.Mesh(vaneGeo, vaneMat);
+  featherGroup.add(vane);
+
+  const quillGeo = new THREE.CylinderGeometry(0.006, 0.003, 0.36);
+  quillGeo.rotateZ(Math.PI / 2);
+  const quill = new THREE.Mesh(quillGeo, materials.whitePaint);
+  featherGroup.add(quill);
+  group.add(featherGroup);
+
+  // Subtle amber memory beacon
+  const beacon = createBeacon(0xffb84d, 1.4);
+  beacon.position.set(0, 0.35, 0);
+  group.add(beacon);
+  group.userData.beacon = beacon;
+
+  return group;
+}
+
+/**
+ * 11. Mars Descent Debris (Parachute, Backshell, and Impact Scar)
+ */
+export function createDescentDebris() {
+  const group = new THREE.Group();
+  group.name = 'descent_debris';
+
+  // Jettisoned Conical Backshell (Half-buried in dust)
+  const shellGeo = new THREE.ConeGeometry(1.6, 1.1, 16, 1, true);
+  shellGeo.rotateZ(0.4);
+  shellGeo.rotateX(0.2);
+  const shellMat = new THREE.MeshStandardMaterial({
+    color: 0xe8e4dc,
+    roughness: 0.75,
+    metalness: 0.15
+  });
+  const shell = new THREE.Mesh(shellGeo, shellMat);
+  shell.position.set(-0.8, 0.45, 0);
+  group.add(shell);
+
+  // Draped Supersonic Nylon Parachute
+  const chuteGeo = new THREE.PlaneGeometry(3.6, 4.8, 16, 16);
+  chuteGeo.rotateX(-Math.PI / 2);
+  const pos = chuteGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const px = pos.getX(i);
+    const pz = pos.getZ(i);
+    // Billow folds in Martian wind
+    const billow = Math.sin(px * 2.5) * 0.12 + Math.cos(pz * 1.8) * 0.08;
+    pos.setY(i, billow + 0.04);
+  }
+  chuteGeo.computeVertexNormals();
+
+  const chuteMat = new THREE.MeshStandardMaterial({
+    color: 0xd95a2b, // Mars orange-and-white pattern
+    roughness: 0.85,
+    metalness: 0.05,
+    side: THREE.DoubleSide
+  });
+  const chute = new THREE.Mesh(chuteGeo, chuteMat);
+  chute.position.set(2.2, 0.02, 0.6);
+  chute.rotation.y = 0.3;
+  group.add(chute);
+
+  // Charred Sky-Crane / Descent Stage Impact Scar on Sand
+  const scorchGeo = new THREE.CircleGeometry(2.4, 24);
+  scorchGeo.rotateX(-Math.PI / 2);
+  const scorchMat = new THREE.MeshBasicMaterial({
+    color: 0x1f140e,
+    transparent: true,
+    opacity: 0.65
+  });
+  const scorch = new THREE.Mesh(scorchGeo, scorchMat);
+  scorch.position.set(-2.8, 0.015, -1.8);
+  group.add(scorch);
+
+  // Telemetry Beacon
+  const beacon = createBeacon(0xe8643c, 1.8);
+  beacon.position.set(-0.8, 1.4, 0);
+  group.add(beacon);
+  group.userData.beacon = beacon;
+
+  return group;
+}
+
 function createBeacon(colorHex, intensity = 1.5) {
   const beaconGroup = new THREE.Group();
 
@@ -610,6 +799,9 @@ export async function getOrCreateModel(modelType) {
     case 'apollo_lm': return createApolloLM();
     case 'lrv_rover': return createLRV();
     case 'surveyor': return createSurveyor();
+    case 'alsep': return createALSEP();
+    case 'hammer_feather': return createHammerFeather();
+    case 'descent_debris': return createDescentDebris();
     case 'viking_lander': return createViking();
     case 'pathfinder_sojourner': return createPathfinder();
     case 'mer_rover': return createMERRover(false);

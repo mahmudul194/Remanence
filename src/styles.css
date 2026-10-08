@@ -1412,6 +1412,175 @@ body.cursor-hover .cursor-dot {
 }
 
 /* ==========================================================================
+   STATION CARD DENSITY, EXPANDABLE READ MORE & SOURCES
+   ========================================================================== */
+.moment-summary {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--moon-white);
+  margin-bottom: 1.2rem;
+  text-shadow: var(--text-shadow-protect);
+}
+
+.panel-expandable {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.45s var(--ease-cinematic), opacity 0.35s ease, margin 0.35s ease;
+}
+
+.machine-panel.is-expanded .panel-expandable {
+  max-height: 900px;
+  opacity: 1;
+  margin-top: 1.1rem;
+}
+
+.panel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.2rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(245, 242, 234, 0.08);
+}
+
+.btn-read-more {
+  background: transparent;
+  border: 1px solid rgba(255, 184, 77, 0.35);
+  color: var(--signal-amber);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.btn-read-more:hover {
+  background: rgba(255, 184, 77, 0.12);
+  border-color: var(--signal-amber);
+  color: var(--moon-white);
+}
+
+.station-source-link {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--ping-cyan);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.25s;
+}
+
+.station-source-link:hover {
+  color: var(--moon-white);
+}
+
+.moment-distance-bg {
+  position: absolute;
+  top: -3.4rem;
+  right: -1rem;
+  font-family: var(--font-mono);
+  font-size: clamp(3.2rem, 7.5vw, 6.5rem);
+  letter-spacing: 0.08em;
+  font-weight: 500;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(111, 227, 255, 0.14);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: -1;
+  user-select: none;
+}
+
+.skip-intro-btn {
+  position: absolute;
+  top: 2rem;
+  right: 2.5rem;
+  background: rgba(11, 16, 32, 0.65);
+  border: 1px solid rgba(245, 242, 234, 0.2);
+  color: var(--moon-silver);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  z-index: 60;
+  transition: all 0.25s ease;
+}
+
+.skip-intro-btn:hover,
+.skip-intro-btn:focus-visible {
+  color: var(--signal-amber);
+  border-color: var(--signal-amber);
+  background: rgba(11, 16, 32, 0.95);
+}
+
+.moment-fact {
+  margin-top: 1.1rem;
+  padding: 0.8rem 1.1rem;
+  background: rgba(5, 6, 10, 0.45);
+  border-left: 2px solid var(--signal-amber);
+  border-radius: 4px;
+}
+
+.fact-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--signal-amber);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.fact-text {
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  line-height: 1.45;
+  color: var(--moon-silver);
+}
+
+.model-sources-table {
+  margin-top: 1.8rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.model-sources-table th,
+.model-sources-table td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid rgba(245, 242, 234, 0.08);
+  text-align: left;
+}
+
+.model-sources-table th {
+  color: var(--signal-amber);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.model-sources-table td {
+  color: var(--moon-silver);
+}
+
+.sources-disclaimer {
+  margin-top: 1.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.88rem;
+  font-style: italic;
+  color: var(--dust-gray);
+  text-align: center;
+}
+
+/* ==========================================================================
    REDUCED MOTION
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {

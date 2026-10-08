@@ -80,6 +80,11 @@ export async function createMarsScene() {
   // 3. Machines on Mars
   const machines = {};
 
+  const descentDebris = await getOrCreateModel('descent_debris');
+  descentDebris.position.set(-15, 0.05, -35);
+  group.add(descentDebris);
+  machines.descent_debris = descentDebris;
+
   const viking = await getOrCreateModel('viking_lander');
   viking.position.set(0, 0, 0);
   group.add(viking);
