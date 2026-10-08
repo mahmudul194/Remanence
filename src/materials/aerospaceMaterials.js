@@ -450,6 +450,174 @@ export function getAerospaceMaterials() {
       color: 0x7a808b,
       metalness: 0.96,
       roughness: 0.3
+    }),
+
+    // 9. LRV Wire-Mesh Tire with Titanium Chevron Cleats
+    lrvWheelMesh: new THREE.MeshPhysicalMaterial({
+      map: createLRVWheelTexture().map,
+      normalMap: createLRVWheelTexture().normal,
+      normalScale: new THREE.Vector2(1.2, 1.2),
+      metalness: 0.94,
+      roughness: 0.28,
+      clearcoat: 0.3,
+      clearcoatRoughness: 0.2,
+      side: THREE.DoubleSide
+    }),
+
+    // 10. LRV Seat Webbing (Woven olive/gray nylon straps)
+    seatWebbing: new THREE.MeshStandardMaterial({
+      color: 0x5a6358,
+      metalness: 0.08,
+      roughness: 0.88
+    }),
+
+    // 11. Apollo 17 Taped Lunar Map Fender Repair (Laminated maps & gray duct tape)
+    tapedFender: new THREE.MeshStandardMaterial({
+      color: 0x8a9098,
+      metalness: 0.15,
+      roughness: 0.65
     })
   };
+}
+
+/**
+ * 7. LRV Wire-Mesh Tire Texture with Titanium Chevron Cleats
+ */
+export function createLRVWheelTexture() {
+  if (textureCache.has('lrv_wheel')) return textureCache.get('lrv_wheel');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+
+  // Zinc-coated steel wire mesh background
+  ctx.fillStyle = '#6e747f';
+  ctx.fillRect(0, 0, 512, 256);
+
+  // Woven wire cross-hatch pattern
+  ctx.strokeStyle = '#9ca5b5';
+  ctx.lineWidth = 1.8;
+  for (let x = -256; x < 768; x += 12) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + 256, 256);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(x + 256, 0);
+    ctx.lineTo(x, 256);
+    ctx.stroke();
+  }
+
+  // Titanium chevron tread cleats (V-shaped traction bars riveted to mesh)
+  ctx.fillStyle = '#949ca8';
+  ctx.strokeStyle = '#3e434c';
+  ctx.lineWidth = 2.5;
+
+  for (let x = 0; x < 512; x += 32) {
+    ctx.beginPath();
+    ctx.moveTo(x, 24);
+    ctx.lineTo(x + 14, 128);
+    ctx.lineTo(x, 232);
+    ctx.lineTo(x + 9, 232);
+    ctx.lineTo(x + 23, 128);
+    ctx.lineTo(x + 9, 24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Rivet dots on cleat tips
+    ctx.fillStyle = '#d2d8e4';
+    ctx.beginPath();
+    ctx.arc(x + 4, 32, 2.2, 0, Math.PI * 2);
+    ctx.arc(x + 18, 128, 2.2, 0, Math.PI * 2);
+    ctx.arc(x + 4, 224, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#949ca8';
+  }
+
+  const diffuseTex = new THREE.CanvasTexture(canvas);
+  diffuseTex.wrapS = THREE.RepeatWrapping;
+  diffuseTex.wrapT = THREE.RepeatWrapping;
+
+  // Normal map for chevron relief
+  const normalCanvas = document.createElement('canvas');
+  normalCanvas.width = 512;
+  normalCanvas.height = 256;
+  const nCtx = normalCanvas.getContext('2d');
+  nCtx.fillStyle = '#8080ff';
+  nCtx.fillRect(0, 0, 512, 256);
+
+  for (let x = 0; x < 512; x += 32) {
+    nCtx.fillStyle = '#a880ff';
+    nCtx.beginPath();
+    nCtx.moveTo(x, 24);
+    nCtx.lineTo(x + 14, 128);
+    nCtx.lineTo(x, 232);
+    nCtx.lineTo(x + 9, 232);
+    nCtx.lineTo(x + 23, 128);
+    nCtx.lineTo(x + 9, 24);
+    nCtx.closePath();
+    nCtx.fill();
+  }
+  const normalTex = new THREE.CanvasTexture(normalCanvas);
+  normalTex.wrapS = THREE.RepeatWrapping;
+  normalTex.wrapT = THREE.RepeatWrapping;
+
+  const result = { map: diffuseTex, normal: normalTex };
+  textureCache.set('lrv_wheel', result);
+  return result;
+}
+
+/**
+ * 8. Lunar Regolith Chevron Rover Tire Tracks
+ */
+export function createLRVTracksTexture() {
+  if (textureCache.has('lrv_tracks')) return textureCache.get('lrv_tracks');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  ctx.clearRect(0, 0, 256, 512);
+
+  // Twin tire track impressions (spaced 1.8m wheel track apart)
+  const leftX = 54;
+  const rightX = 202;
+
+  [leftX, rightX].forEach((cx) => {
+    // Compressed dark soil impression
+    ctx.fillStyle = 'rgba(28, 30, 36, 0.75)';
+    ctx.fillRect(cx - 24, 0, 48, 512);
+
+    // Chevron cleat depressions
+    ctx.strokeStyle = 'rgba(12, 14, 18, 0.95)';
+    ctx.lineWidth = 4;
+    for (let y = 0; y < 512; y += 20) {
+      ctx.beginPath();
+      ctx.moveTo(cx - 20, y);
+      ctx.lineTo(cx, y + 10);
+      ctx.lineTo(cx + 20, y);
+      ctx.stroke();
+    }
+
+    // Displaced berm edges (raised dust lips along track borders)
+    ctx.strokeStyle = 'rgba(165, 168, 175, 0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - 26, 0);
+    ctx.lineTo(cx - 26, 512);
+    ctx.moveTo(cx + 26, 0);
+    ctx.lineTo(cx + 26, 512);
+    ctx.stroke();
+  });
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 8);
+  textureCache.set('lrv_tracks', tex);
+  return tex;
 }

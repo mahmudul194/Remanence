@@ -98,20 +98,6 @@ export async function createMoonScene() {
   rockInstanced.castShadow = true;
   group.add(rockInstanced);
 
-  // 3. Rover Track Paths
-  const trackGeo = new THREE.PlaneGeometry(1.6, 60);
-  trackGeo.rotateX(-Math.PI / 2);
-  const trackMat = new THREE.MeshStandardMaterial({
-    color: 0x484b50,
-    roughness: 1.0,
-    transparent: true,
-    opacity: 0.6
-  });
-  const tracks = new THREE.Mesh(trackGeo, trackMat);
-  tracks.position.set(35, 0.02, -30);
-  tracks.rotation.y = 0.3;
-  group.add(tracks);
-
   // 4. Instantiate Machines at their Historical Lunar Stations
   const machines = {};
 
@@ -127,7 +113,7 @@ export async function createMoonScene() {
   machines.alsep = alsep;
 
   const lrv = await getOrCreateModel('lrv_rover');
-  lrv.position.set(38, 0.1, -55);
+  lrv.position.set(38, 0.02, -55);
   lrv.rotation.y = -0.6;
   group.add(lrv);
   machines.lrv = lrv;

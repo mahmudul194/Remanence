@@ -9,6 +9,7 @@
 import * as THREE from 'three';
 import { modelLoader } from '../utils/loader.js';
 import { createDetailedApolloLM } from './lunarModule.js';
+import { createDetailedLRV } from './lunarRover.js';
 
 // Realistic Aerospace Materials Pool (Tuned for HDR Image-Based Lighting)
 const materials = {
@@ -84,98 +85,10 @@ export function createApolloLM() {
 }
 
 /**
- * 2. Apollo Lunar Roving Vehicle (LRV)
+ * 2. Apollo Lunar Roving Vehicle (LRV) (Hero Asset)
  */
 export function createLRV() {
-  const group = new THREE.Group();
-  group.name = 'lrv_rover';
-
-  // Chassis Frame
-  const chassisGeo = new THREE.BoxGeometry(1.6, 0.15, 2.6);
-  const chassisMesh = new THREE.Mesh(chassisGeo, materials.aluminum);
-  chassisMesh.position.y = 0.5;
-  group.add(chassisMesh);
-
-  // 4 Wire-Mesh Wheels with Fenders
-  const wheelPositions = [
-    [-0.95, 0.45, 0.95],
-    [0.95, 0.45, 0.95],
-    [-0.95, 0.45, -0.95],
-    [0.95, 0.45, -0.95]
-  ];
-
-  wheelPositions.forEach(([x, y, z]) => {
-    const wheelGroup = new THREE.Group();
-    wheelGroup.position.set(x, y, z);
-
-    const tireGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.25, 16);
-    const tireMesh = new THREE.Mesh(tireGeo, materials.wheelMesh);
-    tireMesh.rotation.z = Math.PI / 2;
-    wheelGroup.add(tireMesh);
-
-    const hubGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.27, 8);
-    const hubMesh = new THREE.Mesh(hubGeo, materials.darkMetal);
-    hubMesh.rotation.z = Math.PI / 2;
-    wheelGroup.add(hubMesh);
-
-    const fenderGeo = new THREE.BoxGeometry(0.3, 0.08, 0.6);
-    const fenderMesh = new THREE.Mesh(fenderGeo, materials.whitePaint);
-    fenderMesh.position.set(0, 0.4, 0);
-    wheelGroup.add(fenderMesh);
-
-    group.add(wheelGroup);
-  });
-
-  // Dual Lawn-Chair Seats
-  for (let s = -0.35; s <= 0.35; s += 0.7) {
-    const seatBottomGeo = new THREE.BoxGeometry(0.45, 0.05, 0.45);
-    const seatBottom = new THREE.Mesh(seatBottomGeo, materials.darkMetal);
-    seatBottom.position.set(s, 0.65, 0.0);
-    group.add(seatBottom);
-
-    const seatBackGeo = new THREE.BoxGeometry(0.45, 0.5, 0.05);
-    const seatBack = new THREE.Mesh(seatBackGeo, materials.darkMetal);
-    seatBack.position.set(s, 0.92, -0.22);
-    seatBack.rotation.x = -0.15;
-    group.add(seatBack);
-  }
-
-  // T-handle Steering Control Console
-  const stickGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.4);
-  const stickMesh = new THREE.Mesh(stickGeo, materials.aluminum);
-  stickMesh.position.set(0, 0.8, 0.2);
-  group.add(stickMesh);
-
-  const tHandleGeo = new THREE.BoxGeometry(0.2, 0.04, 0.04);
-  const tHandle = new THREE.Mesh(tHandleGeo, materials.darkMetal);
-  tHandle.position.set(0, 1.0, 0.2);
-  group.add(tHandle);
-
-  // High-Gain Mesh Antenna Dish on front mast
-  const mastGeo = new THREE.CylinderGeometry(0.03, 0.03, 1.1);
-  const mastMesh = new THREE.Mesh(mastGeo, materials.aluminum);
-  mastMesh.position.set(0.5, 1.1, 1.0);
-  group.add(mastMesh);
-
-  const dishGeo = new THREE.CylinderGeometry(0.4, 0.1, 0.1, 16, 1, true);
-  const dishMesh = new THREE.Mesh(dishGeo, materials.aluminum);
-  dishMesh.position.set(0.5, 1.6, 1.0);
-  dishMesh.rotation.x = 0.5;
-  group.add(dishMesh);
-
-  // RCA Color TV Camera (filmed Apollo 17 lift-off)
-  const tvCamGeo = new THREE.BoxGeometry(0.2, 0.18, 0.3);
-  const tvCamMesh = new THREE.Mesh(tvCamGeo, materials.goldKapton);
-  tvCamMesh.position.set(-0.5, 1.2, 1.0);
-  group.add(tvCamMesh);
-
-  // Telemetry Beacon
-  const beacon = createBeacon(0x4df0ff, 1.6);
-  beacon.position.set(0.5, 1.75, 1.0);
-  group.add(beacon);
-  group.userData.beacon = beacon;
-
-  return group;
+  return createDetailedLRV();
 }
 
 /**
