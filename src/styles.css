@@ -1,0 +1,837 @@
+/* ==========================================================================
+   REMANENCE: What remains.
+   NASA Space Apps Challenge — Team Apollo 404
+   Cinematic Mission-Control Stylesheet
+   ========================================================================== */
+
+:root {
+  --bg-deep-space: #030407;
+  --text-main: #f0f2f5;
+  --text-dim: #8b949e;
+  --text-code: #abb2bf;
+  --cyan-telemetry: #4df0ff;
+  --amber-mars: #ff9d42;
+  --gold-lunar: #ffd700;
+  --red-silent: #ff4757;
+  --green-beacon: #00ff88;
+  --border-hud: rgba(77, 240, 255, 0.18);
+  --glass-bg: rgba(7, 10, 15, 0.82);
+  --font-mono: 'Space Mono', monospace;
+  --font-sans: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: auto;
+}
+
+html {
+  background-color: var(--bg-deep-space);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: visible;
+  position: relative;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+/* 3D WebGL Canvas Fixed Background */
+#webgl-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   0. THEMED LOADING SCREEN
+   ========================================================================== */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #020204;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 1.2s;
+}
+
+.loader-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-terminal {
+  position: relative;
+  width: 90%;
+  max-width: 540px;
+  background: rgba(10, 12, 16, 0.95);
+  border: 1px solid var(--border-hud);
+  padding: 2.5rem 2rem;
+  border-radius: 4px;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(77, 240, 255, 0.08);
+  overflow: hidden;
+}
+
+.loader-scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 0, 0, 0.3) 51%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  color: var(--cyan-telemetry);
+  margin-bottom: 1.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--cyan-telemetry);
+  display: inline-block;
+}
+
+.status-dot.pulsing {
+  animation: pulseBeacon 1.4s infinite ease-in-out;
+}
+
+@keyframes pulseBeacon {
+  0% { transform: scale(0.9); opacity: 0.5; box-shadow: 0 0 0 0 rgba(77, 240, 255, 0.7); }
+  70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 8px rgba(77, 240, 255, 0); }
+  100% { transform: scale(0.9); opacity: 0.5; }
+}
+
+.loader-status {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  min-height: 1.8rem;
+}
+
+.loader-progress-bar {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.loader-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--cyan-telemetry), #ffffff);
+  box-shadow: 0 0 8px var(--cyan-telemetry);
+  transition: width 0.4s ease-out;
+}
+
+.loader-definition {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 1s ease, transform 1s ease;
+  border-left: 2px solid var(--amber-mars);
+  padding-left: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.loader-definition.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.loader-definition .term {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  color: var(--amber-mars);
+  margin-bottom: 0.35rem;
+}
+
+.loader-definition .pos {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.loader-definition .def {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #ffffff;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.loader-definition .sub-def {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.btn-enter {
+  display: none;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: 1px solid var(--cyan-telemetry);
+  color: var(--cyan-telemetry);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+}
+
+.btn-enter.show {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-enter:hover {
+  background: rgba(77, 240, 255, 0.15);
+  color: #ffffff;
+  box-shadow: 0 0 15px rgba(77, 240, 255, 0.3);
+}
+
+.enter-shortcut {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* ==========================================================================
+   MISSION CONTROL HUD OVERLAY (TOP & BOTTOM)
+   ========================================================================== */
+.hud-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  padding: 0.9rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  pointer-events: auto;
+  background: rgba(3, 5, 9, 0.92);
+  border-bottom: 1px solid rgba(77, 240, 255, 0.15);
+  backdrop-filter: blur(16px);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+}
+
+.hud-item.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.hud-badge {
+  background: rgba(77, 240, 255, 0.12);
+  border: 1px solid var(--cyan-telemetry);
+  color: var(--cyan-telemetry);
+  padding: 0.2rem 0.6rem;
+  border-radius: 2px;
+}
+
+.mission-name {
+  color: var(--text-dim);
+}
+
+.hud-item.telemetry {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.hud-status {
+  color: var(--cyan-telemetry);
+  transition: color 0.4s ease;
+}
+
+.telemetry-bar {
+  color: rgba(77, 240, 255, 0.4);
+  font-size: 0.65rem;
+  letter-spacing: -1px;
+}
+
+.hud-actions {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.hud-btn {
+  background: rgba(10, 15, 25, 0.7);
+  border: 1px solid var(--border-hud);
+  color: var(--text-main);
+  padding: 0.35rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.25s;
+}
+
+.hud-btn:hover {
+  border-color: var(--cyan-telemetry);
+  background: rgba(77, 240, 255, 0.12);
+  color: var(--cyan-telemetry);
+}
+
+.hud-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  padding: 1.2rem 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 100;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(3, 4, 7, 0.85), transparent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+
+.hud-dock-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.hud-label {
+  color: var(--text-dim);
+  font-size: 0.65rem;
+}
+
+.hud-value {
+  color: var(--cyan-telemetry);
+  font-weight: 700;
+}
+
+.scroll-indicator {
+  align-items: flex-end;
+}
+
+.scroll-arrow {
+  font-size: 0.9rem;
+  color: var(--cyan-telemetry);
+  animation: bounceDown 1.5s infinite;
+}
+
+@keyframes bounceDown {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+
+/* ==========================================================================
+   OPPORTUNITY DUST STORM FULLSCREEN BLACKOUT
+   ========================================================================== */
+.storm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: radial-gradient(circle, rgba(40, 15, 8, 0.8) 0%, rgba(5, 2, 2, 0.98) 100%);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 50;
+  transition: opacity 0.5s ease-out;
+}
+
+/* ==========================================================================
+   SCROLL CONTAINER & STORY SECTIONS
+   ========================================================================== */
+.scroll-container {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+}
+
+.story-section {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 7.5rem 8vw 4.5rem 8vw;
+  position: relative;
+}
+
+/* Section 0: Title Section */
+.section-intro {
+  justify-content: center;
+  text-align: center;
+  min-height: 105vh;
+}
+
+.title-container {
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signal-tag {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--cyan-telemetry);
+  letter-spacing: 0.2em;
+  margin-bottom: 1.2rem;
+}
+
+.main-title {
+  font-family: var(--font-mono);
+  font-size: clamp(3.2rem, 9vw, 7.5rem);
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  color: #ffffff;
+  position: relative;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+/* Ghost-Trail Afterimage Effect matching "Remanence" theme */
+.ghost-trail {
+  position: relative;
+  display: inline-block;
+}
+
+.ghost-trail::before,
+.ghost-trail::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.ghost-trail::before {
+  color: rgba(77, 240, 255, 0.35);
+  transform: translate(-3px, -2px);
+  filter: blur(4px);
+  animation: ghostDrift 6s infinite alternate ease-in-out;
+}
+
+.ghost-trail::after {
+  color: rgba(255, 157, 66, 0.25);
+  transform: translate(3px, 2px);
+  filter: blur(5px);
+  animation: ghostDrift 8s infinite alternate-reverse ease-in-out;
+}
+
+@keyframes ghostDrift {
+  0% { transform: translate(-2px, -1px); opacity: 0.25; }
+  50% { transform: translate(3px, 1px); opacity: 0.45; }
+  100% { transform: translate(-3px, 2px); opacity: 0.3; }
+}
+
+.tagline {
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  color: var(--text-dim);
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  margin-bottom: 2.5rem;
+}
+
+.definition-card {
+  background: rgba(12, 16, 24, 0.6);
+  border: 1px solid rgba(77, 240, 255, 0.2);
+  padding: 1.2rem 2rem;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+  margin-bottom: 3rem;
+}
+
+.dict-term {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--cyan-telemetry);
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.dict-text {
+  font-size: 1.05rem;
+  color: #ffffff;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+.scroll-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--cyan-telemetry);
+  animation: pulseFaint 2.2s infinite ease-in-out;
+}
+
+@keyframes pulseFaint {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ==========================================================================
+   MISSION CARDS (PER-MACHINE MISSION LOG FORMAT)
+   ========================================================================== */
+.mission-card {
+  max-width: 520px;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-hud);
+  border-radius: 4px;
+  padding: 2.2rem 2.2rem;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(77, 240, 255, 0.04);
+  position: relative;
+  z-index: 25;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.mission-card:hover {
+  border-color: rgba(77, 240, 255, 0.65);
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.9), 0 0 30px rgba(77, 240, 255, 0.25);
+  transform: translateY(-3px);
+}
+
+.mission-card:active {
+  transform: scale(0.99);
+}
+
+.mission-card.ping-active {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 45px rgba(77, 240, 255, 0.5) !important;
+}
+
+.card-hint {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--cyan-telemetry);
+  opacity: 0.7;
+  letter-spacing: 0.1em;
+  transition: opacity 0.2s;
+}
+
+.mission-card:hover .card-hint {
+  opacity: 1;
+}
+
+/* Alternate card positioning for visual rhythm */
+#section-apollo11 .mission-card,
+#section-viking1 .mission-card,
+#section-spirit .mission-card {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+#section-earth .mission-card,
+#section-lrv .mission-card,
+#section-surveyor3 .mission-card,
+#section-pathfinder .mission-card,
+#section-ingenuity .mission-card {
+  margin-left: auto;
+  margin-right: 0;
+}
+
+#section-opportunity .mission-card {
+  margin: 0 auto;
+  max-width: 580px;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--cyan-telemetry);
+  background: rgba(77, 240, 255, 0.08);
+  border: 1px solid rgba(77, 240, 255, 0.3);
+  padding: 0.25rem 0.65rem;
+  border-radius: 2px;
+}
+
+.badge.alert-badge {
+  color: var(--red-silent);
+  background: rgba(255, 71, 87, 0.1);
+  border-color: rgba(255, 71, 87, 0.4);
+}
+
+.badge.beacon-badge {
+  color: var(--green-beacon);
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.4);
+}
+
+.sub-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+}
+
+.machine-title {
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  margin-bottom: 1.25rem;
+  text-transform: uppercase;
+}
+
+/* Mission Log Grid */
+.log-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.9rem 0;
+  margin-bottom: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+
+.log-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.log-key {
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+
+.log-val {
+  color: var(--text-code);
+  line-height: 1.35;
+}
+
+.status-silent {
+  color: var(--red-silent);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.status-active {
+  color: var(--cyan-telemetry);
+  font-weight: 700;
+}
+
+.status-honor {
+  color: var(--green-beacon);
+  font-weight: 700;
+}
+
+.remanence-row {
+  background: rgba(77, 240, 255, 0.04);
+  padding: 0.4rem 0.5rem;
+  border-left: 2px solid var(--cyan-telemetry);
+  margin-top: 0.2rem;
+}
+
+.remanence-row .log-key {
+  color: var(--cyan-telemetry);
+  font-weight: 700;
+}
+
+.remanence-row .log-val {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.story-body {
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: #d1d5db;
+  letter-spacing: 0.01em;
+}
+
+/* Climax Quote (Opportunity) */
+.climax-quote {
+  font-family: var(--font-mono);
+  font-size: 1.05rem;
+  font-style: italic;
+  color: var(--amber-mars);
+  border-left: 2px solid var(--amber-mars);
+  padding-left: 1rem;
+  margin-top: 1.5rem;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   SECTION 11: FINALE
+   ========================================================================== */
+.section-finale {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 6rem 8vw 3.5rem 8vw;
+}
+
+.finale-card {
+  max-width: 660px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.6rem 2rem;
+  background: rgba(8, 12, 18, 0.94);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.finale-card .log-grid {
+  padding: 0.5rem 0;
+  margin-bottom: 0.8rem;
+}
+
+.finale-card .story-body {
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.finale-climax-block {
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(0, 255, 136, 0.25);
+  text-align: center;
+}
+
+.finale-words {
+  font-size: 1.1rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #ffffff;
+  letter-spacing: 0.03em;
+  margin-bottom: 1rem;
+}
+
+.finale-title {
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin-bottom: 0.2rem;
+}
+
+.finale-tagline {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  letter-spacing: 0.35em;
+  color: var(--cyan-telemetry);
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.finale-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN (MOBILE & TABLET)
+   ========================================================================== */
+@media (max-width: 900px) {
+  .hud-top, .hud-bottom {
+    padding: 1rem 1.2rem;
+  }
+
+  .hud-item.telemetry {
+    display: none;
+  }
+
+  .story-section {
+    padding: 5rem 5vw;
+  }
+
+  .mission-card {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 1.6rem 1.4rem;
+  }
+
+  .log-row {
+    grid-template-columns: 100px 1fr;
+  }
+
+  .main-title {
+    font-size: 2.8rem;
+    letter-spacing: 0.15em;
+  }
+
+  .finale-title {
+    font-size: 2.4rem;
+    letter-spacing: 0.18em;
+  }
+}

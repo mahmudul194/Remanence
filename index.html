@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>REMANENCE — What Remains | NASA Space Apps Challenge</title>
+    <meta
+      name="description"
+      content="A scroll-driven 3D cinematic exploration of NASA's abandoned machines on the Moon and Mars. Team Apollo 404."
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+
+    <!-- Google Fonts: Space Mono (logs) & Inter (narrative) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <!-- 0. THEMED LOADING SCREEN -->
+    <div id="loader-overlay" class="loader-overlay">
+      <div class="loader-terminal">
+        <div class="loader-scanline"></div>
+        <div class="terminal-header">
+          <span class="status-dot pulsing"></span>
+          <span class="terminal-title">NASA DEEP SPACE NETWORK // AP-404</span>
+        </div>
+        <div id="loader-status" class="loader-status typewriter">
+          &gt; SEARCHING FOR SIGNAL...
+        </div>
+        <div class="loader-progress-bar">
+          <div id="loader-bar-fill" class="loader-bar-fill"></div>
+        </div>
+        <div id="loader-definition" class="loader-definition">
+          <p class="term">remanence <span class="pos">(n.)</span></p>
+          <p class="def">&ldquo;What remains after the force is gone.&rdquo;</p>
+          <p class="sub-def">
+            The residual magnetic flux left behind in a circuit; the enduring
+            monuments left silent across alien soil.
+          </p>
+        </div>
+        <button id="btn-enter" class="btn-enter">
+          <span class="btn-glow"></span>
+          <span>ENTER THE VOID</span>
+          <span class="enter-shortcut">[ CLICK OR SCROLL ]</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3D WEBGL CANVAS -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- OPPORTUNITY DUST STORM BLACKOUT OVERLAY -->
+    <div id="storm-overlay" class="storm-overlay"></div>
+
+    <!-- NASA MISSION CONTROL TELEMETRY HUD -->
+    <header class="hud-top">
+      <div class="hud-item brand">
+        <span class="hud-badge">APOLLO 404</span>
+        <span class="mission-name">NASA SPACE APPS // REMANENCE</span>
+      </div>
+      <div class="hud-item telemetry">
+        <span id="hud-dsn" class="hud-status">DSN: SEARCHING</span>
+        <span class="telemetry-bar">||||||||||||</span>
+      </div>
+      <div class="hud-actions">
+        <button id="btn-quality" class="hud-btn" title="Toggle Graphics Quality">
+          <span class="btn-label">GFX: HIGH</span>
+        </button>
+        <button id="btn-audio" class="hud-btn" title="Toggle Audio (Howler / WebAudio)">
+          <span id="audio-icon" class="audio-wave">AUDIO: ON</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- LOWER TELEMETRY DOCK -->
+    <footer class="hud-bottom">
+      <div class="hud-dock-item">
+        <span class="hud-label">COORDINATES</span>
+        <span id="hud-coords" class="hud-value">28.5721° N, 80.6480° W</span>
+      </div>
+      <div class="hud-dock-item target-item">
+        <span class="hud-label">TARGET STATION</span>
+        <span id="hud-target" class="hud-value">PLANET EARTH</span>
+      </div>
+      <div class="hud-dock-item scroll-indicator">
+        <span class="hud-label">SCROLL TRAJECTORY</span>
+        <span class="scroll-arrow">&#x2193;</span>
+      </div>
+    </footer>
+
+    <!-- SCROLL-DRIVEN HTML STORY OVERLAYS -->
+    <div class="scroll-container">
+      <!-- Section 0: Title Opening -->
+      <section class="story-section section-intro" id="section-intro">
+        <div class="title-container">
+          <p class="signal-tag">&gt; SIGNAL RECEIVED. TRANSLUNAR LOCK ESTABLISHED.</p>
+          <h1 class="main-title ghost-trail" data-text="REMANENCE">REMANENCE</h1>
+          <p class="tagline">What remains.</p>
+          <div class="definition-card">
+            <span class="dict-term">remanence (n.)</span>
+            <p class="dict-text">&mdash; what remains after the force is gone.</p>
+          </div>
+          <div class="scroll-prompt">
+            <span class="mouse-icon"></span>
+            <span>SCROLL DOWN TO BEGIN FLIGHT</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 1: Planet Earth Overview -->
+      <section class="story-section" id="section-earth">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">ORIGIN // 00</span>
+            <span class="sub-badge">EARTH STATION</span>
+          </div>
+          <h2 class="machine-title typewriter-line">PLANET EARTH</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Low Earth Orbit / Cape Canaveral</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">EPOCH:</span>
+              <span class="log-val">1969 &mdash; PRESENT</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-active">ACTIVE ORIGIN</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Every footprint on other worlds began here.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            From this fragile blue marble against the dark, humanity dared to launch metal, glass, and dreams into the vacuum. We sent our mechanical children across the void to see what no human eyes could yet behold.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 2: Moon - Apollo 11 -->
+      <section class="story-section" id="section-apollo11">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">LUNAR SURFACE // 01</span>
+            <span class="sub-badge">MARE TRANQUILLITATIS</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Apollo 11 Descent Stage</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">LM-5 &ldquo;Eagle&rdquo; Descent Stage</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Tranquility Base (0.674° N, 23.473° E)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">July 24, 1969 (Descent Shutdown: July 21)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-silent">SILENT</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Descent stage gold foil, stainless steel plaque, and pristine astronaut bootprints in vacuum.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            On July 20, 1969, Neil Armstrong and Buzz Aldrin brought Eagle down with seconds of fuel remaining. When they fired the ascent engine to rejoin Michael Collins, the descent stage stayed behind. Bolted to its strut is a plaque: &ldquo;Here men from the planet Earth first set foot upon the Moon. We came in peace for all mankind.&rdquo; In the airless lunar silence, the gold Kapton foil still glints in the unfiltered sunlight.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 3: Moon - Lunar Roving Vehicles -->
+      <section class="story-section" id="section-lrv">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">LUNAR SURFACE // 02</span>
+            <span class="sub-badge">APOLLO 15, 16, 17</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Apollo Lunar Roving Vehicles</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">LRV-1, LRV-2, LRV-3</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Hadley Rille, Descartes, Taurus-Littrow</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">December 14, 1972 (Apollo 17 Departure)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-silent">SILENT</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Three electric buggies parked facing the lunar sky; tire tracks crisp in the regolith.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Between 1971 and 1972, three electric rovers expanded humanity&rsquo;s reach across the Moon. Apollo 17 Commander Eugene Cernan parked LRV-3 a short distance away to capture the ascent stage ignition on camera, wiping dust off the lens one last time. No human hand has touched its steering joystick in over half a century; its zinc-silver batteries have long gone cold under the silent stars.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 4: Moon - Surveyor 3 -->
+      <section class="story-section" id="section-surveyor3">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">LUNAR SURFACE // 03</span>
+            <span class="sub-badge">OCEANUS PROCELLARUM</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Surveyor 3 Lander</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">Surveyor 3 Lander</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Surveyor Crater (3.015° S, 23.418° W)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">May 4, 1967 (Visited by Apollo 12: Nov 1969)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-silent">SILENT</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Weathered tubular aluminum tripod standing silently inside Surveyor Crater.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Surveyor 3 bounced three times before settling in a crater in 1967, proving the lunar regolith could support a spacecraft. In November 1969, Apollo 12 astronauts Pete Conrad and Alan Bean pinpoint-landed just 160 meters away and walked over to visit it. They retrieved its camera to study how machines age in space. It was humanity&rsquo;s first reunion with a solitary machine left behind on an alien world.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 5: Transit to Mars -->
+      <section class="story-section section-transit" id="section-transit">
+        <div class="story-card mission-card transit-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">INTERPLANETARY CORRIDOR</span>
+            <span class="sub-badge">TRANS-MARS INJECTION</span>
+          </div>
+          <h2 class="machine-title typewriter-line">THE VOID BETWEEN WORLDS</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">DISTANCE:</span>
+              <span class="log-val">225 Million Kilometers</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">TELEMETRY:</span>
+              <span class="log-val">Intermittent Heartbeat Pings</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Deep cosmic silence and phantom carrier waves across the dark.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Leaving the Moon behind, the journey stretches into the vast chasm between planetary orbits. Space is not empty; it is filled with solar wind, cosmic rays, and the ghosts of radio signals traveling at the speed of light. Out here, human voices thin into faint telemetry pings echoing across the dark.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 6: Mars - Viking 1 -->
+      <section class="story-section" id="section-viking1">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">MARTIAN DESERT // 01</span>
+            <span class="sub-badge">CHRYSE PLANITIA</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Viking 1 Lander</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">Viking 1 Lander</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Plains of Gold (22.697° N, 48.222° W)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">November 11, 1982</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-silent">SILENT</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Titanium lander body, meteorology boom, and trench scoops preserved in red dust.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            On July 20, 1976&mdash;seven years to the day after Apollo 11&mdash;Viking 1 gave humanity its first color view of Mars: an amber sky over red rocks. It transmitted daily weather, soil chemistry, and images for 2,245 sols until a human command error caused its high-gain antenna to swing away from Earth. Its robotic arm remains poised forever over the rust-colored soil it scooped.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 7: Mars - Pathfinder & Sojourner -->
+      <section class="story-section" id="section-pathfinder">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">MARTIAN DESERT // 02</span>
+            <span class="sub-badge">ARES VALLIS</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Pathfinder & Sojourner</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">Carl Sagan Memorial Station & Micro-Rover</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Ares Vallis (19.33° N, 33.55° W)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">September 27, 1997</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-silent">SILENT</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">The Carl Sagan Memorial Station petals and the 10.5-kg six-wheeled rover circling nearby.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Pathfinder bounced onto Mars cushioned inside airbags on July 4, 1997, opening like a flower to release Sojourner&mdash;the first wheeled rover to drive on another planet. The tiny microrover sniffed Martian rocks named &ldquo;Barnacle Bill&rdquo; and &ldquo;Yogi&rdquo;. When Pathfinder&rsquo;s nickel-cadmium battery froze in the autumn chill, Sojourner was left circling the base station, following programmed instructions to seek a signal that never came.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 8: Mars - Spirit Rover -->
+      <section class="story-section" id="section-spirit">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">MARTIAN DESERT // 03</span>
+            <span class="sub-badge">GUSEV CRATER // &ldquo;TROY&rdquo;</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Spirit Rover (MER-A)</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">Mars Exploration Rover - Spirit</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Troy Sand Trap (14.568° S, 175.473° E)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">March 22, 2010 (Sol 2210)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-silent">SILENT</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Six titanium wheels trapped in sulphate sand; solar panels angled toward a cold winter horizon.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Designed to drive just 600 meters over 90 days, Spirit battled through rocky terrain for more than six years. In May 2009, its wheels broke through a deceptive crust into powder-fine sulphate sand at a spot called &ldquo;Troy&rdquo;. Trapped and unable to angle its solar arrays toward the sun for the coming winter, Spirit transmitted its final engineering packet on March 22, 2010 before succumbing to hypothermia.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 9: Mars - Opportunity Rover (EMOTIONAL CLIMAX) -->
+      <section class="story-section" id="section-opportunity">
+        <div class="story-card mission-card climax-card">
+          <div class="card-header typewriter-line">
+            <span class="badge alert-badge">MARTIAN DESERT // 04</span>
+            <span class="sub-badge">ENDEAVOUR CRATER RIM</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Opportunity Rover (MER-B)</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">Mars Exploration Rover - Opportunity</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Perseverance Valley (2.327° S, 354.673° E)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">June 10, 2018 (Sol 5111)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-silent">SILENT &mdash; THE FINAL TWILIGHT</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">A marathon path of 45.16 kilometers etched into the red sands; solar wings buried under dust.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Opportunity survived 5,111 sols, traversing an entire marathon across alien dunes and finding hematite &ldquo;blueberries&rdquo; forged in ancient groundwater. In June 2018, a catastrophic planet-wide dust storm blotted out the sun, plunging the sky into darkness (tau &gt; 10.8). Its final telemetry transmitted power dropping to 22 watt-hours. Science reporter Jacob Margolis translated its telemetry as: <em>&ldquo;My battery is low and it&rsquo;s getting dark.&rdquo;</em> For eight months NASA beamed Billie Holiday&rsquo;s &ldquo;I&rsquo;ll Be Seeing You&rdquo; into the void, but Oppy never woke up.
+          </p>
+          <div class="climax-quote typewriter-line">
+            &ldquo;My battery is low and it&rsquo;s getting dark.&rdquo;
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 10: Mars - Ingenuity Helicopter -->
+      <section class="story-section" id="section-ingenuity">
+        <div class="story-card mission-card">
+          <div class="card-header typewriter-line">
+            <span class="badge">MARTIAN SKIES // 05</span>
+            <span class="sub-badge">VALINOR HILLS // JEZERO CRATER</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Ingenuity Mars Helicopter</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">Ingenuity Mars Helicopter (&ldquo;Ginny&rdquo;)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Valinor Hills (18.445° N, 77.451° E)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val">Mission Concluded: January 25, 2024</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-honor">RETIRED HONORABLY</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Carbon-fiber rotor blades resting upright on sand ripples, silently logging temperature telemetry.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Carrying a postage-stamp swatch of fabric from the Wright Brothers&rsquo; 1903 Flyer, Ingenuity proved powered atmospheric flight is possible in Mars&rsquo; razor-thin atmosphere. Planned for five test hops, the 1.8-kg drone flew 72 missions across Jezero Crater. On its final landing in January 2024, rotor tip damage ended its flights. Today, Ingenuity stands proud on Valinor Hills, serving as a permanent automated weather station greeting the Martian dawn.
+          </p>
+        </div>
+      </section>
+
+      <!-- Section 11: Finale - Retroreflectors -->
+      <section class="story-section section-finale" id="section-finale">
+        <div class="story-card mission-card finale-card">
+          <div class="card-header typewriter-line">
+            <span class="badge beacon-badge">LUNAR FINALE // THE ENDURING BEACON</span>
+            <span class="sub-badge">APOLLO 11, 14, 15</span>
+          </div>
+          <h2 class="machine-title typewriter-line">Apollo Lunar Laser Retroreflectors</h2>
+          <div class="log-grid">
+            <div class="log-row typewriter-line">
+              <span class="log-key">MACHINE:</span>
+              <span class="log-val">Lunar Laser Ranging Retroreflector Arrays (LRRR)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LOCATION:</span>
+              <span class="log-val">Apollo 11, 14, and 15 Sites, Moon</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">LAST CONTACT:</span>
+              <span class="log-val status-active">PULSED TODAY (Delay: ~2.56 sec)</span>
+            </div>
+            <div class="log-row typewriter-line">
+              <span class="log-key">STATUS:</span>
+              <span class="log-val status-active">PERPETUALLY ACTIVE</span>
+            </div>
+            <div class="log-row remanence-row typewriter-line">
+              <span class="log-key">REMANENCE:</span>
+              <span class="log-val">Solid quartz corner-cube prisms bouncing green photon lasers back to Earth right now.</span>
+            </div>
+          </div>
+          <p class="story-body typewriter-line">
+            Fifty years after human boots left the regolith, there is one Apollo experiment that never shut down. The Lunar Laser Ranging Retroreflectors have no batteries, no computer chips, and no moving parts. Astronomers in Texas, France, and Hawaii still fire high-powered green lasers through telescopes directly at these silent prisms, catching single returning photons to calculate the Moon&rsquo;s distance to millimeter precision.
+          </p>
+
+          <div class="finale-climax-block typewriter-line">
+            <p class="finale-words">
+              &ldquo;They&rsquo;re still up there.<br />
+              What remains is what we remember.&rdquo;
+            </p>
+            <h1 class="finale-title ghost-trail" data-text="REMANENCE">REMANENCE</h1>
+            <p class="finale-tagline">What remains.</p>
+            <div class="finale-meta">
+              <span>NASA SPACE APPS CHALLENGE // BANGLADESH REGIONAL</span>
+              <span>TEAM APOLLO 404 &mdash; OCTOBER 2026</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- MAIN JAVASCRIPT ENTRY -->
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
