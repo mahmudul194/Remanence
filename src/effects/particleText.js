@@ -23,8 +23,8 @@ export function createParticleText(scene) {
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Render "REMANENCE" in high-contrast serif
-  ctx.font = '600 130px "Cormorant Garamond", "Instrument Serif", Georgia, serif';
+  // Render "REMANENCE" in high-contrast Instrument Serif
+  ctx.font = '400 130px "Instrument Serif", "Cormorant Garamond", Georgia, serif';
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -56,10 +56,10 @@ export function createParticleText(scene) {
   const sizes = new Float32Array(count);
   const colors = new Float32Array(count * 3);
 
-  // Colors: warm amber center, crystalline starlight edges
-  const colorAmber = new THREE.Color(0xffbf66);
-  const colorWhite = new THREE.Color(0xf6f8fc);
-  const colorCyan = new THREE.Color(0x7fe3ff);
+  // Colors: warm signal amber, moon white, ping cyan
+  const colorAmber = new THREE.Color(0xffb84d);
+  const colorWhite = new THREE.Color(0xf5f2ea);
+  const colorCyan = new THREE.Color(0x6fe3ff);
 
   for (let i = 0; i < count; i++) {
     const pt = validPoints[i];

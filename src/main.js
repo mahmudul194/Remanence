@@ -21,6 +21,7 @@ import { StoryTimeline } from './story/timeline.js';
 import { STORY_DATA } from './story/data.js';
 import { audio } from './audio.js';
 import { InspectionManager } from './effects/inspection.js';
+import { ContrastGuard } from './typography.js';
 
 class RemanenceApp {
   constructor() {
@@ -177,6 +178,7 @@ class RemanenceApp {
     // 4. Timeline & GSAP triggers
     this.timeline = new StoryTimeline(this);
     this.inspection = new InspectionManager(this);
+    this.contrastGuard = new ContrastGuard(this.canvas, false);
 
     // Telemetry ping audio
     audio.playPing(1100, 0.4);
@@ -322,7 +324,8 @@ class RemanenceApp {
         audio.unlock();
         const isMuted = audio.toggleMute();
         audioIcon.textContent = isMuted ? 'AUDIO: OFF' : 'AUDIO: ON';
-        btnAudio.style.borderColor = isMuted ? 'var(--accent-amber)' : 'var(--border-subtle)';
+        btnAudio.style.borderColor = isMuted ? 'var(--signal-amber)' : 'rgba(245, 242, 234, 0.14)';
+        btnAudio.classList.toggle('active', !isMuted);
       });
     }
 

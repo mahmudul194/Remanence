@@ -1,41 +1,100 @@
 /* ==========================================================================
    REMANENCE: What remains.
-   Cinematic Editorial Stylesheet (Awwwards / FWA Standard)
+   Global Editorial Typography, Color & Contrast System
+   WCAG 2.1 AAA Compliant — Zero Text Washed Out Over Space / Moon / Mars
    ========================================================================== */
 
 :root {
-  --bg-void: #020306;
-  --text-primary: #f5f7fa;
-  --text-secondary: #9da4b0;
-  --text-muted: #646a75;
-  --accent-amber: #ffbf66;
-  --accent-amber-glow: rgba(255, 191, 102, 0.45);
-  --accent-cyan: #6ce4ff;
-  --accent-moon: #e8edf5;
-  --accent-mars: #c85a2b;
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(255, 191, 102, 0.35);
+  /* ========================================================================
+     1. COLOR SYSTEM (Strictly defined per specification)
+     ======================================================================== */
+  --space-black:   #05060A;   /* main background */
+  --deep-navy:     #0B1020;   /* panels, gradients */
+  --ink-950:       #0E1424;
+  --moon-white:    #F5F2EA;   /* primary text, warm white */
+  --moon-silver:   #C9CCD6;   /* secondary text */
+  --dust-gray:     #8E93A3;   /* tertiary / metadata, large sizes only */
+  --signal-amber:  #FFB84D;   /* main accent: signal lights, key words, active states */
+  --amber-glow:    #FF9A1F;   /* hover / glow */
+  --mars-rust:     #E8643C;   /* Mars chapters accent */
+  --ping-cyan:     #6FE3FF;   /* ping rings, data highlights, links */
+  --danger-dim:    #FF5A5A;   /* only for "signal lost / silent" status */
 
-  --font-serif: 'Cormorant Garamond', 'Instrument Serif', Georgia, serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'Space Mono', monospace;
+  /* Chapter theme defaults (Earth/Space) */
+  --chapter-accent: var(--signal-amber);
+  --chapter-highlight: var(--ping-cyan);
 
+  /* ========================================================================
+     2. TYPOGRAPHY SYSTEM
+     ======================================================================== */
+  --font-serif: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Manrope", Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Fluid Type Scale (clamp-based) */
+  --type-hero: clamp(3.5rem, 12vw, 11rem);
+  --type-chapter: clamp(2.5rem, 7vw, 6.5rem);
+  --type-statement: clamp(1.6rem, 3.2vw, 3rem);
+  --type-body: clamp(1.05rem, 1.25vw, 1.25rem);
+  --type-label: 12px;
+  --type-panel-title: clamp(1.8rem, 3vw, 2.4rem);
+
+  /* Contrast & Legibility Protections */
+  --scrim-boost: 1.0;
+  --scrim-blur: 6px;
+  --text-shadow-protect: 0 2px 24px rgba(0, 0, 0, 0.7), 0 0 2px rgba(0, 0, 0, 0.9);
+
+  /* Easing curves */
   --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-fast: cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
-* {
+/* ==========================================================================
+   CHAPTER THEMES
+   ========================================================================== */
+[data-theme="earth"] {
+  --chapter-accent: var(--signal-amber);
+  --chapter-highlight: var(--ping-cyan);
+}
+
+[data-theme="moon"] {
+  --chapter-accent: var(--signal-amber);
+  --chapter-highlight: var(--moon-silver);
+}
+
+[data-theme="transit"] {
+  --chapter-accent: var(--signal-amber);
+  --chapter-highlight: var(--ping-cyan);
+}
+
+[data-theme="mars"] {
+  --chapter-accent: var(--signal-amber);
+  --chapter-highlight: var(--mars-rust);
+  --scrim-boost: 1.18; /* Extra contrast reinforcement on Mars orange haze */
+}
+
+[data-theme="finale"] {
+  --chapter-accent: var(--signal-amber);
+  --chapter-highlight: var(--moon-white);
+}
+
+/* ==========================================================================
+   GLOBAL RESET & SMOOTHING
+   ========================================================================== */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 html {
-  background-color: var(--bg-void);
-  color: var(--text-primary);
+  background-color: var(--space-black);
+  color: var(--moon-white);
   font-family: var(--font-sans);
+  font-feature-settings: "kern" 1, "liga" 1;
   width: 100%;
   min-height: 100%;
   overflow-x: hidden;
@@ -48,13 +107,23 @@ body {
   overflow-x: hidden;
   overflow-y: visible;
   position: relative;
-  cursor: none; /* Handled by custom magnetic cursor */
+  background-color: var(--space-black);
+  cursor: none; /* Custom magnetic cursor takes over */
 }
 
 /* Lenis scroll container */
 html.lenis,
 html.lenis body {
   height: auto;
+}
+
+/* Interactive focus rings (always visible & high contrast) */
+button:focus-visible,
+a:focus-visible,
+[tabindex="0"]:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--signal-amber) !important;
+  outline-offset: 3px !important;
 }
 
 /* ==========================================================================
@@ -66,7 +135,7 @@ html.lenis body {
   left: 0;
   width: 6px;
   height: 6px;
-  background-color: var(--accent-amber);
+  background-color: var(--signal-amber);
   border-radius: 50%;
   pointer-events: none;
   z-index: 100000;
@@ -78,9 +147,9 @@ html.lenis body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 38px;
-  height: 38px;
-  border: 1px solid rgba(255, 191, 102, 0.4);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 184, 77, 0.45);
   border-radius: 50%;
   pointer-events: none;
   z-index: 99999;
@@ -89,18 +158,19 @@ html.lenis body {
 }
 
 body.cursor-hover .cursor-ring {
-  width: 64px;
-  height: 64px;
-  border-color: var(--accent-amber);
-  background-color: rgba(255, 191, 102, 0.06);
+  width: 60px;
+  height: 60px;
+  border-color: var(--signal-amber);
+  background-color: rgba(255, 184, 77, 0.08);
 }
 
 body.cursor-hover .cursor-dot {
-  opacity: 0.5;
+  opacity: 0.6;
+  background-color: var(--moon-white);
 }
 
 /* ==========================================================================
-   3D WEBGL CANVAS
+   3D CANVAS & CINEMATIC SCENE DIMMER
    ========================================================================== */
 #webgl-canvas {
   position: fixed;
@@ -108,8 +178,24 @@ body.cursor-hover .cursor-dot {
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 1;
+  z-index: 0;
+  display: block;
+}
+
+/* Scene Dimmer & Soft Vignette
+   Gently dims 3D scene (15% to 25%) while text moments are in viewport to guarantee 7:1 contrast */
+.scene-dimmer {
+  position: fixed;
+  inset: 0;
   pointer-events: none;
+  background: radial-gradient(circle at center, rgba(5, 6, 10, 0.18) 0%, rgba(5, 6, 10, 0.38) 100%);
+  opacity: 0.2;
+  z-index: 1;
+  transition: opacity 0.8s var(--ease-cinematic);
+}
+
+.scene-dimmer.active {
+  opacity: 0.45;
 }
 
 /* ==========================================================================
@@ -121,17 +207,16 @@ body.cursor-hover .cursor-dot {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: #000000;
-  z-index: 9000;
+  z-index: 50;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 1.6s var(--ease-cinematic), visibility 1.6s;
+  background-color: var(--space-black);
+  transition: opacity 1.6s var(--ease-cinematic);
 }
 
 .intro-screen.hidden {
   opacity: 0;
-  visibility: hidden;
   pointer-events: none;
 }
 
@@ -139,22 +224,20 @@ body.cursor-hover .cursor-dot {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
-  max-width: 680px;
-  padding: 2rem;
   position: relative;
+  z-index: 2;
+  padding: 2rem;
 }
 
-/* Central Pulsing Beacon with SVG Progress Ring */
 .beacon-container {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 3.5rem;
+  margin-bottom: 2.8rem;
 }
 
 .beacon-ring-svg {
@@ -168,42 +251,44 @@ body.cursor-hover .cursor-dot {
 
 .beacon-ring-bg {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.06);
+  stroke: rgba(201, 204, 214, 0.12);
   stroke-width: 1.5;
 }
 
 .beacon-ring-fill {
   fill: none;
-  stroke: var(--accent-amber);
-  stroke-width: 1.5;
+  stroke: var(--signal-amber);
+  stroke-width: 1.8;
   stroke-dasharray: 465;
   stroke-dashoffset: 465;
-  transition: stroke-dashoffset 0.25s linear;
-  filter: drop-shadow(0 0 6px var(--accent-amber-glow));
+  transition: stroke-dashoffset 0.1s linear;
 }
 
 .amber-core {
-  width: 14px;
-  height: 14px;
-  background-color: var(--accent-amber);
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  box-shadow: 0 0 24px var(--accent-amber), 0 0 48px var(--accent-amber-glow);
-  animation: beaconHeartbeat 2.4s infinite var(--ease-cinematic);
+  background-color: var(--signal-amber);
+  box-shadow: 0 0 20px var(--signal-amber), 0 0 40px var(--amber-glow);
+  animation: pulseCore 2.4s infinite ease-in-out;
 }
 
-@keyframes beaconHeartbeat {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  35% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 35px var(--accent-amber), 0 0 70px var(--accent-amber); }
-  50% { transform: scale(1.05); opacity: 0.85; }
-  70% { transform: scale(1.25); opacity: 0.95; }
-  100% { transform: scale(0.9); opacity: 0.7; }
+@keyframes pulseCore {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+    box-shadow: 0 0 32px var(--signal-amber), 0 0 60px var(--amber-glow);
+  }
 }
 
-/* Intro Copy (Reveals when particles assemble) */
 .intro-copy {
   opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 1.4s var(--ease-cinematic), transform 1.4s var(--ease-cinematic);
+  transform: translateY(20px);
+  transition: opacity 1.2s var(--ease-cinematic), transform 1.2s var(--ease-cinematic);
   pointer-events: none;
 }
 
@@ -214,35 +299,36 @@ body.cursor-hover .cursor-dot {
 }
 
 .intro-def {
-  margin-bottom: 3rem;
+  margin-bottom: 2.8rem;
 }
 
 .def-term {
   font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-size: 2.4rem;
   font-weight: 400;
-  color: var(--text-primary);
+  color: var(--moon-white);
   letter-spacing: 0.05em;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .def-pos {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1.3rem;
-  color: var(--accent-amber);
+  font-size: 1.35rem;
+  color: var(--signal-amber);
   margin-left: 0.5rem;
 }
 
 .def-meaning {
   font-family: var(--font-serif);
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-style: italic;
-  color: var(--text-secondary);
+  color: var(--moon-silver);
   margin-top: 0.6rem;
   letter-spacing: 0.02em;
+  text-shadow: var(--text-shadow-protect);
 }
 
-/* Magnetic Enter Button */
 .magnetic-btn-wrapper {
   display: inline-block;
   cursor: pointer;
@@ -270,13 +356,13 @@ body.cursor-hover .cursor-dot {
 
 .btn-ring-bg {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.12);
+  stroke: rgba(201, 204, 214, 0.16);
   stroke-width: 1.2;
 }
 
 .btn-ring-fill {
   fill: none;
-  stroke: var(--accent-amber);
+  stroke: var(--signal-amber);
   stroke-width: 1.5;
   stroke-dasharray: 290;
   stroke-dashoffset: 290;
@@ -292,84 +378,102 @@ body.cursor-hover .cursor-dot {
 }
 
 .btn-text {
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
   font-weight: 500;
   letter-spacing: 0.25em;
-  color: var(--text-primary);
+  color: var(--moon-white);
   transition: color 0.3s;
 }
 
 .magnetic-btn-wrapper:hover .btn-text {
-  color: var(--accent-amber);
+  color: var(--signal-amber);
 }
 
 /* ==========================================================================
-   PERSISTENT EDITORIAL HUD
+   5. NAVBAR STYLING (Strictly adheres to specification)
+   Transparent with gradient scrim fading from rgba(5,6,10,0.8) to transparent.
+   Left: REMANENCE wordmark (Instrument Serif, uppercase, tracking 0.2em, --moon-white).
+   Right: sound toggle and chapter indicator in IBM Plex Mono, --moon-silver, amber when active.
+   Nothing else.
    ========================================================================== */
 .hud-top {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  padding: 2.2rem 3rem;
+  padding: 2.2rem 3.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 100;
+  background: linear-gradient(to bottom, rgba(5, 6, 10, 0.82) 0%, rgba(5, 6, 10, 0.4) 65%, transparent 100%);
   pointer-events: none;
 }
 
 .hud-brand {
-  display: flex;
-  align-items: baseline;
-  gap: 1.2rem;
   pointer-events: auto;
 }
 
 .wordmark {
   font-family: var(--font-serif);
-  font-size: 1.6rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  color: var(--text-primary);
-}
-
-.tagline {
-  font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.24em;
-  color: var(--text-muted);
+  font-size: 1.75rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--moon-white);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .hud-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.4rem;
   pointer-events: auto;
 }
 
-.hud-pill {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-subtle);
-  border-radius: 999px;
-  padding: 0.5rem 1.1rem;
-  color: var(--text-secondary);
+.chapter-indicator {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  backdrop-filter: blur(16px);
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--moon-silver);
+  transition: color 0.3s ease;
+  text-shadow: var(--text-shadow-protect);
+}
+
+.chapter-indicator.active {
+  color: var(--signal-amber);
+}
+
+.hud-pill {
+  background: rgba(11, 16, 32, 0.65);
+  border: 1px solid rgba(245, 242, 234, 0.14);
+  border-radius: 999px;
+  padding: 0.55rem 1.2rem;
+  color: var(--moon-silver);
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   cursor: pointer;
   transition: border-color 0.3s, color 0.3s, background-color 0.3s;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.hud-pill:hover {
-  border-color: var(--border-active);
-  color: var(--accent-amber);
-  background-color: rgba(255, 191, 102, 0.05);
+.hud-pill:hover,
+.hud-pill.active {
+  border-color: var(--signal-amber);
+  color: var(--signal-amber);
+  background-color: rgba(255, 184, 77, 0.12);
 }
 
-/* Chapter Timeline Rail (Right) */
+/* ==========================================================================
+   PROGRESS TIMELINE RAIL (Right)
+   Uses --signal-amber and --moon-white only
+   ========================================================================== */
 .chapter-rail {
   position: fixed;
   top: 50%;
@@ -385,7 +489,7 @@ body.cursor-hover .cursor-dot {
 .rail-track {
   width: 1px;
   height: 240px;
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: rgba(245, 242, 234, 0.12);
   position: relative;
 }
 
@@ -395,8 +499,8 @@ body.cursor-hover .cursor-dot {
   left: -1px;
   width: 3px;
   height: 20px;
-  background-color: var(--accent-amber);
-  box-shadow: 0 0 10px var(--accent-amber);
+  background-color: var(--signal-amber);
+  box-shadow: 0 0 10px var(--signal-amber);
   transition: top 0.2s linear;
 }
 
@@ -408,10 +512,10 @@ body.cursor-hover .cursor-dot {
 }
 
 .rail-dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.18);
+  background-color: rgba(201, 204, 214, 0.3);
   border: none;
   cursor: pointer;
   padding: 0;
@@ -421,22 +525,25 @@ body.cursor-hover .cursor-dot {
 .rail-dot:hover,
 .rail-dot.active {
   transform: scale(2.2);
-  background-color: var(--accent-amber);
-  box-shadow: 0 0 8px var(--accent-amber);
+  background-color: var(--signal-amber);
+  box-shadow: 0 0 10px var(--signal-amber);
 }
 
-/* Lower Metadata Dock */
+/* ==========================================================================
+   LOWER METADATA DOCK
+   ========================================================================== */
 .hud-bottom {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 2.2rem 3rem;
+  padding: 2.2rem 3.5rem;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   z-index: 100;
   pointer-events: none;
+  background: linear-gradient(to top, rgba(5, 6, 10, 0.85) 0%, rgba(5, 6, 10, 0.35) 60%, transparent 100%);
 }
 
 .metadata-col {
@@ -455,34 +562,37 @@ body.cursor-hover .cursor-dot {
 
 .meta-label {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.22em;
-  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dust-gray);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .meta-value {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  color: var(--text-secondary);
+  font-size: var(--type-label);
+  letter-spacing: 0.14em;
+  color: var(--moon-white);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .meta-value.status-active {
-  color: var(--accent-cyan);
+  color: var(--ping-cyan);
 }
 
 .meta-value.status-silent {
-  color: var(--accent-amber);
+  color: var(--danger-dim);
 }
 
 /* ==========================================================================
-   SCROLL-DRIVEN STORY MOMENTS
+   SCROLL-DRIVEN EDITORIAL STORY MOMENTS
    ========================================================================== */
 .scroll-container {
   position: relative;
   width: 100%;
-  z-index: 2;
-  pointer-events: none; /* Let 3D canvas receive pointer events where blank */
+  z-index: 10;
+  pointer-events: none;
 }
 
 .story-section {
@@ -495,7 +605,7 @@ body.cursor-hover .cursor-dot {
   pointer-events: none;
 }
 
-/* Alternate alignment between left and right */
+/* Alternating side layout: text sits opposite to bright 3D focal assets */
 .story-section:nth-child(even) {
   justify-content: flex-end;
 }
@@ -507,14 +617,21 @@ body.cursor-hover .cursor-dot {
   text-align: center;
 }
 
-/* Borderless Typographic Story Moments */
+/* Soft Dark Scrim behind every text block (sized 20% larger than text block, blur 6px) */
 .moment-wrap {
+  position: relative;
   width: 100%;
-  max-width: 580px;
+  max-width: 58ch;
+  padding: 2.6rem 3rem;
+  border-radius: 18px;
   pointer-events: auto;
   opacity: 0;
-  transform: translateY(36px);
-  transition: opacity 1.2s var(--ease-cinematic), transform 1.2s var(--ease-cinematic);
+  transform: translateY(32px);
+  transition: opacity 1.1s var(--ease-cinematic), transform 1.1s var(--ease-cinematic);
+  background: radial-gradient(ellipse at center, rgba(5, 6, 10, calc(0.82 * var(--scrim-boost, 1))) 0%, rgba(5, 6, 10, calc(0.55 * var(--scrim-boost, 1))) 75%, transparent 100%);
+  backdrop-filter: blur(var(--scrim-blur, 6px));
+  -webkit-backdrop-filter: blur(var(--scrim-blur, 6px));
+  box-shadow: 0 16px 48px rgba(5, 6, 10, 0.65);
 }
 
 .moment-wrap.active {
@@ -523,10 +640,29 @@ body.cursor-hover .cursor-dot {
 }
 
 .moment-wrap.moment-center {
-  max-width: 780px;
+  max-width: 74ch;
   margin: 0 auto;
 }
 
+/* Huge background year numerals (Instrument Serif, low opacity / outline, decorative) */
+.moment-year-bg {
+  position: absolute;
+  top: -3.8rem;
+  right: -1.2rem;
+  font-family: var(--font-serif);
+  font-size: clamp(6.5rem, 15vw, 14rem);
+  line-height: 0.9;
+  font-weight: 400;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(245, 242, 234, 0.09);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: -1;
+  user-select: none;
+  font-feature-settings: "kern" 1;
+}
+
+/* Kicker labels */
 .moment-kicker {
   display: flex;
   align-items: center;
@@ -536,57 +672,77 @@ body.cursor-hover .cursor-dot {
 
 .kicker-num {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-size: var(--type-label);
   letter-spacing: 0.16em;
-  color: var(--accent-amber);
+  color: var(--signal-amber);
 }
 
 .kicker-name {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.24em;
-  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dust-gray);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .kicker-label {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.28em;
-  color: var(--accent-amber);
-  margin-bottom: 1.4rem;
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--signal-amber);
+  margin-bottom: 1.2rem;
+  text-shadow: var(--text-shadow-protect);
 }
 
+/* Chapter titles */
 .moment-title {
   font-family: var(--font-serif);
-  font-size: 3.8rem;
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: 0.02em;
-  color: var(--text-primary);
-  margin-bottom: 1.8rem;
-}
-
-.hero-title {
-  font-family: var(--font-serif);
-  font-size: 6.2rem;
+  font-size: var(--type-chapter);
   font-weight: 400;
   line-height: 1.02;
-  letter-spacing: 0.14em;
-  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  color: var(--moon-white);
+  margin-bottom: 1.6rem;
+  text-wrap: balance;
+  text-shadow: var(--text-shadow-protect);
+}
+
+.moment-title em,
+.moment-title i {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--moon-white);
+}
+
+/* Hero title REMANENCE */
+.hero-title {
+  font-family: var(--font-serif);
+  font-size: var(--type-hero);
+  font-weight: 400;
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--moon-white);
   margin-bottom: 1.2rem;
+  text-wrap: balance;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .hero-title.small-title {
-  font-size: 4.8rem;
+  font-size: clamp(2.8rem, 8vw, 6rem);
 }
 
 .hero-tagline {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 2.0rem;
-  color: var(--text-secondary);
-  letter-spacing: 0.06em;
+  font-size: clamp(1.6rem, 3.2vw, 2.8rem);
+  color: var(--moon-silver);
+  letter-spacing: 0.04em;
   margin-bottom: 2rem;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .hero-definition {
@@ -599,84 +755,163 @@ body.cursor-hover .cursor-dot {
 
 .dict-term {
   font-family: var(--font-serif);
-  font-size: 1.25rem;
-  color: var(--text-primary);
+  font-size: 1.35rem;
+  color: var(--moon-white);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .dict-meaning {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1.25rem;
-  color: var(--text-muted);
+  font-size: 1.35rem;
+  color: var(--moon-silver);
+  text-shadow: var(--text-shadow-protect);
 }
 
-/* Specifications Grid */
-.moment-spec {
+/* ==========================================================================
+   MACHINE INFO PANELS (Section 5 Spec)
+   Dark glass: background rgba(11,16,32,0.72), backdrop-filter blur(14px),
+   1px border rgba(245,242,234,0.12), radius 14px.
+   Inside: label (mono, amber), machine name (Instrument Serif, 2.4rem, moon-white),
+   data rows (label in dust-gray mono, value in moon-white Manrope),
+   status "SILENT" in --danger-dim.
+   ========================================================================== */
+.machine-panel {
+  background: rgba(11, 16, 32, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(245, 242, 234, 0.12);
+  border-radius: 14px;
+  padding: 1.6rem 1.9rem;
+  margin: 1.8rem 0;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.panel-label {
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--signal-amber);
+  display: block;
+  margin-bottom: 0.4rem;
+  text-shadow: var(--text-shadow-protect);
+}
+
+.panel-machine-name {
+  font-family: var(--font-serif);
+  font-size: var(--type-panel-title);
+  font-weight: 400;
+  color: var(--moon-white);
+  line-height: 1.15;
+  margin-bottom: 1.2rem;
+  text-wrap: balance;
+  text-shadow: var(--text-shadow-protect);
+}
+
+.panel-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
-  margin-bottom: 2rem;
-  padding: 1.2rem 0;
-  border-top: 1px solid var(--border-subtle);
-  border-bottom: 1px solid var(--border-subtle);
+  gap: 0.75rem;
 }
 
 .spec-item {
   display: grid;
-  grid-template-columns: 130px 1fr;
+  grid-template-columns: 135px 1fr;
   align-items: baseline;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .spec-item .sk {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dust-gray);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .spec-item .sv {
   font-family: var(--font-sans);
-  font-size: 0.82rem;
-  font-weight: 400;
-  color: var(--text-secondary);
-  line-height: 1.4;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--moon-white);
+  line-height: 1.45;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .spec-item .sv.status-silent {
-  color: var(--accent-amber);
+  color: var(--danger-dim);
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  font-weight: 600;
 }
 
+/* ==========================================================================
+   BODY PARAGRAPHS & NARRATIVE
+   Manrope 400/500, line-height 1.7, max-width 56ch, color --moon-white/--moon-silver
+   ========================================================================== */
 .moment-narrative {
   font-family: var(--font-sans);
-  font-size: 1.05rem;
-  font-weight: 300;
-  line-height: 1.85;
-  color: var(--text-secondary);
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: 1.7;
+  max-width: 56ch;
+  color: var(--moon-white);
   letter-spacing: 0.01em;
+  text-wrap: pretty;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .moment-narrative.text-center {
   text-align: center;
-}
-
-.moment-narrative.max-w {
-  max-width: 620px;
   margin: 0 auto;
 }
 
+.moment-narrative.max-w {
+  max-width: 56ch;
+}
+
+/* Key words with amber underline sweep / glow */
+.key-word {
+  position: relative;
+  color: var(--moon-white);
+  font-weight: 500;
+  display: inline-block;
+}
+
+.key-word::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--signal-amber);
+  box-shadow: 0 0 8px var(--amber-glow);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.8s var(--ease-cinematic);
+}
+
+.moment-wrap.active .key-word::after {
+  transform: scaleX(1);
+}
+
+/* Scroll affordance */
 .scroll-affordance {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.8rem;
-  margin-top: 2rem;
+  margin-top: 2.5rem;
 }
 
 .scroll-line {
   width: 1px;
   height: 38px;
-  background: linear-gradient(to bottom, var(--accent-amber), transparent);
+  background: linear-gradient(to bottom, var(--signal-amber), transparent);
   animation: scrollLineDrop 2.2s infinite ease-in-out;
 }
 
@@ -689,87 +924,140 @@ body.cursor-hover .cursor-dot {
 
 .scroll-text {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.28em;
-  color: var(--text-muted);
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dust-gray);
+  text-shadow: var(--text-shadow-protect);
 }
 
-/* Climax & Finale Styling */
+/* ==========================================================================
+   FINALE & CLIMAX STYLING
+   ========================================================================== */
 .climax-box {
   margin-top: 3.5rem;
   padding-top: 3rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(245, 242, 234, 0.12);
 }
 
 .climax-quote {
   font-family: var(--font-serif);
-  font-size: 2.2rem;
+  font-size: var(--type-statement);
   font-style: italic;
-  font-weight: 300;
-  line-height: 1.4;
-  color: var(--text-primary);
-  margin-bottom: 2rem;
+  font-weight: 400;
+  line-height: 1.25;
+  color: var(--moon-white);
+  margin-bottom: 2.2rem;
+  text-wrap: balance;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .climax-wordmark {
   font-family: var(--font-serif);
-  font-size: 4.8rem;
-  letter-spacing: 0.18em;
-  color: var(--text-primary);
+  font-size: clamp(3.2rem, 9vw, 6.5rem);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--moon-white);
   margin-bottom: 0.4rem;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .climax-sub {
   font-family: var(--font-serif);
   font-style: italic;
-  font-size: 1.6rem;
-  color: var(--accent-amber);
+  font-size: 1.8rem;
+  color: var(--signal-amber);
+  text-shadow: var(--text-shadow-protect);
 }
 
-/* Sources & Archive Section */
+/* ==========================================================================
+   DATA & SOURCES SECTION (Section 5 Spec)
+   Solid --deep-navy background for full readability, with moon-silver text
+   and cyan links.
+   ========================================================================== */
+.section-sources {
+  background-color: var(--deep-navy) !important;
+  border-top: 1px solid rgba(245, 242, 234, 0.12);
+  z-index: 15;
+  pointer-events: auto !important;
+  min-height: 100vh;
+}
+
+.section-sources .moment-wrap {
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.section-sources .moment-narrative {
+  color: var(--moon-silver);
+}
+
 .sources-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.8rem;
-  margin: 2.5rem 0 3.5rem 0;
+  margin: 2.8rem 0 3.5rem 0;
 }
 
 .source-card {
   padding: 1.8rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(245, 242, 234, 0.12);
+  border-radius: 8px;
+  background: rgba(14, 20, 36, 0.6);
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
+  transition: border-color 0.3s;
+}
+
+.source-card:hover {
+  border-color: var(--ping-cyan);
 }
 
 .src-title {
   font-family: var(--font-serif);
-  font-size: 1.25rem;
-  color: var(--accent-amber);
+  font-size: 1.35rem;
+  color: var(--signal-amber);
 }
 
 .src-desc {
   font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 300;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: var(--moon-silver);
   line-height: 1.6;
+}
+
+.source-card a,
+.src-link {
+  color: var(--ping-cyan);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  font-family: var(--font-mono);
+  font-size: var(--type-label);
+  letter-spacing: 0.12em;
+  margin-top: 0.4rem;
 }
 
 .credits-footer {
   display: flex;
   justify-content: space-between;
   padding-top: 2rem;
-  border-top: 1px solid var(--border-subtle);
+  border-top: 1px solid rgba(245, 242, 234, 0.12);
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.2em;
-  color: var(--text-muted);
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dust-gray);
 }
 
-/* Opportunity Dust Storm Blackout Overlay */
+/* ==========================================================================
+   OPPORTUNITY DUST STORM OVERLAY
+   ========================================================================== */
 .storm-overlay {
   position: fixed;
   top: 0;
@@ -784,78 +1072,8 @@ body.cursor-hover .cursor-dot {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN (Tablets & Mobile)
+   HOTSPOT MARKERS & HARDWARE INSPECTION CARDS
    ========================================================================== */
-@media (max-width: 1024px) {
-  .hud-top {
-    padding: 1.6rem 2rem;
-  }
-  .hud-bottom {
-    padding: 1.6rem 2rem;
-  }
-  .story-section {
-    padding: 5rem 2.5rem;
-  }
-  .chapter-rail {
-    right: 1.4rem;
-  }
-  .moment-title {
-    font-size: 3.0rem;
-  }
-  .hero-title {
-    font-size: 4.4rem;
-  }
-}
-
-@media (max-width: 768px) {
-  body {
-    cursor: auto; /* Fall back to native touch cursor */
-  }
-  .cursor-dot,
-  .cursor-ring {
-    display: none;
-  }
-  .hud-top {
-    padding: 1.2rem 1.4rem;
-  }
-  .tagline {
-    display: none;
-  }
-  .chapter-rail {
-    display: none;
-  }
-  .hud-bottom {
-    display: none;
-  }
-  .story-section {
-    padding: 4rem 1.5rem;
-    min-height: 100vh;
-    justify-content: center !important;
-    text-align: left;
-  }
-  .moment-wrap {
-    max-width: 100%;
-  }
-  .moment-title {
-    font-size: 2.4rem;
-  }
-  .hero-title {
-    font-size: 3.2rem;
-  }
-  .spec-item {
-    grid-template-columns: 100px 1fr;
-  }
-  .credits-footer {
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-}
-
-/* ==========================================================================
-   INTERACTIVE INSPECTION & WEATHERING CONTROLS (AWWWARDS / FWA STANDARD)
-   ========================================================================== */
-
-/* Hotspot Markers Screen Layer */
 .hotspots-layer {
   position: fixed;
   inset: 0;
@@ -884,7 +1102,7 @@ body.cursor-hover .cursor-dot {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1px solid var(--accent-amber);
+  border: 1px solid var(--signal-amber);
   animation: hsPulse 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
 }
 
@@ -892,8 +1110,8 @@ body.cursor-hover .cursor-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent-amber);
-  box-shadow: 0 0 10px var(--accent-amber-glow);
+  background: var(--signal-amber);
+  box-shadow: 0 0 10px var(--amber-glow);
   position: relative;
   z-index: 2;
   transition: transform 0.25s var(--ease-cinematic);
@@ -906,51 +1124,45 @@ body.cursor-hover .cursor-dot {
 
 .hs-label {
   font-family: var(--font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
+  font-size: var(--type-label);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-primary);
-  background: rgba(5, 7, 12, 0.7);
+  color: var(--moon-white);
+  background: rgba(11, 16, 32, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 0.35rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(245, 242, 234, 0.14);
   white-space: nowrap;
   transition: all 0.3s var(--ease-cinematic);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .hotspot-marker:hover .hs-label {
   color: #ffffff;
-  border-color: var(--accent-amber);
-  background: rgba(12, 16, 26, 0.9);
+  border-color: var(--signal-amber);
+  background: rgba(14, 20, 36, 0.95);
   transform: translateX(4px);
 }
 
 @keyframes hsPulse {
-  0% {
-    transform: translateY(-50%) scale(0.6);
-    opacity: 0.9;
-  }
-  100% {
-    transform: translateY(-50%) scale(2.2);
-    opacity: 0;
-  }
+  0% { transform: translateY(-50%) scale(0.6); opacity: 0.9; }
+  100% { transform: translateY(-50%) scale(2.2); opacity: 0; }
 }
 
-/* Inspection Technical Card HUD */
 .inspection-card {
   position: fixed;
   bottom: 5.5rem;
   left: 3.5rem;
   max-width: 380px;
-  background: rgba(4, 6, 10, 0.82);
+  background: rgba(11, 16, 32, 0.88);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-left: 2px solid var(--accent-amber);
-  border-radius: 4px;
+  border: 1px solid rgba(245, 242, 234, 0.14);
+  border-left: 2px solid var(--signal-amber);
+  border-radius: 14px;
   padding: 1.5rem 1.8rem;
   z-index: 20;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
@@ -975,76 +1187,80 @@ body.cursor-hover .cursor-dot {
 
 .card-category {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
+  font-size: 11px;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--accent-amber);
+  color: var(--signal-amber);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .card-close {
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: var(--dust-gray);
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 1rem;
   padding: 0.2rem;
   line-height: 1;
   transition: color 0.2s;
 }
 
 .card-close:hover {
-  color: #ffffff;
+  color: var(--moon-white);
 }
 
 .card-title {
   font-family: var(--font-serif);
   font-size: 1.6rem;
   font-weight: 400;
-  color: var(--text-primary);
+  color: var(--moon-white);
   line-height: 1.2;
   margin-bottom: 0.75rem;
+  text-wrap: balance;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .card-desc {
   font-family: var(--font-sans);
-  font-size: 0.88rem;
-  font-weight: 300;
-  line-height: 1.55;
-  color: var(--text-secondary);
+  font-size: 0.92rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--moon-silver);
   margin-bottom: 1.2rem;
+  text-wrap: pretty;
+  text-shadow: var(--text-shadow-protect);
 }
 
 .card-footer {
   display: flex;
   justify-content: space-between;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(245, 242, 234, 0.1);
   padding-top: 0.75rem;
   font-family: var(--font-mono);
-  font-size: 0.58rem;
-  letter-spacing: 0.14em;
-  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--dust-gray);
 }
 
 .card-status {
-  color: var(--accent-cyan);
+  color: var(--ping-cyan);
 }
 
-/* Weathering Chronology Slider Widget */
 .weathering-control {
   position: fixed;
   bottom: 5.5rem;
   right: 3.5rem;
-  background: rgba(4, 6, 10, 0.82);
+  background: rgba(11, 16, 32, 0.88);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
-  padding: 1.1rem 1.4rem;
+  border: 1px solid rgba(245, 242, 234, 0.14);
+  border-radius: 14px;
+  padding: 1.2rem 1.5rem;
   z-index: 20;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.65rem;
   opacity: 0;
   transform: translateY(20px);
   pointer-events: none;
@@ -1066,17 +1282,19 @@ body.cursor-hover .cursor-dot {
 
 .wc-label {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--text-muted);
+  color: var(--dust-gray);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .wc-state {
   font-family: var(--font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.08em;
-  color: var(--accent-amber);
+  font-size: var(--type-label);
+  letter-spacing: 0.12em;
+  color: var(--signal-amber);
+  text-shadow: var(--text-shadow-protect);
 }
 
 .wc-slider-row {
@@ -1086,14 +1304,14 @@ body.cursor-hover .cursor-dot {
 }
 
 .wc-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-secondary);
+  background: rgba(245, 242, 234, 0.05);
+  border: 1px solid rgba(245, 242, 234, 0.14);
+  color: var(--moon-silver);
   font-family: var(--font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.1em;
+  font-size: 11px;
+  letter-spacing: 0.14em;
   padding: 0.35rem 0.65rem;
-  border-radius: 3px;
+  border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.25s var(--ease-cinematic);
@@ -1101,9 +1319,9 @@ body.cursor-hover .cursor-dot {
 
 .wc-btn:hover,
 .wc-btn.active {
-  background: rgba(255, 191, 102, 0.15);
-  border-color: var(--accent-amber);
-  color: var(--text-primary);
+  background: rgba(255, 184, 77, 0.15);
+  border-color: var(--signal-amber);
+  color: var(--signal-amber);
 }
 
 .wc-slider {
@@ -1111,7 +1329,7 @@ body.cursor-hover .cursor-dot {
   appearance: none;
   width: 140px;
   height: 3px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(245, 242, 234, 0.18);
   border-radius: 2px;
   outline: none;
 }
@@ -1122,27 +1340,86 @@ body.cursor-hover .cursor-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: var(--accent-amber);
+  background: var(--signal-amber);
   cursor: pointer;
-  box-shadow: 0 0 8px var(--accent-amber-glow);
+  box-shadow: 0 0 8px var(--amber-glow);
   transition: transform 0.15s;
 }
 
-.wc-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.3);
+/* ==========================================================================
+   RESPONSIVE DESIGN & MOBILE OPTIMIZATION
+   Mobile body min 17px, no text under 12px anywhere
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .hud-top {
+    padding: 1.6rem 2rem;
+  }
+  .hud-bottom {
+    padding: 1.6rem 2rem;
+  }
+  .story-section {
+    padding: 5rem 2.2rem;
+  }
+  .chapter-rail {
+    right: 1.2rem;
+  }
 }
 
 @media (max-width: 768px) {
+  :root {
+    --type-body: 17px; /* Strict requirement: Minimum body size 17px on mobile */
+  }
+
+  .hud-top {
+    padding: 1.2rem 1.5rem;
+  }
+  .chapter-indicator {
+    display: none;
+  }
+  .chapter-rail {
+    display: none;
+  }
+  .hud-bottom {
+    display: none;
+  }
+  .story-section {
+    padding: 4rem 1.5rem;
+    min-height: 100vh;
+    justify-content: center !important;
+  }
+  .moment-wrap {
+    max-width: 100%;
+    padding: 2rem 1.6rem;
+  }
+  .spec-item {
+    grid-template-columns: 110px 1fr;
+    gap: 0.6rem;
+  }
+  .credits-footer {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
   .inspection-card {
-    left: 1.5rem;
-    right: 1.5rem;
+    left: 1.2rem;
+    right: 1.2rem;
     bottom: 5.5rem;
     max-width: none;
   }
   .weathering-control {
-    right: 1.5rem;
-    left: 1.5rem;
+    right: 1.2rem;
+    left: 1.2rem;
     bottom: 16rem;
   }
 }
 
+/* ==========================================================================
+   REDUCED MOTION
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

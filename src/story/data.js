@@ -50,7 +50,7 @@ export const STORY_DATA = {
       story: "On July 20, 1969, Neil Armstrong and Buzz Aldrin brought Eagle down with seconds of fuel remaining. When they fired the ascent engine to rejoin Michael Collins, the descent stage stayed behind. Bolted to its strut is a plaque: 'Here men from the planet Earth first set foot upon the Moon. We came in peace for all mankind.' In the airless lunar silence, the gold Kapton foil still glints in the unfiltered sunlight.",
       coordinates: "0.67408° N, 23.47297° E",
       modelType: "apollo_lm",
-      glowColor: 0xffd700,
+      glowColor: 0xffb84d,
       lightIntensity: 1.8,
       fact: "The Apollo 11 descent stage contains a silicon disc etched with goodwill messages from 73 world leaders."
     },
@@ -67,7 +67,7 @@ export const STORY_DATA = {
       story: "Between 1971 and 1972, three electric rovers expanded humanity's reach across the Moon. Apollo 17 Commander Eugene Cernan parked LRV-3 a short distance away to capture the ascent stage ignition on camera, wiping dust off the lens one last time. No human hand has touched its steering joystick in over half a century; its zinc-silver batteries have long gone cold under the silent stars.",
       coordinates: "20.1908° N, 30.7717° E (Apollo 17 Site)",
       modelType: "lrv_rover",
-      glowColor: 0x4df0ff,
+      glowColor: 0xffb84d,
       lightIntensity: 1.6,
       fact: "Apollo 17 astronaut Harrison Schmitt clocked the lunar rover speed record at 11.2 mph down a crater slope."
     },
@@ -84,7 +84,7 @@ export const STORY_DATA = {
       story: "Surveyor 3 bounced three times before settling in a crater in 1967, proving the lunar regolith could support a spacecraft. In November 1969, Apollo 12 astronauts Pete Conrad and Alan Bean pinpoint-landed just 160 meters away and walked over to visit it. They retrieved its camera to study how machines age in space. It was humanity's first reunion with a solitary machine left behind on an alien world.",
       coordinates: "3.015° S, 23.418° W",
       modelType: "surveyor",
-      glowColor: 0xfff4b8,
+      glowColor: 0xc9ccd6,
       lightIntensity: 1.5,
       fact: "Microbes (Streptococcus mitis) retrieved from Surveyor's camera were claimed to survive 2.5 years on the Moon."
     },
@@ -114,7 +114,7 @@ export const STORY_DATA = {
       story: "On July 20, 1976—seven years to the day after Apollo 11—Viking 1 gave humanity its first color view of Mars: an amber sky over red rocks. It transmitted daily weather, soil chemistry, and images for 2,245 sols until a human command error caused its high-gain antenna to swing away from Earth. Its robotic arm remains poised forever over the rust-colored soil it scooped.",
       coordinates: "22.697° N, 48.222° W",
       modelType: "viking_lander",
-      glowColor: 0xffaa44,
+      glowColor: 0xe8643c,
       lightIntensity: 1.8,
       fact: "Viking 1 operated on Mars for over 6 Earth years—far surpassing its original 90-day mission plan."
     },
@@ -131,7 +131,7 @@ export const STORY_DATA = {
       story: "Pathfinder bounced onto Mars cushioned inside airbags on July 4, 1997, opening like a flower to release Sojourner—the first wheeled rover to drive on another planet. The tiny microrover sniffed Martian rocks named 'Barnacle Bill' and 'Yogi'. When Pathfinder's nickel-cadmium battery froze in the autumn chill, Sojourner was left circling the base station, following programmed instructions to seek a signal that never came.",
       coordinates: "19.33° N, 33.55° W",
       modelType: "pathfinder_sojourner",
-      glowColor: 0x4df0ff,
+      glowColor: 0xe8643c,
       lightIntensity: 1.6,
       fact: "Sojourner was named in honor of abolitionist and women's rights activist Sojourner Truth."
     },
@@ -148,7 +148,7 @@ export const STORY_DATA = {
       story: "Designed to drive just 600 meters over 90 days, Spirit battled through rocky terrain for more than six years. In May 2009, its wheels broke through a deceptive crust into powder-fine sulphate sand at a spot called 'Troy'. Trapped and unable to angle its solar arrays toward the sun for the coming winter, Spirit transmitted its final engineering packet on March 22, 2010 before succumbing to hypothermia.",
       coordinates: "14.5684° S, 175.4726° E",
       modelType: "mer_rover",
-      glowColor: 0xff8833,
+      glowColor: 0xe8643c,
       lightIntensity: 1.7,
       fact: "Spirit's jammed front-right wheel dragged like an anchor, inadvertently furrowing open pure silica—proof of ancient hydrothermal vents."
     },
@@ -165,7 +165,7 @@ export const STORY_DATA = {
       story: "Opportunity survived 5,111 sols, traversing an entire marathon across alien dunes and finding hematite 'blueberries' forged in ancient groundwater. In June 2018, a catastrophic planet-wide dust storm blotted out the sun, plunging the sky into darkness (tau > 10.8). Its final telemetry transmitted power dropping to 22 watt-hours. Science reporter Jacob Margolis translated its telemetry as: 'My battery is low and it's getting dark.' For eight months NASA beamed Billie Holiday's 'I'll Be Seeing You' into the void, but Oppy never woke up.",
       coordinates: "2.327° S, 354.673° E",
       modelType: "mer_rover_oppy",
-      glowColor: 0xff4422,
+      glowColor: 0xffb84d,
       lightIntensity: 2.0,
       dustStorm: true,
       fact: "Opportunity holds the all-time off-world driving record: 45.16 km (28.06 miles)."
@@ -183,7 +183,7 @@ export const STORY_DATA = {
       story: "Carrying a postage-stamp swatch of fabric from the Wright Brothers' 1903 Flyer, Ingenuity proved powered atmospheric flight is possible in Mars' razor-thin atmosphere. Planned for five test hops, the 1.8-kg drone flew 72 missions across Jezero Crater. On its final landing in January 2024, rotor tip damage ended its flights. Today, Ingenuity stands proud on Valinor Hills, serving as a permanent automated weather station greeting the Martian dawn.",
       coordinates: "18.445° N, 77.451° E",
       modelType: "ingenuity",
-      glowColor: 0x66ffaa,
+      glowColor: 0xe8643c,
       lightIntensity: 1.9,
       fact: "Ingenuity clocked 128.8 total flight minutes across 17 kilometers, soaring as high as 24 meters."
     },
@@ -200,7 +200,7 @@ export const STORY_DATA = {
       story: "Fifty years after human boots left the regolith, there is one Apollo experiment that never shut down. The Lunar Laser Ranging Retroreflectors have no batteries, no computer chips, and no moving parts. Astronomers in Texas, France, and Hawaii still fire high-powered green lasers through telescopes directly at these silent prisms, catching single returning photons to calculate the Moon's distance to millimeter precision.",
       coordinates: "Apollo 11 (23.47° E), Apollo 14 (17.47° W), Apollo 15 (3.63° E)",
       modelType: "retroreflector",
-      glowColor: 0x00ff88,
+      glowColor: 0x6fe3ff,
       laserActive: true,
       conclusion: "They are not abandoned. They are monuments to human courage, waiting in the dust.\nWhat remains is what we remember."
     },

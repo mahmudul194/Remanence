@@ -93,7 +93,9 @@ export class StoryTimeline {
         start: 'top 65%',
         end: 'bottom 35%',
         onEnter: () => this.onSectionActive(idx),
-        onEnterBack: () => this.onSectionActive(idx)
+        onEnterBack: () => this.onSectionActive(idx),
+        onLeave: () => this.onSectionLeave(idx),
+        onLeaveBack: () => this.onSectionLeave(idx)
       });
     });
 
@@ -273,11 +275,48 @@ export class StoryTimeline {
       }
     }
 
+    // 3.6 Update Navbar Chapter Indicator & Scene Dimmer
+    const chapterEl = document.getElementById('chapter-indicator');
+    if (chapterEl) {
+      const chNum = String(index).padStart(2, '0');
+      const machineName = sectionData.machine || sectionData.title || 'ORIGIN';
+      chapterEl.textContent = `CH.${chNum} // ${machineName.toUpperCase()}`;
+      chapterEl.classList.add('active');
+    }
+
+    const dimmer = document.getElementById('scene-dimmer');
+    if (dimmer) {
+      dimmer.classList.toggle('active', index >= 1 && index <= 11);
+    }
+
     // 4. Update Mission Control HUD telemetry
     this.updateHUD(sectionData);
 
     // 5. Trigger Letter-by-Letter Typewriter / Masked word animation on active moment
     this.animateStoryMoment(index);
+  }
+
+  onSectionLeave(index) {
+    const sections = document.querySelectorAll('.story-section');
+    const section = sections[index];
+    if (!section) return;
+    const moment = section.querySelector('.moment-wrap');
+    if (!moment) return;
+
+    // Exit animation: faster than entrances (0.5s) per spec
+    gsap.to(moment, {
+      opacity: 0,
+      y: -18,
+      duration: 0.5,
+      ease: 'power2.in',
+      onComplete: () => {
+        moment.classList.remove('active');
+        moment.dataset.animated = 'false';
+      }
+    });
+
+    const chapterEl = document.getElementById('chapter-indicator');
+    if (chapterEl) chapterEl.classList.remove('active');
   }
 
   getMachineForSection(id) {
@@ -328,47 +367,84 @@ export class StoryTimeline {
     if (moment.dataset.animated === 'true') return;
     moment.dataset.animated = 'true';
 
-    // SplitType masked word reveal on the luxury serif title
+    // Respect prefers-reduced-motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      gsap.set(moment, { opacity: 1, y: 0 });
+      return;
+    }
+
+    // 1. Titles reveal with masked line-by-line rise:
+    // translateY 110% to 0, 1.1s, cubic-bezier(0.16, 1, 0.3, 1), 80ms stagger
     const titleEl = moment.querySelector('.moment-title, .hero-title');
     if (titleEl) {
       try {
-        const split = new SplitType(titleEl, { types: 'lines,words' });
-        if (split.words && split.words.length > 0) {
+        const splitTitle = new SplitType(titleEl, { types: 'lines' });
+        if (splitTitle.lines && splitTitle.lines.length > 0) {
+          splitTitle.lines.forEach((line) => {
+            if (!line.parentElement.classList.contains('line-mask')) {
+              const mask = document.createElement('div');
+              mask.className = 'line-mask';
+              mask.style.overflow = 'hidden';
+              mask.style.display = 'block';
+              line.parentNode.insertBefore(mask, line);
+              mask.appendChild(line);
+            }
+          });
+
           gsap.fromTo(
-            split.words,
-            { yPercent: 100, opacity: 0 },
+            splitTitle.lines,
+            { yPercent: 110, opacity: 0 },
             {
               yPercent: 0,
               opacity: 1,
-              stagger: 0.04,
+              stagger: 0.08,
               duration: 1.1,
               ease: 'power3.out'
             }
           );
         }
       } catch (e) {
-        gsap.fromTo(titleEl, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out' });
+        gsap.fromTo(titleEl, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' });
       }
     }
 
-    // Narrative paragraph reveal
-    const narrative = moment.querySelector('.moment-narrative');
-    if (narrative) {
+    // 2. Machine info panel reveal
+    const panel = moment.querySelector('.machine-panel');
+    if (panel) {
       gsap.fromTo(
-        narrative,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 1.2, delay: 0.2, ease: 'power2.out' }
+        panel,
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.9, delay: 0.25, ease: 'power2.out' }
       );
     }
 
-    // Spec lines reveal
-    const specs = moment.querySelectorAll('.spec-item');
-    if (specs.length > 0) {
-      gsap.fromTo(
-        specs,
-        { opacity: 0, x: -15 },
-        { opacity: 1, x: 0, stagger: 0.08, duration: 0.8, delay: 0.15, ease: 'power2.out' }
-      );
+    // 3. Body text fades up with 12px rise and 40ms word stagger
+    const narrative = moment.querySelector('.moment-narrative');
+    if (narrative) {
+      try {
+        const splitWords = new SplitType(narrative, { types: 'words' });
+        if (splitWords.words && splitWords.words.length > 0) {
+          gsap.fromTo(
+            splitWords.words,
+            { opacity: 0, y: 12 },
+            {
+              opacity: 1,
+              y: 0,
+              stagger: 0.04,
+              duration: 0.8,
+              delay: 0.35,
+              ease: 'power2.out'
+            }
+          );
+        }
+      } catch (e) {
+        gsap.fromTo(
+          narrative,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, duration: 0.9, delay: 0.35, ease: 'power2.out' }
+        );
+      }
     }
   }
 }
