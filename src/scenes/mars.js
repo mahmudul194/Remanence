@@ -77,36 +77,42 @@ export async function createMarsScene() {
   rockInstanced.castShadow = true;
   group.add(rockInstanced);
 
-  // 3. Machines on Mars
+  // 3. Machines on Mars (firmly anchored at calculated terrain elevations)
   const machines = {};
 
+  // EDL Descent Debris in crater furrow (y = -3.179)
   const descentDebris = await getOrCreateModel('descent_debris');
-  descentDebris.position.set(-15, 0.05, -35);
+  descentDebris.position.set(-15, -3.179, -35);
   group.add(descentDebris);
   machines.descent_debris = descentDebris;
 
+  // Viking 1 Lander on Chryse Planitia ridge (y = 0.45)
   const viking = await getOrCreateModel('viking_lander');
-  viking.position.set(0, 0, 0);
+  viking.position.set(0, 0.45, 0);
   group.add(viking);
   machines.viking1 = viking;
 
+  // Mars Pathfinder & Sojourner at Ares Vallis (y = 0.256)
   const pathfinder = await getOrCreateModel('pathfinder_sojourner');
-  pathfinder.position.set(38, 0, 60);
+  pathfinder.position.set(38, 0.256, 60);
   group.add(pathfinder);
   machines.pathfinder = pathfinder;
 
+  // Spirit Rover in Troy sand deposit (y = -1.811)
   const spirit = await getOrCreateModel('mer_rover');
-  spirit.position.set(-36, -0.4, 125);
+  spirit.position.set(-36, -1.811, 125);
   group.add(spirit);
   machines.spirit = spirit;
 
+  // Opportunity Rover in Endeavour Crater depression (y = -1.787)
   const opportunity = await getOrCreateModel('mer_rover_oppy');
-  opportunity.position.set(12, 0.2, 195);
+  opportunity.position.set(12, -1.787, 195);
   group.add(opportunity);
   machines.opportunity = opportunity;
 
+  // Ingenuity Mars Helicopter at Valinor Hills crest (y = 2.075)
   const ingenuity = await getOrCreateModel('ingenuity');
-  ingenuity.position.set(-28, 0.2, 260);
+  ingenuity.position.set(-28, 2.075, 260);
   group.add(ingenuity);
   machines.ingenuity = ingenuity;
 

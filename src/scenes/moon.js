@@ -101,36 +101,42 @@ export async function createMoonScene() {
   // 4. Instantiate Machines at their Historical Lunar Stations
   const machines = {};
 
+  // Tranquility Base pad leveled to y = 0
   const apolloLM = await getOrCreateModel('apollo_lm');
-  apolloLM.position.set(0, 0, 0);
+  apolloLM.position.set(0, 0.0, 0);
   group.add(apolloLM);
   machines.apollo11 = apolloLM;
 
+  // ALSEP Station on gentle Mare ridge (y = 0.085)
   const alsep = await getOrCreateModel('alsep');
-  alsep.position.set(14, 0.05, -20);
+  alsep.position.set(14, 0.085, -20);
   alsep.rotation.y = 0.4;
   group.add(alsep);
   machines.alsep = alsep;
 
+  // Lunar Roving Vehicle parked near crater slope (y = -4.159)
   const lrv = await getOrCreateModel('lrv_rover');
-  lrv.position.set(38, 0.02, -55);
+  lrv.position.set(38, -4.159, -55);
   lrv.rotation.y = -0.6;
   group.add(lrv);
   machines.lrv = lrv;
 
+  // Apollo 15 Hammer & Feather site in Hadley terrain (y = -2.619)
   const hammerFeather = await getOrCreateModel('hammer_feather');
-  hammerFeather.position.set(30, 0.05, -72);
+  hammerFeather.position.set(30, -2.619, -72);
   group.add(hammerFeather);
   machines.hammer_feather = hammerFeather;
 
+  // Surveyor 3 on eastern inner slope of Surveyor Crater (y = -3.551)
   const surveyor = await getOrCreateModel('surveyor');
-  surveyor.position.set(-40, -3.2, -95);
-  surveyor.rotation.set(0.2, 0.5, 0.1);
+  surveyor.position.set(-40, -3.551, -95);
+  surveyor.rotation.set(0.18, 0.5, 0.08);
   group.add(surveyor);
   machines.surveyor = surveyor;
 
+  // Apollo Lunar Laser Ranging Retroreflector (y = 0.875)
   const retro = await getOrCreateModel('retroreflector');
-  retro.position.set(15, 0.1, 45);
+  retro.position.set(15, 0.875, 45);
   group.add(retro);
   machines.retroreflector = retro;
 

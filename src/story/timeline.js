@@ -33,23 +33,23 @@ export class StoryTimeline {
   }
 
   initCurves() {
-    // Exact 3D trajectory waypoints (16 Stations)
+    // Exact 3D trajectory waypoints (16 Stations) - physically calibrated to terrain elevations
     const camPoints = [
       new THREE.Vector3(0, 6, 54),          // 0: Hero / Opening (Earth orbit)
       new THREE.Vector3(0, 6, 50),          // 1: Earth overview
-      new THREE.Vector3(3.8, -8.3, -174),   // 2: Apollo 11 Lunar Module
-      new THREE.Vector3(18.5, -8.6, -195),  // 3: ALSEP Station
-      new THREE.Vector3(41.5, -8.7, -231),  // 4: Lunar Roving Vehicle
-      new THREE.Vector3(32.0, -9.0, -248),  // 5: Hammer & Feather
-      new THREE.Vector3(-36.8, -12.4, -270),// 6: Surveyor 3 in crater
+      new THREE.Vector3(3.8, -8.3, -174),   // 2: Apollo 11 Lunar Module (grounded at y = -10.0)
+      new THREE.Vector3(17.8, -8.8, -194),  // 3: ALSEP Station (grounded at y = -9.92)
+      new THREE.Vector3(41.5, -12.9, -231), // 4: Lunar Roving Vehicle (grounded in crater at y = -14.16)
+      new THREE.Vector3(31.4, -12.0, -250.2),// 5: Hammer & Feather (grounded intimate view at y = -12.62)
+      new THREE.Vector3(-36.8, -12.4, -270),// 6: Surveyor 3 in crater slope (grounded at y = -13.55)
       new THREE.Vector3(12, 38, 240),       // 7: Interplanetary Transit Void
-      new THREE.Vector3(-18.5, -8.4, 620),  // 8: Mars Descent Debris
-      new THREE.Vector3(3.5, -8.2, 656),    // 9: Viking 1 on Mars
-      new THREE.Vector3(40.5, -8.8, 714),   // 10: Pathfinder & Sojourner
-      new THREE.Vector3(-33.5, -9.1, 779),  // 11: Spirit in Troy Sand
-      new THREE.Vector3(14.5, -8.4, 848),   // 12: Opportunity in Twilight
-      new THREE.Vector3(-26.2, -8.8, 914),  // 13: Ingenuity at Valinor Hills
-      new THREE.Vector3(16.5, -9.2, -132),  // 14: Finale - Retroreflector Laser
+      new THREE.Vector3(-18.5, -11.8, 620), // 8: Mars Descent Debris (grounded in furrow at y = -13.18)
+      new THREE.Vector3(3.5, -8.2, 656),    // 9: Viking 1 on Mars ridge (grounded at y = -9.55)
+      new THREE.Vector3(40.5, -8.8, 714),   // 10: Pathfinder & Sojourner (grounded at y = -9.74)
+      new THREE.Vector3(-33.5, -10.5, 779), // 11: Spirit in Troy Sand (grounded at y = -11.81)
+      new THREE.Vector3(14.5, -10.4, 848),  // 12: Opportunity in Twilight (grounded at y = -11.79)
+      new THREE.Vector3(-26.2, -7.2, 914),  // 13: Ingenuity at Valinor Hills (grounded at y = -7.93)
+      new THREE.Vector3(17.2, -8.4, -131),  // 14: Finale - Retroreflector Laser (grounded at y = -9.13)
       new THREE.Vector3(26.0, 4.0, -100)    // 15: Archive & Sources wide view
     ];
 
@@ -58,19 +58,19 @@ export class StoryTimeline {
       new THREE.Vector3(0, 0, 0),           // 0: Center Earth
       new THREE.Vector3(0, 0, 0),           // 1: Center Earth
       new THREE.Vector3(0, -8.8, -180),     // 2: Apollo 11 Descent Stage
-      new THREE.Vector3(14, -9.2, -200),    // 3: ALSEP Station
-      new THREE.Vector3(38, -9.6, -235),    // 4: LRV Rover body
-      new THREE.Vector3(30, -9.6, -252),    // 5: Hammer & Feather
-      new THREE.Vector3(-40, -13.2, -275),  // 6: Surveyor 3
+      new THREE.Vector3(14, -9.4, -200),    // 3: ALSEP Station
+      new THREE.Vector3(38, -13.6, -235),   // 4: LRV Rover body and tracks
+      new THREE.Vector3(30, -12.55, -252),  // 5: Hammer & Feather on lunar regolith
+      new THREE.Vector3(-40, -12.6, -275),  // 6: Surveyor 3
       new THREE.Vector3(40, -10, 420),      // 7: Mars approaching in distance
-      new THREE.Vector3(-15, -9.2, 625),    // 8: Mars Descent Debris
-      new THREE.Vector3(0, -9.2, 650),      // 9: Viking 1 body
-      new THREE.Vector3(38, -9.6, 710),     // 10: Pathfinder & Sojourner
-      new THREE.Vector3(-36, -10.2, 775),   // 11: Spirit wheels in sand
-      new THREE.Vector3(12, -9.6, 845),     // 12: Opportunity rover
-      new THREE.Vector3(-28, -9.6, 910),    // 13: Ingenuity rotor hub
-      new THREE.Vector3(15, -9.8, -135),    // 14: Retroreflector array
-      new THREE.Vector3(15, -9.8, -135)     // 15: Retroreflector array & Moon horizon
+      new THREE.Vector3(-15, -12.8, 615),   // 8: Mars Descent Debris & Parachute
+      new THREE.Vector3(0, -8.9, 650),      // 9: Viking 1 body
+      new THREE.Vector3(38, -9.3, 710),     // 10: Pathfinder & Sojourner
+      new THREE.Vector3(-36, -11.2, 775),   // 11: Spirit wheels in sand
+      new THREE.Vector3(12, -11.2, 845),    // 12: Opportunity rover
+      new THREE.Vector3(-28, -7.6, 910),    // 13: Ingenuity rotor hub & damaged blade
+      new THREE.Vector3(15, -8.8, -135),    // 14: Retroreflector array
+      new THREE.Vector3(15, -9.0, -135)     // 15: Retroreflector array & Moon horizon
     ];
 
     this.camCurve = new THREE.CatmullRomCurve3(camPoints, false, 'catmullrom', 0.2);

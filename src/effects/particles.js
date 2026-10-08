@@ -42,15 +42,35 @@ export function createParticleManager(scene) {
     }
   }
 
+function createSoftParticleTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+  grad.addColorStop(0.3, 'rgba(255, 255, 255, 0.7)');
+  grad.addColorStop(0.65, 'rgba(255, 255, 255, 0.2)');
+  grad.addColorStop(1.0, 'rgba(255, 255, 255, 0.0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(canvas);
+  return tex;
+}
+
+  const softParticleTex = createSoftParticleTexture();
+
   starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
   starGeo.setAttribute('color', new THREE.BufferAttribute(starColors, 3));
 
   const starMat = new THREE.PointsMaterial({
-    size: 1.2,
+    size: 1.0,
+    map: softParticleTex,
     vertexColors: true,
     transparent: true,
     opacity: 0.85,
-    sizeAttenuation: true
+    sizeAttenuation: true,
+    depthWrite: false
   });
   const starsMesh = new THREE.Points(starGeo, starMat);
   scene.add(starsMesh);
@@ -66,16 +86,18 @@ export function createParticleManager(scene) {
   }
   lunarGeo.setAttribute('position', new THREE.BufferAttribute(lunarPos, 3));
   const lunarMat = new THREE.PointsMaterial({
-    size: 0.45,
+    size: 0.35,
+    map: softParticleTex,
     color: 0xcccccc,
     transparent: true,
     opacity: 0.35,
-    blending: THREE.AdditiveBlending
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
   });
   const lunarMesh = new THREE.Points(lunarGeo, lunarMat);
   scene.add(lunarMesh);
 
-  // 3. Martian Atmospheric Dust Storm Particles (around Mars scene)
+  // 3. Martian Atmospheric Dust Storm Particles (Fine airborne hematite sand)
   const marsDustCount = 2400;
   const marsGeo = new THREE.BufferGeometry();
   const marsPos = new Float32Array(marsDustCount * 3);
@@ -93,11 +115,13 @@ export function createParticleManager(scene) {
   }
   marsGeo.setAttribute('position', new THREE.BufferAttribute(marsPos, 3));
   const marsMat = new THREE.PointsMaterial({
-    size: 0.8,
+    size: 0.22,
+    map: softParticleTex,
     color: 0xdd6633,
     transparent: true,
     opacity: 0.45,
-    blending: THREE.AdditiveBlending
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
   });
   const marsDustMesh = new THREE.Points(marsGeo, marsMat);
   scene.add(marsDustMesh);
