@@ -203,8 +203,19 @@ export const STORY_DATA = {
       modelType: "retroreflector",
       glowColor: 0x00ff88,
       laserActive: true,
-      laserTarget: "Earth Observatory (McDonald / Apache Point)",
       conclusion: "They are not abandoned. They are monuments to human courage, waiting in the dust.\nWhat remains is what we remember."
+    },
+
+    {
+      id: "sources",
+      type: "archive",
+      badge: "ARCHIVE & DOCUMENTATION",
+      title: "Data & Sources",
+      machine: "DATA & SOURCES",
+      location: "NASA Scientific Archives",
+      status: "VERIFIED",
+      coordinates: "NASA ARCHIVES // AP-404",
+      story: "Every date, coordinate, and telemetry log in REMANENCE is verified against official NASA historical and mission archives: NASA History Office, NASA Planetary Data System (PDS), Lunar Reconnaissance Orbiter (LROC), and NASA 3D Resources."
     }
   ],
 

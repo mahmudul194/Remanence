@@ -1,7 +1,7 @@
 /**
  * GSAP ScrollTrigger & Story Timeline Engine
- * Controls camera spline flight path, Section transitions,
- * UI mission card typewriter effect, audio atmospheric transitions,
+ * Controls CatmullRomCurve3 camera flight path, dynamic sub-scene isolation,
+ * editorial SplitType typography reveals, atmospheric soundscapes,
  * radar pulse triggers, and Opportunity dust-storm blackout.
  */
 
@@ -33,9 +33,9 @@ export class StoryTimeline {
   }
 
   initCurves() {
-    // Exact 3D trajectory waypoints (Camera positions)
+    // Exact 3D trajectory waypoints (13 Camera positions)
     const camPoints = [
-      new THREE.Vector3(0, 0.2, 24),        // 0: Loading / Opening (close beacon)
+      new THREE.Vector3(0, 0, 16),          // 0: Loading / Opening (Particle text)
       new THREE.Vector3(0, 6, 52),          // 1: Earth overview
       new THREE.Vector3(3.8, -8.3, -174),   // 2: Apollo 11 Lunar Module
       new THREE.Vector3(41.5, -8.7, -231),  // 3: Lunar Roving Vehicle
@@ -46,12 +46,13 @@ export class StoryTimeline {
       new THREE.Vector3(-33.5, -9.1, 779),  // 8: Spirit in Troy Sand
       new THREE.Vector3(14.5, -8.4, 848),   // 9: Opportunity in Twilight
       new THREE.Vector3(-26.2, -8.8, 914),  // 10: Ingenuity at Valinor Hills
-      new THREE.Vector3(16.5, -9.2, -132)   // 11: Finale - Retroreflector Laser
+      new THREE.Vector3(16.5, -9.2, -132),  // 11: Finale - Retroreflector Laser
+      new THREE.Vector3(26.0, 4.0, -100)    // 12: Archive & Sources wide view
     ];
 
     // Look-at focal targets for each station
     const lookPoints = [
-      new THREE.Vector3(0, 0, 0),           // 0: Center beacon
+      new THREE.Vector3(0, 0, 0),           // 0: Particle text origin
       new THREE.Vector3(0, 0, 0),           // 1: Center Earth
       new THREE.Vector3(0, -8.8, -180),     // 2: Apollo 11 Descent Stage
       new THREE.Vector3(38, -9.6, -235),    // 3: LRV Rover body
@@ -62,7 +63,8 @@ export class StoryTimeline {
       new THREE.Vector3(-36, -10.2, 775),   // 8: Spirit wheels in sand
       new THREE.Vector3(12, -9.6, 845),     // 9: Opportunity rover
       new THREE.Vector3(-28, -9.6, 910),    // 10: Ingenuity rotor hub
-      new THREE.Vector3(15, -9.8, -135)     // 11: Retroreflector array
+      new THREE.Vector3(15, -9.8, -135),    // 11: Retroreflector array
+      new THREE.Vector3(15, -9.8, -135)     // 12: Retroreflector array & Moon horizon
     ];
 
     this.camCurve = new THREE.CatmullRomCurve3(camPoints, false, 'catmullrom', 0.2);
@@ -72,25 +74,24 @@ export class StoryTimeline {
   initScrollTrigger() {
     const scrollContainer = document.querySelector('.scroll-container');
     const sections = document.querySelectorAll('.story-section');
-    const totalSections = sections.length;
 
     // Track scroll progress along the flight curve
     ScrollTrigger.create({
       trigger: scrollContainer,
       start: 'top top',
       end: 'bottom bottom',
-      scrub: 1.2,
+      scrub: 1.25,
       onUpdate: (self) => {
         this.updateCameraFlight(self.progress);
       }
     });
 
-    // Individual section triggers for typewriter mission cards & atmospheric sound
+    // Individual section triggers for typographic reveals & audio atmosphere
     sections.forEach((sec, idx) => {
       ScrollTrigger.create({
         trigger: sec,
-        start: 'top center',
-        end: 'bottom center',
+        start: 'top 65%',
+        end: 'bottom 35%',
         onEnter: () => this.onSectionActive(idx),
         onEnterBack: () => this.onSectionActive(idx)
       });
@@ -115,7 +116,7 @@ export class StoryTimeline {
           }
           const overlay = document.getElementById('storm-overlay');
           if (overlay) {
-            overlay.style.opacity = (intensity * 0.9).toFixed(2);
+            overlay.style.opacity = (intensity * 0.95).toFixed(2);
           }
         },
         onLeave: () => {
@@ -151,6 +152,12 @@ export class StoryTimeline {
     // Isolate sub-scenes dynamically so planes never clip across other planetary views
     this.updateSceneVisibility(t);
 
+    // Update chapter rail thumb position
+    const railThumb = document.getElementById('rail-thumb');
+    if (railThumb) {
+      railThumb.style.top = `${t * 220}px`;
+    }
+
     // Camera position from spline
     const pos = this.camCurve.getPoint(t);
     const target = this.lookCurve.getPoint(t);
@@ -173,7 +180,7 @@ export class StoryTimeline {
     // 0.14 - 0.40: Moon Apollo landing sites
     // 0.41 - 0.50: Transit Void (Earth & Mars in deep space)
     // 0.51 - 0.94: Mars surface stations
-    // 0.95 - 1.00: Finale Retroreflectors on Moon
+    // 0.95 - 1.00: Finale Retroreflectors & Archive on Moon
 
     let showSpace = false;
     let showMoon = false;
@@ -219,7 +226,7 @@ export class StoryTimeline {
 
     // 1. Apollo 404 Glitch Burst between stories
     if (index > 1) {
-      this.postfx.triggerGlitch(0.32);
+      this.postfx.triggerGlitch(0.28);
       audio.playGlitch();
     }
 
@@ -260,8 +267,8 @@ export class StoryTimeline {
     // 4. Update Mission Control HUD telemetry
     this.updateHUD(sectionData);
 
-    // 5. Trigger Letter-by-Letter Typewriter animation on active card
-    this.animateMissionCard(index);
+    // 5. Trigger Letter-by-Letter Typewriter / Masked word animation on active moment
+    this.animateStoryMoment(index);
   }
 
   getMachineForSection(id) {
@@ -289,56 +296,70 @@ export class StoryTimeline {
     if (targetEl && (data.machine || data.title)) targetEl.textContent = (data.machine || data.title).toUpperCase();
     if (dsnEl) {
       dsnEl.textContent = data.status === 'SILENT' ? 'DSN: CARRIER LOST' : `DSN: ${data.status || 'TRACKING'}`;
-      dsnEl.style.color = data.status === 'SILENT' ? '#ff4d4d' : '#4df0ff';
+      dsnEl.className = data.status === 'SILENT' ? 'meta-value status-silent' : 'meta-value status-active';
     }
   }
 
-  animateMissionCard(index) {
-    const card = document.querySelector(`.story-section:nth-child(${index + 1}) .mission-card`);
-    if (!card || card.dataset.animated === 'true') return;
+  animateStoryMoment(index) {
+    const sections = document.querySelectorAll('.story-section');
+    const section = sections[index];
+    if (!section) return;
 
-    card.dataset.animated = 'true';
+    const moment = section.querySelector('.moment-wrap');
+    if (!moment) return;
 
-    // Smooth card entry
-    gsap.fromTo(card, { opacity: 0, y: 25 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' });
+    moment.classList.add('active');
 
-    // SplitType letter-by-letter animation on machine title
-    const titleEl = card.querySelector('.machine-title');
+    // Update chapter rail indicators
+    const railDots = document.querySelectorAll('.rail-dot');
+    railDots.forEach((d, i) => {
+      d.classList.toggle('active', i === index);
+    });
+
+    if (moment.dataset.animated === 'true') return;
+    moment.dataset.animated = 'true';
+
+    // SplitType masked word reveal on the luxury serif title
+    const titleEl = moment.querySelector('.moment-title, .hero-title');
     if (titleEl) {
       try {
-        const split = new SplitType(titleEl, { types: 'chars' });
-        if (split.chars && split.chars.length > 0) {
+        const split = new SplitType(titleEl, { types: 'lines,words' });
+        if (split.words && split.words.length > 0) {
           gsap.fromTo(
-            split.chars,
-            { opacity: 0, display: 'none' },
+            split.words,
+            { yPercent: 100, opacity: 0 },
             {
+              yPercent: 0,
               opacity: 1,
-              display: 'inline-block',
-              stagger: 0.025,
-              duration: 0.05,
-              ease: 'none',
-              onStart: () => audio.playKeyClick()
+              stagger: 0.04,
+              duration: 1.1,
+              ease: 'power3.out'
             }
           );
         }
       } catch (e) {
-        // Fallback
+        gsap.fromTo(titleEl, { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out' });
       }
     }
 
-    // Typewriter line revelation
-    const lines = card.querySelectorAll('.typewriter-line:not(.machine-title)');
-    gsap.fromTo(
-      lines,
-      { opacity: 0, y: 10 },
-      {
-        opacity: 1,
-        y: 0,
-        stagger: 0.1,
-        duration: 0.4,
-        ease: 'power2.out',
-        onStart: () => audio.playKeyClick()
-      }
-    );
+    // Narrative paragraph reveal
+    const narrative = moment.querySelector('.moment-narrative');
+    if (narrative) {
+      gsap.fromTo(
+        narrative,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 1.2, delay: 0.2, ease: 'power2.out' }
+      );
+    }
+
+    // Spec lines reveal
+    const specs = moment.querySelectorAll('.spec-item');
+    if (specs.length > 0) {
+      gsap.fromTo(
+        specs,
+        { opacity: 0, x: -15 },
+        { opacity: 1, x: 0, stagger: 0.08, duration: 0.8, delay: 0.15, ease: 'power2.out' }
+      );
+    }
   }
 }

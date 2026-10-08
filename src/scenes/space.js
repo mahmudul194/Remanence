@@ -199,12 +199,24 @@ export function createSpaceScene() {
   distantMars.position.set(40, -10, 420);
   group.add(distantMars);
 
+  // 7. Cinematic Multi-Spectral Starfield (Points with Stellar Classifications & Twinkle)
+  const starfield = createCinematicStarfield();
+  group.add(starfield.mesh);
+
+  // 8. Distant Sun with Additive Corona Halo & Anamorphic Streak
+  const sunGroup = createCinematicSun(sunLight.position);
+  group.add(sunGroup);
+
   // Animation update
-  function update(delta) {
-    earthMesh.rotation.y += delta * 0.015;
-    cloudsMesh.rotation.y += delta * 0.022; // clouds rotate slightly faster
+  function update(delta, time = 0) {
+    earthMesh.rotation.y += delta * 0.012;
+    cloudsMesh.rotation.y += delta * 0.018; // clouds rotate slightly faster
     distantMoon.rotation.y += delta * 0.005;
     distantMars.rotation.y += delta * 0.008;
+
+    if (starfield && starfield.update) {
+      starfield.update(delta, time);
+    }
   }
 
   return {
@@ -213,8 +225,179 @@ export function createSpaceScene() {
     clouds: cloudsMesh,
     distantMoon,
     distantMars,
+    sunLight,
     update
   };
+}
+
+/**
+ * Procedural Starfield with realistic stellar spectral temperatures,
+ * apparent magnitude distribution, and dynamic atmospheric twinkle
+ */
+function createCinematicStarfield() {
+  const count = 3200;
+  const positions = new Float32Array(count * 3);
+  const colors = new Float32Array(count * 3);
+  const sizes = new Float32Array(count);
+  const phases = new Float32Array(count);
+
+  const spectralTypes = [
+    new THREE.Color(0x9db4ff), // O/B hot blue-white
+    new THREE.Color(0xf8f9fa), // A pure white
+    new THREE.Color(0xfff4e8), // G solar white-yellow
+    new THREE.Color(0xffddb4), // K warm orange
+    new THREE.Color(0xffa885)  // M cool red/amber
+  ];
+
+  for (let i = 0; i < count; i++) {
+    // Spherical distribution with deep radial depth
+    const radius = 350 + Math.random() * 550;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+
+    positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+    positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+    positions[i * 3 + 2] = radius * Math.cos(phi);
+
+    // Stellar spectral color distribution
+    const colIdx = Math.floor(Math.random() * spectralTypes.length);
+    const col = spectralTypes[colIdx];
+    colors[i * 3] = col.r;
+    colors[i * 3 + 1] = col.g;
+    colors[i * 3 + 2] = col.b;
+
+    // Magnitude: mostly faint background stars with a few brilliant beacons
+    const mag = Math.random();
+    sizes[i] = mag > 0.94 ? 2.8 : (mag > 0.7 ? 1.8 : 1.0);
+    phases[i] = Math.random() * Math.PI * 2;
+  }
+
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
+  geometry.setAttribute('aPhase', new THREE.BufferAttribute(phases, 1));
+
+  const uniforms = {
+    uTime: { value: 0 },
+    uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+  };
+
+  const material = new THREE.ShaderMaterial({
+    uniforms,
+    vertexShader: `
+      attribute vec3 color;
+      attribute float aSize;
+      attribute float aPhase;
+      uniform float uTime;
+      uniform float uPixelRatio;
+      varying vec3 vColor;
+      varying float vAlpha;
+
+      void main() {
+        vColor = color;
+        // Subtle organic twinkle
+        float twinkle = sin(uTime * 1.5 + aPhase) * 0.35 + 0.65;
+        vAlpha = twinkle;
+
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        gl_Position = projectionMatrix * mvPosition;
+        gl_PointSize = (aSize * uPixelRatio * 4.5);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      varying float vAlpha;
+
+      void main() {
+        vec2 coord = gl_PointCoord - vec2(0.5);
+        float dist = length(coord);
+        if (dist > 0.5) discard;
+        float intensity = 1.0 - smoothstep(0.0, 0.5, dist);
+        intensity = pow(intensity, 2.0);
+        gl_FragColor = vec4(vColor, intensity * vAlpha);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+
+  const mesh = new THREE.Points(geometry, material);
+
+  function update(delta, time) {
+    uniforms.uTime.value = time;
+  }
+
+  return { mesh, update };
+}
+
+/**
+ * Creates photorealistic celestial Sun with luminous corona
+ * and anamorphic horizontal cinematic streak
+ */
+function createCinematicSun(position) {
+  const group = new THREE.Group();
+  group.position.copy(position);
+
+  // 1. Sun Core Disc
+  const coreGeo = new THREE.SphereGeometry(3.5, 32, 32);
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+  group.add(coreMesh);
+
+  // 2. Soft Radial Corona Sprite
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255, 255, 255, 1.0)');
+  grad.addColorStop(0.2, 'rgba(255, 240, 200, 0.7)');
+  grad.addColorStop(0.5, 'rgba(255, 190, 100, 0.25)');
+  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 256);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  const coronaMat = new THREE.SpriteMaterial({
+    map: texture,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending
+  });
+  const coronaSprite = new THREE.Sprite(coronaMat);
+  coronaSprite.scale.set(45, 45, 1);
+  group.add(coronaSprite);
+
+  // 3. Subtle Anamorphic Flare Streak
+  const streakGeo = new THREE.PlaneGeometry(120, 1.8);
+  const streakCanvas = document.createElement('canvas');
+  streakCanvas.width = 256;
+  streakCanvas.height = 32;
+  const sCtx = streakCanvas.getContext('2d');
+  const sGrad = sCtx.createLinearGradient(0, 0, 256, 0);
+  sGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+  sGrad.addColorStop(0.35, 'rgba(120, 200, 255, 0.25)');
+  sGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.85)');
+  sGrad.addColorStop(0.65, 'rgba(120, 200, 255, 0.25)');
+  sGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  sCtx.fillStyle = sGrad;
+  sCtx.fillRect(0, 0, 256, 32);
+
+  const streakTexture = new THREE.CanvasTexture(streakCanvas);
+  const streakMat = new THREE.MeshBasicMaterial({
+    map: streakTexture,
+    transparent: true,
+    opacity: 0.7,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  const streakMesh = new THREE.Mesh(streakGeo, streakMat);
+  group.add(streakMesh);
+
+  return group;
 }
 
 /**
