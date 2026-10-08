@@ -537,13 +537,13 @@ body.cursor-hover .cursor-dot {
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 2.2rem 3.5rem;
+  padding: 1.5rem 3.5rem;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   z-index: 100;
   pointer-events: none;
-  background: linear-gradient(to top, rgba(5, 6, 10, 0.85) 0%, rgba(5, 6, 10, 0.35) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(5, 6, 10, 0.85) 0%, rgba(5, 6, 10, 0.25) 60%, transparent 100%);
 }
 
 .metadata-col {
@@ -617,20 +617,53 @@ body.cursor-hover .cursor-dot {
   text-align: center;
 }
 
-/* Soft Dark Scrim behind every text block (sized 20% larger than text block, blur 6px) */
+/* Hero Title Container: Floating freely in cosmic space (zero box, zero blur, zero border) */
+.hero-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 90ch;
+  margin: 0 auto;
+  text-align: center;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0);
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0;
+}
+
+.hero-wrap.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-intro .moment-wrap,
+.section-intro .hero-wrap {
+  background: transparent !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Sleek, Architectural Side-docked Story Moments */
 .moment-wrap {
   position: relative;
   width: 100%;
-  max-width: 58ch;
-  padding: 2.6rem 3rem;
-  border-radius: 18px;
+  max-width: 48ch;
+  padding: 2.2rem 2.6rem;
+  border-radius: 14px;
   pointer-events: auto;
   opacity: 0;
   transform: translateY(24px);
-  background: radial-gradient(ellipse at center, rgba(5, 6, 10, calc(0.82 * var(--scrim-boost, 1))) 0%, rgba(5, 6, 10, calc(0.55 * var(--scrim-boost, 1))) 75%, transparent 100%);
-  backdrop-filter: blur(var(--scrim-blur, 6px));
-  -webkit-backdrop-filter: blur(var(--scrim-blur, 6px));
-  box-shadow: 0 16px 48px rgba(5, 6, 10, 0.65);
+  background: linear-gradient(135deg, rgba(8, 12, 22, 0.78) 0%, rgba(5, 7, 12, 0.62) 100%);
+  border: 1px solid rgba(245, 242, 234, 0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 
 .moment-wrap.active {
@@ -639,7 +672,7 @@ body.cursor-hover .cursor-dot {
 }
 
 .moment-wrap.moment-center {
-  max-width: 74ch;
+  max-width: 56ch;
   margin: 0 auto;
 }
 

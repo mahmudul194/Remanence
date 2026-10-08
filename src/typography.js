@@ -117,7 +117,8 @@ export class ContrastGuard {
   }
 
   auditActiveMoments() {
-    const activeWraps = document.querySelectorAll('.moment-wrap.active, .moment-wrap');
+    // Only audit story moment cards, never the opening title
+    const activeWraps = document.querySelectorAll('.story-section:not(.section-intro) .moment-wrap.active');
     const moonWhiteLum = getRelativeLuminance(THEME_PALETTE.moonWhite); // ~0.887
 
     activeWraps.forEach((wrap) => {
@@ -135,19 +136,12 @@ export class ContrastGuard {
 
       const bodyRatio = getContrastRatio(moonWhiteLum, compositeLum);
 
-      // Auto-boost scrim if contrast drops below strict 7.0:1 threshold
+      // Protect legibility gently with scrim boost if scene is bright
       if (bodyRatio < 7.0) {
-        const neededBoost = Math.min(1.5, scrimBoost + 0.15);
+        const neededBoost = Math.min(1.3, scrimBoost + 0.1);
         wrap.style.setProperty('--scrim-boost', neededBoost.toFixed(2));
-        wrap.style.setProperty('--scrim-blur', '10px');
-
-        if (this.isDev) {
-          console.warn(`[ContrastGuard] Boosted scrim on #${wrap.parentElement?.id || 'moment'}: ratio was ${bodyRatio.toFixed(2)}:1 (target >= 7.0:1)`);
-        }
       } else if (bodyRatio > 11.0 && scrimBoost > 1.0) {
-        // Return gently to default
         wrap.style.setProperty('--scrim-boost', '1.0');
-        wrap.style.setProperty('--scrim-blur', '6px');
       }
     });
   }

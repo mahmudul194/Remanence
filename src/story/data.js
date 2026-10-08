@@ -18,6 +18,9 @@ export const STORY_DATA = {
       id: "intro",
       type: "intro",
       title: "REMANENCE",
+      machineTitle: "Planet Earth · Low Orbit",
+      coordinates: "28.5721° N, 80.6480° W",
+      status: "Active",
       tagline: "What remains.",
       lead: "Translunar Insertion · 1969 to Present",
       instruction: "Scroll to explore"

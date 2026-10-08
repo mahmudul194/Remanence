@@ -9,7 +9,7 @@ import * as THREE from 'three';
 
 /**
  * Inverts NASA ocean specular reflection mask into a PBR roughness map:
- * Oceans (high specular) -> low roughness (0.05 glossy mirror water)
+ * Oceans (high specular) -> low roughness (0.04 glossy mirror water)
  * Continents (zero specular) -> high roughness (0.92 matte dry terrain)
  */
 function createInvertedRoughnessMap(url) {
@@ -33,11 +33,48 @@ function createInvertedRoughnessMap(url) {
     const data = imgData.data;
     for (let i = 0; i < data.length; i += 4) {
       const spec = data[i]; // NASA mask: 255 ocean, 0 land
-      // Invert: 255 spec -> 14 roughness (~0.05), 0 spec -> 238 roughness (~0.93)
-      const rough = Math.max(14, 240 - Math.floor(spec * 0.88));
+      // Invert: 255 spec -> 12 roughness (~0.04), 0 spec -> 236 roughness (~0.92)
+      const rough = Math.max(12, 238 - Math.floor(spec * 0.88));
       data[i] = rough;
       data[i + 1] = rough;
       data[i + 2] = rough;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    texture.needsUpdate = true;
+  };
+  img.src = url;
+  return texture;
+}
+
+/**
+ * Converts indexed / grayscale NASA clouds into transparent RGBA clouds:
+ * Black background -> 100% transparent (reveals sapphire blue ocean below)
+ * White clouds -> pure white with alpha proportional to density
+ */
+function createTransparentCloudsMap(url) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.ClampToEdgeWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      // Below threshold is transparent atmosphere; above is cloud density
+      data[i + 3] = brightness > 30 ? Math.floor(Math.min(235, (brightness - 25) * 1.1)) : 0;
     }
     ctx.putImageData(imgData, 0, 0);
     texture.needsUpdate = true;
@@ -58,7 +95,7 @@ export function createSpaceScene() {
 
   const earthNormal = textureLoader.load('./textures/earth_normal_2048.jpg');
   const earthRoughness = createInvertedRoughnessMap('./textures/earth_specular_2048.jpg');
-  const earthClouds = textureLoader.load('./textures/earth_clouds_1024.png');
+  const earthClouds = createTransparentCloudsMap('./textures/earth_clouds_1024.png');
   const earthLights = textureLoader.load('./textures/earth_lights_2048.png');
   earthLights.colorSpace = THREE.SRGBColorSpace;
 
@@ -68,38 +105,40 @@ export function createSpaceScene() {
   const marsMap = textureLoader.load('./textures/mars_2048.webp');
   marsMap.colorSpace = THREE.SRGBColorSpace;
 
-  // Direct Sunlight Vector
-  const sunLight = new THREE.DirectionalLight(0xffffff, 5.0);
-  sunLight.position.set(80, 42, 68);
+  // Cinematic Sunlight Vector (natural exposure, no harsh blowout)
+  const sunLight = new THREE.DirectionalLight(0xfff8ee, 2.8);
+  sunLight.position.set(80, 36, 60);
   group.add(sunLight);
+
+  // Subtle deep-space cosmic fill
+  const spaceAmbient = new THREE.AmbientLight(0x040810, 0.12);
+  group.add(spaceAmbient);
 
   const sunDir = sunLight.position.clone().normalize();
 
-  // 2. Photorealistic Earth Sphere (PBR Material with Shader Hook)
+  // 2. Photorealistic Earth Sphere (PBR Material with Zero Metalness)
   const earthGeo = new THREE.SphereGeometry(18, 128, 128);
   const earthMat = new THREE.MeshStandardMaterial({
     map: earthMap,
     normalMap: earthNormal,
     normalScale: new THREE.Vector2(0.85, 0.85),
     roughnessMap: earthRoughness,
-    roughness: 1.0,
-    metalness: 0.12,
+    roughness: 0.75,
+    metalness: 0.0, // Natural silicate & liquid water, never metal!
     emissiveMap: earthLights,
     emissive: new THREE.Color(0xffbf66),
-    emissiveIntensity: 1.6
+    emissiveIntensity: 1.3
   });
 
   // Inject physically accurate day/night modulation for city lights:
-  // City lights are invisible in daytime sunlight and illuminate on the dark night side!
   earthMat.onBeforeCompile = (shader) => {
     shader.fragmentShader = shader.fragmentShader.replace(
       '#include <emissivemap_fragment>',
       `#include <emissivemap_fragment>
-       // In Three.js, directionalLights[0].direction is light direction in view space
        #if NUM_DIR_LIGHTS > 0
          float sunDot = dot(normalize(geometryNormal), normalize(directionalLights[0].direction));
-         // Night factor: 0.0 on bright daylit side, 1.0 on deep dark side
-         float nightFactor = smoothstep(0.12, -0.18, sunDot);
+         // Night factor: 0.0 on bright daylit side, smoothly 1.0 on deep dark side
+         float nightFactor = smoothstep(0.08, -0.22, sunDot);
          totalEmissiveRadiance *= nightFactor;
        #endif
       `
@@ -109,16 +148,16 @@ export function createSpaceScene() {
   const earthMesh = new THREE.Mesh(earthGeo, earthMat);
   earthMesh.position.set(0, 0, 0);
   earthMesh.rotation.y = 2.4;
-  earthMesh.rotation.x = 0.25; // Real 23.5° axial tilt
+  earthMesh.rotation.x = 0.25; // Authentic 23.5° axial tilt
   earthMesh.receiveShadow = true;
   group.add(earthMesh);
 
-  // 3. Swirling 3D Cloud Layer (floating above surface)
-  const cloudsGeo = new THREE.SphereGeometry(18.25, 96, 96);
+  // 3. Floating 3D Cloud Layer (pure white clouds over crystal transparent oceans)
+  const cloudsGeo = new THREE.SphereGeometry(18.16, 96, 96);
   const cloudsMat = new THREE.MeshStandardMaterial({
     map: earthClouds,
     transparent: true,
-    opacity: 0.82,
+    opacity: 0.85,
     blending: THREE.NormalBlending,
     roughness: 0.95,
     metalness: 0.0,
@@ -129,8 +168,8 @@ export function createSpaceScene() {
   cloudsMesh.rotation.x = 0.25;
   group.add(cloudsMesh);
 
-  // 4. Photorealistic Rayleigh Atmospheric Scattering Rim
-  const atmoGeo = new THREE.SphereGeometry(18.55, 64, 64);
+  // 4. Photorealistic Rayleigh Atmospheric Scattering Rim (Delicate, sharp halo)
+  const atmoGeo = new THREE.SphereGeometry(18.42, 64, 64);
   const atmoUniforms = {
     uSunDir: { value: sunDir }
   };
@@ -151,22 +190,22 @@ export function createSpaceScene() {
       varying vec3 vWorldNormal;
       varying vec3 vViewDir;
       void main() {
-        // Limb Fresnel: bright along the curved horizon edge
+        // Razor-sharp limb Fresnel hugging the planetary edge
         float fresnel = 1.0 - max(dot(vWorldNormal, vViewDir), 0.0);
-        fresnel = pow(fresnel, 3.2);
+        fresnel = pow(fresnel, 4.5);
 
         // Sunlight alignment: atmosphere only scatters light on the illuminated side
         float sunDot = dot(vWorldNormal, normalize(uSunDir));
-        float sunFactor = smoothstep(-0.25, 0.45, sunDot);
+        float sunFactor = smoothstep(-0.15, 0.45, sunDot);
 
         // Vibrant Rayleigh cyan and warm sunset amber at terminator
-        vec3 dayAtmosphere = vec3(0.24, 0.68, 1.0);
-        vec3 sunsetTwilight = vec3(1.0, 0.52, 0.18);
-        float terminator = smoothstep(0.25, -0.15, abs(sunDot));
+        vec3 dayAtmosphere = vec3(0.24, 0.65, 1.0);
+        vec3 sunsetTwilight = vec3(1.0, 0.48, 0.16);
+        float terminator = smoothstep(0.2, -0.1, abs(sunDot));
         vec3 color = mix(dayAtmosphere, sunsetTwilight, terminator * 0.4);
 
-        float alpha = fresnel * (sunFactor * 0.92 + 0.08);
-        gl_FragColor = vec4(color, alpha);
+        float intensity = fresnel * sunFactor;
+        gl_FragColor = vec4(color * (intensity * 1.8), 1.0);
       }
     `,
     blending: THREE.AdditiveBlending,

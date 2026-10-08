@@ -70,7 +70,7 @@ class RemanenceApp {
     new RGBELoader().load('./textures/lobe.hdr', (envTexture) => {
       envTexture.mapping = THREE.EquirectangularReflectionMapping;
       this.scene.environment = envTexture;
-      this.scene.environmentIntensity = 1.35;
+      this.scene.environmentIntensity = 0.25;
     });
 
     // 4. Effects Managers

@@ -337,7 +337,7 @@ export class StoryTimeline {
     const sections = document.querySelectorAll('.story-section');
     const section = sections[index];
     if (!section) return;
-    const moment = section.querySelector('.moment-wrap');
+    const moment = section.querySelector('.moment-wrap, .hero-wrap');
     if (!moment) return;
 
     gsap.killTweensOf(moment);
@@ -393,7 +393,7 @@ export class StoryTimeline {
     const section = sections[index];
     if (!section) return;
 
-    const moment = section.querySelector('.moment-wrap');
+    const moment = section.querySelector('.moment-wrap, .hero-wrap');
     if (!moment) return;
 
     // 1. Immediately kill any exit tweens on moment and animate to full opacity
