@@ -1,6 +1,6 @@
 /**
  * Post-Processing Pipeline for REMANENCE
- * Includes UnrealBloom, Film Grain, Vignette, and Apollo 404 Glitch Burst.
+ * Includes UnrealBloom, Film Grain, Vignette, and Signal Glitch Burst.
  * Supports High / Low performance modes and mobile optimization.
  */
 
@@ -45,7 +45,7 @@ const CinemaShader = {
     void main() {
       vec2 uv = vUv;
 
-      // Apollo 404 Glitch displacement
+      // Signal Glitch displacement
       if (uGlitchIntensity > 0.001) {
         float sliceY = floor(uv.y * 30.0);
         float noiseSlice = sin(sliceY * 13.0 + uTime * 45.0);
@@ -108,7 +108,7 @@ export function createPostProcessing(renderer, scene, camera) {
   );
   composer.addPass(bloomPass);
 
-  // 3. Cinema Shader Pass (Grain, Vignette, Apollo 404 Glitch)
+  // 3. Cinema Shader Pass (Grain, Vignette, Telemetry Glitch)
   const cinemaPass = new ShaderPass(CinemaShader);
   composer.addPass(cinemaPass);
 

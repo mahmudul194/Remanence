@@ -1,6 +1,6 @@
 /**
  * REMANENCE: What remains.
- * NASA Space Apps Challenge - Team Apollo 404
+ * Storytelling about NASA's Discarded Equipment on the Moon and Mars
  * Complete mission data, timeline telemetry, and historical facts.
  * Verified against NASA archives, NSSDC, and JPL mission logs.
  */
@@ -9,7 +9,6 @@ export const STORY_DATA = {
   meta: {
     title: "REMANENCE",
     tagline: "What remains.",
-    team: "Apollo 404",
     challenge: "Abandoned but Not Forgotten: Storytelling about NASA's Discarded Equipment on the Moon and Mars",
     definition: "remanence (n.) - what remains after the force is gone."
   },
@@ -20,8 +19,8 @@ export const STORY_DATA = {
       type: "intro",
       title: "REMANENCE",
       subtitle: "WHAT REMAINS",
-      lead: "> SEARCHING FOR SIGNAL...",
-      secondary: "SIGNAL RECEIVED. DSN FREQUENCY LOCKED: 2.295 GHz",
+      lead: "TRANSMISSION LOCKED",
+      secondary: "SIGNAL RECEIVED // DSN FREQUENCY LOCKED: 2.295 GHz",
       definition: "remanence (n.)\n1. The residual magnetic flux density left in a magnetic circuit after the removal of the magnetizing force.\n2. The enduring physical traces of human curiosity left silent across other worlds.",
       instruction: "SCROLL TO INITIATE TRAJECTORY"
     },
@@ -214,7 +213,7 @@ export const STORY_DATA = {
       machine: "DATA & SOURCES",
       location: "NASA Scientific Archives",
       status: "VERIFIED",
-      coordinates: "NASA ARCHIVES // AP-404",
+      coordinates: "NASA ARCHIVES // PERPETUAL",
       story: "Every date, coordinate, and telemetry log in REMANENCE is verified against official NASA historical and mission archives: NASA History Office, NASA Planetary Data System (PDS), Lunar Reconnaissance Orbiter (LROC), and NASA 3D Resources."
     }
   ],

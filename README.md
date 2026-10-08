@@ -1,7 +1,6 @@
 # REMANENCE: What remains.
-> **NASA Space Apps Challenge 2026 (Bangladesh Regional)**  
+> **NASA Space Apps Challenge (Storytelling)**  
 > **Challenge:** Abandoned but Not Forgotten: Storytelling about NASA's Discarded Equipment on the Moon and Mars  
-> **Team:** Apollo 404  
 
 ---
 
@@ -17,7 +16,7 @@ From the golden descent stage of Apollo 11 sitting in the airless stillness of M
 - **3D Graphics Engine**: Three.js (r186) with procedural terrains, celestial lighting, and shadow mapping
 - **Camera Spline & Animation**: GSAP + ScrollTrigger with smooth cubic Catmull-Rom curve camera flight (`CatmullRomCurve3`)
 - **Smooth Inertia Scroll**: Lenis (Studio Freight) synchronized with GSAP's internal ticker
-- **Post-Processing**: Three.js EffectComposer with `UnrealBloomPass`, custom `FilmGrainPass`, `VignettePass`, and the **Apollo 404 Glitch Burst** shader
+- **Post-Processing**: Three.js EffectComposer with `UnrealBloomPass`, custom `FilmGrainPass`, `VignettePass`, and the **Signal Glitch Burst** shader
 - **In-Scene 3D Captions**: `troika-three-text` (SDF 3D monospace telemetry labels)
 - **Telemetry HUD Typography**: `SplitType` for letter-by-letter typed mission logs
 - **Sound Architecture**: Procedural Web Audio API synthesizer + Howler.js fallback for zero-dependency immediate space hum, Martian wind, radar sonar pings, and laser chirps
@@ -31,7 +30,7 @@ Remanence/
 ├── index.html                 # Main HTML with loading screen, HUD, and mission cards
 ├── package.json               # ES module package manifest & scripts
 ├── vite.config.js             # Vite configuration with relative base paths
-├── README.md                  # Team and project documentation
+├── README.md                  # Project documentation
 ├── public/
 │   ├── favicon.svg            # Radar pulse SVG icon
 │   ├── models/                # NASA 3D .glb models (optional, with fallback)
@@ -47,7 +46,7 @@ Remanence/
     │   ├── mars.js            # Martian dunes, Viking 1, Pathfinder, Spirit, Oppy, Ginny
     │   └── models.js          # 8 Procedural compound 3D models with telemetry beacons
     ├── effects/
-    │   ├── postfx.js          # Bloom, Film grain, Vignette, Apollo 404 glitch
+    │   ├── postfx.js          # Bloom, Film grain, Vignette, Telemetry glitch
     │   ├── particles.js       # Starfield, regolith dust, reactive Martian sandstorm
     │   └── pingRing.js        # Expanding radar telemetry rings & beacon afterglow
     ├── story/
@@ -152,7 +151,7 @@ To update or translate a mission log, simply edit the corresponding entry in the
 
 ## ✂️ What to Cut First if Time Runs Short (Competition Prioritization)
 If presenting under strict time constraints or low hardware capacity:
-1. **External `.glb` loading**: Keep the built-in procedural models—they load with zero latency and never 404.
+1. **External `.glb` loading**: Keep the built-in procedural models—they load with zero latency and never fail to display.
 2. **Post-Processing Bloom**: Toggle GFX to "Low" in the top HUD if presenting on an older laptop projector.
 3. **Dust Storm Particle Density**: Can be dialed down in `src/effects/particles.js` (`marsDustCount = 800`).
 4. **Never Cut**: The Catmull-Rom spline camera flight, the Opportunity day-to-night dimming, the expanding radar pulse, or the Apollo retroreflector finale story. They carry the emotional core of the project.

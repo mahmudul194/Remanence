@@ -8,6 +8,7 @@
 
 import * as THREE from 'three';
 import { modelLoader } from '../utils/loader.js';
+import { createDetailedApolloLM } from './lunarModule.js';
 
 // Realistic Aerospace Materials Pool (Tuned for HDR Image-Based Lighting)
 const materials = {
@@ -68,106 +69,14 @@ const materials = {
 };
 
 /**
- * 1. Apollo 11 Lunar Module Descent Stage
+ * 1. Apollo 11 Lunar Module Descent Stage (Hero Asset)
  */
 export function createApolloLM() {
-  const group = new THREE.Group();
-  group.name = 'apollo_lm';
+  const group = createDetailedApolloLM();
 
-  // Octagonal Descent Stage Body
-  const bodyGeo = new THREE.CylinderGeometry(2.0, 2.3, 1.4, 8);
-  const bodyMesh = new THREE.Mesh(bodyGeo, materials.goldKapton);
-  bodyMesh.position.y = 1.3;
-  bodyMesh.castShadow = true;
-  bodyMesh.receiveShadow = true;
-  group.add(bodyMesh);
-
-  // Top deck (dark heat shield)
-  const topGeo = new THREE.CylinderGeometry(1.9, 1.9, 0.1, 8);
-  const topMesh = new THREE.Mesh(topGeo, materials.darkMetal);
-  topMesh.position.y = 2.05;
-  group.add(topMesh);
-
-  // Descent Propulsion System (DPS) Rocket Engine Bell
-  const engineGeo = new THREE.ConeGeometry(0.7, 1.1, 24, 1, true);
-  const engineMesh = new THREE.Mesh(engineGeo, materials.darkMetal);
-  engineMesh.position.y = 0.5;
-  engineMesh.rotation.x = Math.PI;
-  group.add(engineMesh);
-
-  // 4 Outrigger Landing Gear Struts & Footpads
-  for (let i = 0; i < 4; i++) {
-    const angle = (i * Math.PI) / 2 + Math.PI / 4;
-    const legGroup = new THREE.Group();
-
-    // Primary strut
-    const strutGeo = new THREE.CylinderGeometry(0.06, 0.06, 2.5);
-    const strutMesh = new THREE.Mesh(strutGeo, materials.goldKapton);
-    strutMesh.position.set(0, 0.9, 1.3);
-    strutMesh.rotation.x = 0.65;
-    legGroup.add(strutMesh);
-
-    // V-shaped secondary braces
-    const braceGeo = new THREE.CylinderGeometry(0.04, 0.04, 1.8);
-    const brace1 = new THREE.Mesh(braceGeo, materials.aluminum);
-    brace1.position.set(-0.35, 1.1, 0.8);
-    brace1.rotation.set(0.4, 0.3, 0.3);
-    legGroup.add(brace1);
-
-    const brace2 = new THREE.Mesh(braceGeo, materials.aluminum);
-    brace2.position.set(0.35, 1.1, 0.8);
-    brace2.rotation.set(0.4, -0.3, -0.3);
-    legGroup.add(brace2);
-
-    // Footpad dish
-    const padGeo = new THREE.CylinderGeometry(0.42, 0.45, 0.1, 16);
-    const padMesh = new THREE.Mesh(padGeo, materials.goldKapton);
-    padMesh.position.set(0, 0.05, 2.1);
-    legGroup.add(padMesh);
-
-    legGroup.rotation.y = angle;
-    group.add(legGroup);
-  }
-
-  // Ladder on front strut
-  const ladderGeo = new THREE.BoxGeometry(0.25, 1.6, 0.05);
-  const ladderMesh = new THREE.Mesh(ladderGeo, materials.aluminum);
-  ladderMesh.position.set(0, 0.9, 2.2);
-  ladderMesh.rotation.x = 0.65;
-  group.add(ladderMesh);
-
-  // Commemorative plaque on ladder strut
-  const plaqueGeo = new THREE.BoxGeometry(0.2, 0.12, 0.02);
-  const plaqueMesh = new THREE.Mesh(
-    plaqueGeo,
-    new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.95, roughness: 0.1 })
-  );
-  plaqueMesh.position.set(0, 1.1, 1.95);
-  plaqueMesh.rotation.x = 0.65;
-  group.add(plaqueMesh);
-
-  // American Flag replica standing nearby
-  const flagGroup = new THREE.Group();
-  const poleGeo = new THREE.CylinderGeometry(0.02, 0.02, 1.6);
-  const poleMesh = new THREE.Mesh(poleGeo, materials.aluminum);
-  poleMesh.position.set(2.8, 0.8, 1.5);
-  flagGroup.add(poleMesh);
-
-  const flagGeo = new THREE.PlaneGeometry(0.7, 0.45);
-  const flagMat = new THREE.MeshStandardMaterial({
-    color: 0xdd2233,
-    roughness: 0.8,
-    side: THREE.DoubleSide
-  });
-  const flagMesh = new THREE.Mesh(flagGeo, flagMat);
-  flagMesh.position.set(3.15, 1.35, 1.5);
-  flagMesh.rotation.y = 0.2;
-  flagGroup.add(flagMesh);
-  group.add(flagGroup);
-
-  // Telemetry Beacon LED
-  const beacon = createBeacon(0xffd700, 1.8);
-  beacon.position.set(0, 2.2, 0);
+  // Subtle telemetry beacon LED indicator on top deck
+  const beacon = createBeacon(0xffbf66, 1.4);
+  beacon.position.set(0, 2.18, 0);
   group.add(beacon);
   group.userData.beacon = beacon;
 

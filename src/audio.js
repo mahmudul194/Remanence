@@ -2,7 +2,7 @@
  * Audio Engine for REMANENCE
  * Combines Web Audio API procedural synthesis with Howler.js.
  * Guarantees zero-dependency immediate sound (deep space drone, Martian wind,
- * radar ping, radio static, telemetry beeps, laser pulses, Apollo 404 glitch)
+ * radar ping, radio static, telemetry beeps, laser pulses, signal glitch)
  * with optional fallback to local audio files in public/sounds/.
  */
 
@@ -283,7 +283,7 @@ class AudioManager {
     osc2.stop(now + 0.35);
   }
 
-  // Glitch burst (Apollo 404 digital distortion)
+  // Glitch burst (signal digital distortion)
   playGlitch() {
     if (!this.audioCtx || this.isMuted) return;
     const now = this.audioCtx.currentTime;

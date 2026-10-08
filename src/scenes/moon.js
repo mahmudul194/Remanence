@@ -19,7 +19,7 @@ export async function createMoonScene() {
 
   const posAttr = terrainGeo.attributes.position;
   const craters = [
-    { x: 0, z: 0, r: 18, depth: 2.2 },
+    { x: 28, z: 32, r: 16, depth: 2.4 }, // Little West Crater (visited by Armstrong)
     { x: 35, z: -55, r: 24, depth: 3.5 },
     { x: -40, z: -95, r: 35, depth: 5.2 }, // Surveyor Crater
     { x: -50, z: 40, r: 15, depth: 1.8 },
@@ -47,6 +47,13 @@ export async function createMoonScene() {
         }
       }
     });
+
+    // Tranquility Base touchdown pad: smoothly leveled so footpads rest firmly with zero float
+    const distTB = Math.hypot(x, z);
+    if (distTB < 14) {
+      const blend = Math.max(0, Math.min(1, (distTB - 4.5) / 9.5));
+      y = y * blend;
+    }
 
     posAttr.setY(i, y);
   }
@@ -130,20 +137,20 @@ export async function createMoonScene() {
   group.add(retro);
   machines.retroreflector = retro;
 
-  // 5. Stark Lunar Sunlight (High contrast, harsh shadows in airless vacuum)
-  const lunarSun = new THREE.DirectionalLight(0xffffff, 4.6);
-  lunarSun.position.set(90, 75, 60);
+  // 5. Stark Lunar Sunlight (Authentic 16° low sun elevation, pitch-black razor-sharp shadows in vacuum)
+  const lunarSun = new THREE.DirectionalLight(0xfff8ee, 5.0);
+  lunarSun.position.set(110, 32, 55);
   lunarSun.castShadow = true;
-  lunarSun.shadow.mapSize.width = 2048;
-  lunarSun.shadow.mapSize.height = 2048;
+  lunarSun.shadow.mapSize.width = 4096;
+  lunarSun.shadow.mapSize.height = 4096;
   lunarSun.shadow.camera.near = 10;
-  lunarSun.shadow.camera.far = 400;
-  const d = 120;
+  lunarSun.shadow.camera.far = 380;
+  const d = 110;
   lunarSun.shadow.camera.left = -d;
   lunarSun.shadow.camera.right = d;
   lunarSun.shadow.camera.top = d;
   lunarSun.shadow.camera.bottom = -d;
-  lunarSun.shadow.bias = -0.0004;
+  lunarSun.shadow.bias = -0.0003;
   group.add(lunarSun);
 
   // Extremely faint Earthshine ambient (deep space contrast)

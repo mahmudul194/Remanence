@@ -224,7 +224,7 @@ export class StoryTimeline {
     if (this.app.moonScene) this.app.moonScene.group.visible = isMoon;
     if (this.app.marsScene) this.app.marsScene.group.visible = isMars;
 
-    // 1. Apollo 404 Glitch Burst between stories
+    // 1. Signal Glitch Burst between stories
     if (index > 1) {
       this.postfx.triggerGlitch(0.28);
       audio.playGlitch();
@@ -261,6 +261,15 @@ export class StoryTimeline {
       // Beacon fade to remanence
       if (currentMachine.userData && currentMachine.userData.beacon) {
         this.pingManager.fadeBeaconToRemanence(currentMachine.userData.beacon, 3.5);
+      }
+    }
+
+    // 3.5. Interactive Inspection Hotspots & Weathering Controls (Apollo 11)
+    if (this.app.inspection) {
+      if (index === 2 && this.app.moonScene && this.app.moonScene.machines.apollo11) {
+        this.app.inspection.setActiveMachine(this.app.moonScene.machines.apollo11, true);
+      } else {
+        this.app.inspection.setActiveMachine(null, false);
       }
     }
 

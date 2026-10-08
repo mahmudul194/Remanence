@@ -1,7 +1,7 @@
 {
   "name": "remanence",
   "version": "1.0.0",
-  "description": "REMANENCE: What remains. Storytelling about NASA's Discarded Equipment on the Moon and Mars - Team Apollo 404",
+  "description": "REMANENCE: What remains. Storytelling about NASA's Discarded Equipment on the Moon and Mars",
   "type": "module",
   "scripts": {
     "dev": "vite",

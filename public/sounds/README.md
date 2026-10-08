@@ -1,6 +1,6 @@
 # Sounds Directory
 
-REMANENCE includes a built-in real-time Web Audio API procedural sound synthesizer (Binaural space hum, Martian wind, Apollo 404 glitch bursts, telemetry radar pings, and laser chirps).
+REMANENCE includes a built-in real-time Web Audio API procedural sound synthesizer (Binaural space hum, Martian wind, telemetry glitch bursts, radar pings, and laser chirps).
 
 If you want to use custom pre-recorded audio tracks via Howler.js, place your royalty-free `.mp3` or `.webm` files here:
 - `ambient_drone.mp3`

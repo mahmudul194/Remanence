@@ -1,6 +1,5 @@
 /**
  * REMANENCE: What remains.
- * NASA Space Apps Challenge - Team Apollo 404
  * Main Application Orchestrator (Award-level Cinematic Standard)
  */
 
@@ -21,6 +20,7 @@ import { createPostProcessing } from './effects/postfx.js';
 import { StoryTimeline } from './story/timeline.js';
 import { STORY_DATA } from './story/data.js';
 import { audio } from './audio.js';
+import { InspectionManager } from './effects/inspection.js';
 
 class RemanenceApp {
   constructor() {
@@ -176,6 +176,7 @@ class RemanenceApp {
 
     // 4. Timeline & GSAP triggers
     this.timeline = new StoryTimeline(this);
+    this.inspection = new InspectionManager(this);
 
     // Telemetry ping audio
     audio.playPing(1100, 0.4);
@@ -374,6 +375,11 @@ class RemanenceApp {
     }
     if (this.pingManager && this.pingManager.update) {
       this.pingManager.update();
+    }
+
+    // Update 3D Inspection hotspots
+    if (this.inspection && this.inspection.update) {
+      this.inspection.update();
     }
 
     // Render through Post-processing pipeline
