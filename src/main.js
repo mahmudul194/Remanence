@@ -183,69 +183,112 @@ class RemanenceApp {
     // Telemetry ping audio
     audio.playPing(1100, 0.4);
 
-    // Simulated asset telemetry loading progress (updating SVG ring)
     let loadProgress = 0;
+    let journeyStarted = false;
+
+    // Simulated asset telemetry loading progress (updating SVG ring)
     const progressInterval = setInterval(() => {
-      loadProgress += Math.floor(Math.random() * 14) + 6;
+      loadProgress += Math.floor(Math.random() * 18) + 12;
       if (loadProgress >= 100) {
         loadProgress = 100;
         clearInterval(progressInterval);
 
         // Morph swirling particles into the typography "REMANENCE"
-        this.particleText.assemble(2.4);
+        this.particleText.assemble(1.6);
 
         // Gracefully reveal definition & magnetic enter control
         setTimeout(() => {
           if (introCopy) introCopy.classList.add('visible');
-        }, 800);
+        }, 250);
       }
       if (ringFill) {
         const offset = 465 - (loadProgress / 100) * 465;
         ringFill.style.strokeDashoffset = offset;
       }
-    }, 110);
+    }, 50);
 
     // Launch opening flight upon clicking ENTER
     const startJourney = () => {
+      if (journeyStarted) return;
+      journeyStarted = true;
+
+      clearInterval(progressInterval);
+      if (ringFill) ringFill.style.strokeDashoffset = 0;
+
       audio.unlock();
       audio.playPing(880, 0.5);
 
-      // 1. Explode particles into starfield
-      this.particleText.explode(2.2);
+      // 1. Instantly fade out intro screen overlay (instant feedback!)
+      if (introScreen) {
+        introScreen.classList.add('hidden');
+        gsap.to(introScreen, {
+          opacity: 0,
+          duration: 0.65,
+          ease: 'power2.out',
+          onComplete: () => {
+            introScreen.style.display = 'none';
+          }
+        });
+      }
 
-      // 2. Dolly camera from particle text toward Earth overview
+      // 2. Explode particles into starfield
+      if (this.particleText) {
+        this.particleText.explode(1.6);
+      }
+
+      // 3. Dolly camera from particle text toward Earth overview
       gsap.to(this.camera.position, {
         x: 0,
         y: 6,
-        z: 52,
-        duration: 2.8,
-        ease: 'power2.inOut',
+        z: 54,
+        duration: 1.6,
+        ease: 'power3.out',
         onComplete: () => {
-          if (introScreen) {
-            introScreen.classList.add('hidden');
-            setTimeout(() => {
-              introScreen.style.display = 'none';
-            }, 1600);
-          }
-
-          // Enable smooth scroll now that journey begins
+          // Enable smooth scroll as camera reaches destination
           this.lenis.start();
           this.lenis.resize();
           ScrollTrigger.refresh();
+
+          // Immediately ensure Section 0 (Hero REMANENCE) is active & beautifully revealed
+          if (this.timeline) {
+            this.timeline.onSectionActive(0);
+          }
         }
       });
+
+      // Quick fallback: also enable scroll within 600ms so user can scroll immediately
+      setTimeout(() => {
+        this.lenis.start();
+        this.lenis.resize();
+        ScrollTrigger.refresh();
+        if (this.timeline) {
+          this.timeline.onSectionActive(0);
+        }
+      }, 600);
     };
 
     if (btnEnter) {
-      btnEnter.addEventListener('click', startJourney);
+      btnEnter.addEventListener('click', (e) => {
+        e.stopPropagation();
+        startJourney();
+      });
     }
 
     // Keyboard shortcut (Enter or Space)
     window.addEventListener('keydown', (e) => {
-      if ((e.key === 'Enter' || e.key === ' ') && introCopy.classList.contains('visible')) {
+      if (e.key === 'Enter' || e.key === ' ') {
         startJourney();
       }
     });
+
+    // Clicking anywhere on intro screen once visible also triggers start
+    if (introScreen) {
+      introScreen.addEventListener('click', () => {
+        if (introCopy && introCopy.classList.contains('visible')) {
+          startJourney();
+        }
+      });
+    }
 
     // Setup interactive HUD controls and chapter navigation
     this.initHUDControls();

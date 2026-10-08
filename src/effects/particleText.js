@@ -264,17 +264,22 @@ export function createParticleText(scene) {
   }
 
   // Explode particles into starfield upon entering
-  function explode(duration = 2.2) {
-    gsap.to(beaconMat, { opacity: 0, duration: 0.8 });
-    gsap.to(haloMat, { opacity: 0, duration: 0.8 });
+  function explode(duration = 1.6) {
+    gsap.to(beaconMat, { opacity: 0, duration: 0.5 });
+    gsap.to(haloMat, { opacity: 0, duration: 0.5 });
     return gsap.to(uniforms.uProgress, {
       value: 2.0,
       duration,
-      ease: 'power2.in',
-      onComplete: () => {
-        group.visible = false;
-      }
+      ease: 'power2.in'
     });
+  }
+
+  function resetHeroState() {
+    group.visible = true;
+    uniforms.uProgress.value = 1.0;
+    if (uniforms.uOpacity) uniforms.uOpacity.value = 1.0;
+    beaconMat.opacity = 0;
+    haloMat.opacity = 0;
   }
 
   function dispose() {
@@ -293,6 +298,7 @@ export function createParticleText(scene) {
     update,
     assemble,
     explode,
+    resetHeroState,
     dispose
   };
 }

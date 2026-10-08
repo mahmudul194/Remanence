@@ -35,8 +35,8 @@ export class StoryTimeline {
   initCurves() {
     // Exact 3D trajectory waypoints (13 Camera positions)
     const camPoints = [
-      new THREE.Vector3(0, 0, 16),          // 0: Loading / Opening (Particle text)
-      new THREE.Vector3(0, 6, 52),          // 1: Earth overview
+      new THREE.Vector3(0, 6, 54),          // 0: Hero / Opening (Earth orbit)
+      new THREE.Vector3(0, 6, 50),          // 1: Earth overview
       new THREE.Vector3(3.8, -8.3, -174),   // 2: Apollo 11 Lunar Module
       new THREE.Vector3(41.5, -8.7, -231),  // 3: Lunar Roving Vehicle
       new THREE.Vector3(-36.8, -12.4, -270),// 4: Surveyor 3 in crater
@@ -52,7 +52,7 @@ export class StoryTimeline {
 
     // Look-at focal targets for each station
     const lookPoints = [
-      new THREE.Vector3(0, 0, 0),           // 0: Particle text origin
+      new THREE.Vector3(0, 0, 0),           // 0: Center Earth
       new THREE.Vector3(0, 0, 0),           // 1: Center Earth
       new THREE.Vector3(0, -8.8, -180),     // 2: Apollo 11 Descent Stage
       new THREE.Vector3(38, -9.6, -235),    // 3: LRV Rover body
@@ -90,12 +90,19 @@ export class StoryTimeline {
     sections.forEach((sec, idx) => {
       ScrollTrigger.create({
         trigger: sec,
-        start: 'top 65%',
-        end: 'bottom 35%',
+        start: idx === 0 ? 'top top' : 'top 65%',
+        end: idx === 0 ? 'bottom 20%' : 'bottom 35%',
         onEnter: () => this.onSectionActive(idx),
         onEnterBack: () => this.onSectionActive(idx),
         onLeave: () => this.onSectionLeave(idx),
-        onLeaveBack: () => this.onSectionLeave(idx)
+        onLeaveBack: () => {
+          // Never hide Section 0 when scrolling back to the top of the page
+          if (idx === 0) {
+            this.onSectionActive(0);
+          } else {
+            this.onSectionLeave(idx);
+          }
+        }
       });
     });
 
@@ -153,6 +160,11 @@ export class StoryTimeline {
 
     // Isolate sub-scenes dynamically so planes never clip across other planetary views
     this.updateSceneVisibility(t);
+
+    // Ensure Section 0 is always active when user scrolls near top
+    if (t <= 0.02 && this.currentSectionIndex !== 0) {
+      this.onSectionActive(0);
+    }
 
     // Update chapter rail thumb position
     const railThumb = document.getElementById('rail-thumb');
@@ -297,17 +309,20 @@ export class StoryTimeline {
   }
 
   onSectionLeave(index) {
+    // Never hide Section 0 if the user is at the top of the page
+    if (index === 0 && window.scrollY < 80) return;
+
     const sections = document.querySelectorAll('.story-section');
     const section = sections[index];
     if (!section) return;
     const moment = section.querySelector('.moment-wrap');
     if (!moment) return;
 
-    // Exit animation: faster than entrances (0.5s) per spec
+    gsap.killTweensOf(moment);
     gsap.to(moment, {
       opacity: 0,
       y: -18,
-      duration: 0.5,
+      duration: 0.45,
       ease: 'power2.in',
       onComplete: () => {
         moment.classList.remove('active');
@@ -356,16 +371,22 @@ export class StoryTimeline {
     const moment = section.querySelector('.moment-wrap');
     if (!moment) return;
 
+    // 1. Immediately kill any exit tweens on moment and animate to full opacity
+    gsap.killTweensOf(moment);
     moment.classList.add('active');
+    gsap.to(moment, {
+      opacity: 1,
+      y: 0,
+      duration: 0.65,
+      ease: 'power2.out',
+      overwrite: true
+    });
 
     // Update chapter rail indicators
     const railDots = document.querySelectorAll('.rail-dot');
     railDots.forEach((d, i) => {
       d.classList.toggle('active', i === index);
     });
-
-    if (moment.dataset.animated === 'true') return;
-    moment.dataset.animated = 'true';
 
     // Respect prefers-reduced-motion
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -374,75 +395,102 @@ export class StoryTimeline {
       return;
     }
 
-    // 1. Titles reveal with masked line-by-line rise:
-    // translateY 110% to 0, 1.1s, cubic-bezier(0.16, 1, 0.3, 1), 80ms stagger
-    const titleEl = moment.querySelector('.moment-title, .hero-title');
-    if (titleEl) {
-      try {
-        const splitTitle = new SplitType(titleEl, { types: 'lines' });
-        if (splitTitle.lines && splitTitle.lines.length > 0) {
-          splitTitle.lines.forEach((line) => {
-            if (!line.parentElement.classList.contains('line-mask')) {
-              const mask = document.createElement('div');
-              mask.className = 'line-mask';
-              mask.style.overflow = 'hidden';
-              mask.style.display = 'block';
-              line.parentNode.insertBefore(mask, line);
-              mask.appendChild(line);
-            }
-          });
+    // SECTION 0: HERO OPENING (REMANENCE)
+    if (index === 0) {
+      const heroTitle = moment.querySelector('.hero-title');
+      if (heroTitle) {
+        gsap.killTweensOf(heroTitle);
+        gsap.fromTo(
+          heroTitle,
+          { opacity: 0, y: 22, letterSpacing: '0.18em' },
+          { opacity: 1, y: 0, letterSpacing: '0.12em', duration: 1.1, ease: 'power3.out' }
+        );
+      }
 
-          gsap.fromTo(
-            splitTitle.lines,
-            { yPercent: 110, opacity: 0 },
-            {
-              yPercent: 0,
-              opacity: 1,
-              stagger: 0.08,
-              duration: 1.1,
-              ease: 'power3.out'
-            }
-          );
-        }
-      } catch (e) {
-        gsap.fromTo(titleEl, { opacity: 0, y: 28 }, { opacity: 1, y: 0, duration: 1.1, ease: 'power3.out' });
+      const heroElements = moment.querySelectorAll('.kicker-label, .hero-tagline, .hero-definition, .scroll-affordance');
+      if (heroElements.length > 0) {
+        gsap.killTweensOf(heroElements);
+        gsap.fromTo(
+          heroElements,
+          { opacity: 0, y: 14 },
+          { opacity: 1, y: 0, duration: 0.9, stagger: 0.08, delay: 0.15, ease: 'power2.out' }
+        );
+      }
+      return;
+    }
+
+    // CHAPTER SECTIONS (1-12)
+    // 1. Title reveal with masked lines or clean fade-rise
+    const titleEl = moment.querySelector('.moment-title');
+    if (titleEl) {
+      gsap.killTweensOf(titleEl);
+      let titleLines = titleEl.querySelectorAll('.title-line');
+      if (titleLines.length === 0) {
+        try {
+          const splitTitle = new SplitType(titleEl, { types: 'lines', lineClass: 'title-line' });
+          if (splitTitle.lines && splitTitle.lines.length > 0) {
+            splitTitle.lines.forEach((line) => {
+              if (!line.parentElement.classList.contains('line-mask')) {
+                const mask = document.createElement('div');
+                mask.className = 'line-mask';
+                mask.style.overflow = 'hidden';
+                mask.style.display = 'block';
+                line.parentNode.insertBefore(mask, line);
+                mask.appendChild(line);
+              }
+            });
+            titleLines = titleEl.querySelectorAll('.title-line');
+          }
+        } catch (e) {}
+      }
+
+      if (titleLines && titleLines.length > 0) {
+        gsap.killTweensOf(titleLines);
+        gsap.fromTo(
+          titleLines,
+          { yPercent: 110, opacity: 0 },
+          { yPercent: 0, opacity: 1, stagger: 0.08, duration: 1.0, ease: 'power3.out' }
+        );
+      } else {
+        gsap.fromTo(titleEl, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 1.0, ease: 'power3.out' });
       }
     }
 
     // 2. Machine info panel reveal
     const panel = moment.querySelector('.machine-panel');
     if (panel) {
+      gsap.killTweensOf(panel);
       gsap.fromTo(
         panel,
         { opacity: 0, y: 16 },
-        { opacity: 1, y: 0, duration: 0.9, delay: 0.25, ease: 'power2.out' }
+        { opacity: 1, y: 0, duration: 0.85, delay: 0.2, ease: 'power2.out' }
       );
     }
 
-    // 3. Body text fades up with 12px rise and 40ms word stagger
+    // 3. Body text word-by-word reveal
     const narrative = moment.querySelector('.moment-narrative');
     if (narrative) {
-      try {
-        const splitWords = new SplitType(narrative, { types: 'words' });
-        if (splitWords.words && splitWords.words.length > 0) {
-          gsap.fromTo(
-            splitWords.words,
-            { opacity: 0, y: 12 },
-            {
-              opacity: 1,
-              y: 0,
-              stagger: 0.04,
-              duration: 0.8,
-              delay: 0.35,
-              ease: 'power2.out'
-            }
-          );
-        }
-      } catch (e) {
+      gsap.killTweensOf(narrative);
+      let words = narrative.querySelectorAll('.word');
+      if (words.length === 0) {
+        try {
+          new SplitType(narrative, { types: 'words' });
+          words = narrative.querySelectorAll('.word');
+        } catch (e) {}
+      }
+
+      if (words && words.length > 0) {
+        gsap.killTweensOf(words);
+        gsap.fromTo(
+          words,
+          { opacity: 0, y: 12 },
+          { opacity: 1, y: 0, stagger: 0.03, duration: 0.7, delay: 0.25, ease: 'power2.out' }
+        );
+      } else {
         gsap.fromTo(
           narrative,
           { opacity: 0, y: 12 },
-          { opacity: 1, y: 0, duration: 0.9, delay: 0.35, ease: 'power2.out' }
+          { opacity: 1, y: 0, duration: 0.8, delay: 0.25, ease: 'power2.out' }
         );
       }
     }
