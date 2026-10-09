@@ -51,7 +51,7 @@ export const POI_LOCATIONS = [
   { name: 'Apollo 11 LM', pos: new THREE.Vector3(0, -10, -180) },
   { name: 'ALSEP Station', pos: new THREE.Vector3(14, -9.9, -200) },
   { name: 'Lunar Rover', pos: new THREE.Vector3(38, -14.1, -235) },
-  { name: 'Hammer & Feather', pos: new THREE.Vector3(30, -12.6, -252) },
+  { name: 'Hammer & Feather', pos: new THREE.Vector3(22, -11.214, -252) },
   { name: 'Surveyor 3', pos: new THREE.Vector3(-40, -13.5, -275) },
   { name: 'The Crossing', pos: new THREE.Vector3(22, 46, 250) },
   { name: 'Descent Debris', pos: new THREE.Vector3(-15, -12.8, 615) },
@@ -126,44 +126,46 @@ export class FlightController {
       // SEGMENT 3: Lunar Surface Glide (s: 0.20 - 0.52)
       new THREE.Vector3(4.8, -7.8, -172),    // 8: Apollo 11 Lunar Module
       new THREE.Vector3(8, -8.6, -185),      // 9: Low surface glide over regolith
-      new THREE.Vector3(17.8, -8.8, -194),   // 10: ALSEP Station
-      new THREE.Vector3(26, -10.2, -212),    // 11: Skimming crater rim
-      new THREE.Vector3(32.5, -12.4, -226.5),// 12: Lunar Roving Vehicle (3/4 perspective)
-      new THREE.Vector3(36, -12.2, -240),    // 13: Along Hadley slope
-      new THREE.Vector3(23.8, -11.9, -249.5),// 14: The Hammer & Feather
-      new THREE.Vector3(0, -11.0, -262),     // 15: Entering Surveyor crater slope
-      new THREE.Vector3(-36.8, -12.4, -270), // 16: Surveyor 3 Lander
+      new THREE.Vector3(17.8, -8.2, -194),   // 10: ALSEP Station
+      new THREE.Vector3(25.0, -6.8, -212.0), // 11: Skimming crater rim (clears rim safely)
+      new THREE.Vector3(33.5, -10.5, -227.0),// 12: LRV Approach
+      new THREE.Vector3(34.0, -10.2, -236.0),// 13: LRV Hold & depart along Hadley slope
+      new THREE.Vector3(30.0, -10.2, -241.0),// 14: Skimming Hadley slope toward H&F
+      new THREE.Vector3(26.0, -10.0, -246.5),// 15: Low glide approach to H&F
+      new THREE.Vector3(23.2, -9.8, -250.0), // 16: The Hammer & Feather Hold (clearance +1.4m!)
+      new THREE.Vector3(4.0, -5.8, -262.0),  // 17: Ridge pass with clearance +2.1m (zero underground clipping)
+      new THREE.Vector3(-36.8, -11.6, -273.0),// 18: Surveyor 3 Lander
 
       // SEGMENT 4: Lunar Ascent & Earth-Moon Pull (s: 0.52 - 0.56)
-      new THREE.Vector3(-22, 18, -235),      // 17: Lunar liftoff thrusters firing
-      new THREE.Vector3(-5, 34, -110),       // 18: Climbing above Moon horizon
+      new THREE.Vector3(-22, 18, -235),      // 19: Lunar liftoff thrusters firing
+      new THREE.Vector3(-5, 34, -110),       // 20: Climbing above Moon horizon
 
       // SEGMENT 5: Interplanetary Cruise to Mars (s: 0.56 - 0.68)
-      new THREE.Vector3(12, 42, 60),         // 19: Passing Earth in rearview
-      new THREE.Vector3(22, 46, 250),        // 20: Deep space transit cruise (The Crossing)
-      new THREE.Vector3(20, 36, 440),        // 21: Approaching red planet Mars
+      new THREE.Vector3(12, 42, 60),         // 21: Passing Earth in rearview
+      new THREE.Vector3(22, 46, 250),        // 22: Deep space transit cruise (The Crossing)
+      new THREE.Vector3(20, 36, 440),        // 23: Approaching red planet Mars
 
       // SEGMENT 6: Martian Atmospheric Entry & Descent (s: 0.68 - 0.74)
-      new THREE.Vector3(10, 16, 560),        // 22: Upper atmospheric entry, plasma heating
-      new THREE.Vector3(-6, -3, 595),        // 23: Deceleration into Chryse dust haze
+      new THREE.Vector3(10, 16, 560),        // 24: Upper atmospheric entry, plasma heating
+      new THREE.Vector3(-6, -3, 595),        // 25: Deceleration into Chryse dust haze
 
       // SEGMENT 7: Martian Surface Glide (s: 0.74 - 0.94)
-      new THREE.Vector3(-27.0, -10.8, 626),  // 24: EDL Descent Debris & Parachute
-      new THREE.Vector3(-8, -9.5, 636),      // 25: Skimming Chryse sand dunes
-      new THREE.Vector3(3.5, -8.2, 656),     // 26: Viking 1 Lander
-      new THREE.Vector3(22, -8.6, 682),      // 27: Flight along Ares Vallis channel
-      new THREE.Vector3(40.5, -8.8, 714),    // 28: Pathfinder & Sojourner
-      new THREE.Vector3(2, -9.8, 746),       // 29: Low glide across basalt plains
-      new THREE.Vector3(-33.5, -10.5, 779),  // 30: Spirit MER Rover
-      new THREE.Vector3(-10, -10.4, 812),    // 31: Glide into twilight dusk storm
-      new THREE.Vector3(15.5, -10.2, 850),   // 32: Opportunity in Twilight
-      new THREE.Vector3(-6, -8.6, 882),      // 33: Climbing toward Valinor ridge
-      new THREE.Vector3(-26.2, -7.2, 914),   // 34: Ingenuity Helicopter
+      new THREE.Vector3(-27.0, -10.8, 626),  // 26: EDL Descent Debris & Parachute
+      new THREE.Vector3(-8, -9.5, 636),      // 27: Skimming Chryse sand dunes
+      new THREE.Vector3(3.5, -8.2, 656),     // 28: Viking 1 Lander
+      new THREE.Vector3(22, -8.6, 682),      // 29: Flight along Ares Vallis channel
+      new THREE.Vector3(40.5, -8.8, 714),    // 30: Pathfinder & Sojourner
+      new THREE.Vector3(2, -9.8, 746),       // 31: Low glide across basalt plains
+      new THREE.Vector3(-33.5, -10.5, 779),  // 32: Spirit MER Rover
+      new THREE.Vector3(-10, -10.4, 812),    // 33: Glide into twilight dusk storm
+      new THREE.Vector3(15.5, -10.2, 850),   // 34: Opportunity in Twilight
+      new THREE.Vector3(-6, -8.6, 882),      // 35: Climbing toward Valinor ridge
+      new THREE.Vector3(-26.2, -7.2, 914),   // 36: Ingenuity Helicopter
 
       // SEGMENT 8: Final Ascent & Laser Signal (s: 0.94 - 1.00)
-      new THREE.Vector3(0, 16, 520),         // 35: Rocketing out of Mars atmosphere
-      new THREE.Vector3(18.5, -7.8, -129),   // 36: Retroreflector array & green laser beam
-      new THREE.Vector3(26.0, 4.0, -100)     // 37: Wide cosmic solar archive view
+      new THREE.Vector3(0, 16, 520),         // 37: Rocketing out of Mars atmosphere
+      new THREE.Vector3(18.5, -7.8, -129),   // 38: Retroreflector array & green laser beam
+      new THREE.Vector3(26.0, 4.0, -100)     // 39: Wide cosmic solar archive view
     ];
 
     // 2. Master Look-at Targets (precisely aimed at planets, hardware, and forward flight vectors)
@@ -186,12 +188,14 @@ export class FlightController {
       new THREE.Vector3(0, -8.8, -180),      // 8: Apollo 11
       new THREE.Vector3(10, -9.2, -195),
       new THREE.Vector3(14, -9.4, -200),     // ALSEP
-      new THREE.Vector3(30, -11.0, -225),
-      new THREE.Vector3(38, -13.6, -235),    // LRV
-      new THREE.Vector3(34, -12.8, -245),
-      new THREE.Vector3(20.5, -12.55, -252), // Hammer & Feather
-      new THREE.Vector3(-25, -12.2, -265),
-      new THREE.Vector3(-40, -12.6, -275),   // Surveyor 3
+      new THREE.Vector3(28, -10.5, -220),    // Forward vector toward LRV
+      new THREE.Vector3(38, -13.6, -235),    // 12: LRV Approach
+      new THREE.Vector3(38, -13.8, -235),    // 13: LRV Hold
+      new THREE.Vector3(30, -11.5, -244),    // 14: Forward vector along Hadley slope
+      new THREE.Vector3(25, -11.3, -248),    // 15: Low glide vector approaching H&F
+      new THREE.Vector3(22.0, -11.20, -252), // 16: Hammer & Feather (true surface elevation!)
+      new THREE.Vector3(2, -8.5, -262),      // 17: Ridge pass vector
+      new THREE.Vector3(-40, -12.8, -275),   // 18: Surveyor 3
 
       // SEGMENT 4: Ascent
       new THREE.Vector3(0, -50, -220),       // Curving Moon below

@@ -2073,6 +2073,10 @@ body.cursor-hover .cursor-dot {
   transition: border-color 0.2s, background-color 0.2s;
 }
 
+.shot-hotspot-label.align-left {
+  transform: translate(calc(-100% - 14px), -50%);
+}
+
 .shot-hotspot-label:hover {
   border-color: var(--signal-amber);
   background: rgba(14, 20, 36, 0.95);

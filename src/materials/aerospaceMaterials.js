@@ -529,6 +529,36 @@ export function getAerospaceMaterials() {
       color: 0x767d88,
       metalness: 0.94,
       roughness: 0.35
+    }),
+
+    // 18. White Female Gyrfalcon Flight Feather ("Baggin")
+    falconFeather: new THREE.MeshStandardMaterial({
+      map: createFalconFeatherTexture().map,
+      normalMap: createFalconFeatherTexture().normal,
+      normalScale: new THREE.Vector2(1.6, 1.6),
+      color: 0xffffff,
+      roughness: 0.38,
+      metalness: 0.02,
+      transparent: true,
+      alphaTest: 0.20,
+      depthWrite: true,
+      side: THREE.DoubleSide
+    }),
+
+    // 19. Apollo Lunar Geologic Hammer Handle (Machined 2024-T4 Aluminum with cm scale & knurling)
+    hammerHandle: new THREE.MeshStandardMaterial({
+      map: createHammerHandleTexture().map,
+      normalMap: createHammerHandleTexture().normal,
+      normalScale: new THREE.Vector2(1.4, 1.4),
+      metalness: 0.92,
+      roughness: 0.30
+    }),
+
+    // 20. Forged Tool Steel Hammer Head (Gunmetal satin finish)
+    toolSteel: new THREE.MeshStandardMaterial({
+      color: 0x363a42,
+      metalness: 0.88,
+      roughness: 0.42
     })
   };
 }
@@ -977,6 +1007,212 @@ export function createLRVFloorGridTexture() {
 
   const result = { map: tex, normal: normalTex };
   textureCache.set('lrv_floor', result);
+  return result;
+}
+
+/**
+ * 7e. White Female Gyrfalcon Flight Feather Texture ("Baggin" - USAF Academy Mascot)
+ * Produces photorealistic asymmetric flight feather vane with micro-barb striations,
+ * translucent rachis quill shaft, and soft creamy keratin albedo.
+ */
+export function createFalconFeatherTexture() {
+  if (textureCache.has('falcon_feather')) return textureCache.get('falcon_feather');
+
+  const width = 512;
+  const height = 1024;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Fully transparent background for authentic cut vane silhouette
+  ctx.clearRect(0, 0, width, height);
+
+  // 1. Asymmetric primary flight feather silhouette
+  // Leading edge (outer vane) is narrower and stiffer (x: 256 -> 155 -> 256)
+  // Trailing edge (inner vane) is wider and rounded (x: 256 -> 410 -> 256)
+  const tipX = 256;
+  const tipY = 60;
+  const quillBaseX = 256;
+  const quillBaseY = 960;
+  const vaneBaseY = 900;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(quillBaseX, vaneBaseY);
+  // Outer leading vane curve
+  ctx.bezierCurveTo(135, 780, 115, 360, tipX, tipY);
+  // Inner trailing vane curve
+  ctx.bezierCurveTo(430, 320, 410, 780, quillBaseX, vaneBaseY);
+  ctx.closePath();
+
+  // Natural ivory creamy white keratin gradient
+  const grad = ctx.createLinearGradient(0, tipY, 0, vaneBaseY);
+  grad.addColorStop(0.0, '#faf8f2');
+  grad.addColorStop(0.3, '#f5f2e8');
+  grad.addColorStop(0.7, '#ece7da');
+  grad.addColorStop(1.0, '#ded8c8');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Clip to vane outline for drawing barbs
+  ctx.clip();
+
+  // 2. Microscopic barb striations radiating from central rachis
+  // Leading edge barbs (~45 deg)
+  ctx.lineWidth = 1.2;
+  for (let y = tipY + 15; y < vaneBaseY; y += 4.5) {
+    const norm = (y - tipY) / (vaneBaseY - tipY);
+    ctx.strokeStyle = (Math.floor(y / 4.5) % 2 === 0) ? 'rgba(255, 255, 255, 0.75)' : 'rgba(180, 172, 158, 0.40)';
+    ctx.beginPath();
+    ctx.moveTo(256, y);
+    ctx.lineTo(80 + norm * 80, y - 28 - norm * 15);
+    ctx.stroke();
+  }
+
+  // Trailing edge barbs (~40 deg)
+  for (let y = tipY + 15; y < vaneBaseY; y += 4.5) {
+    const norm = (y - tipY) / (vaneBaseY - tipY);
+    ctx.strokeStyle = (Math.floor(y / 4.5) % 2 === 0) ? 'rgba(255, 255, 255, 0.85)' : 'rgba(175, 168, 152, 0.42)';
+    ctx.beginPath();
+    ctx.moveTo(256, y);
+    ctx.lineTo(440 - norm * 60, y - 26 - norm * 16);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // 3. Central Rachis Quill Shaft
+  ctx.strokeStyle = '#fefdfa';
+  ctx.lineWidth = 6.0;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(quillBaseX, quillBaseY);
+  ctx.bezierCurveTo(256, 700, 256, 350, tipX, tipY);
+  ctx.stroke();
+
+  // Rachis shadow core
+  ctx.strokeStyle = 'rgba(150, 140, 125, 0.45)';
+  ctx.lineWidth = 2.0;
+  ctx.beginPath();
+  ctx.moveTo(quillBaseX + 1.5, quillBaseY);
+  ctx.bezierCurveTo(257.5, 700, 257.5, 350, tipX, tipY);
+  ctx.stroke();
+
+  const diffuseTex = new THREE.CanvasTexture(canvas);
+  diffuseTex.wrapS = THREE.ClampToEdgeWrapping;
+  diffuseTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  // Tangent Normal Map
+  const normalCanvas = document.createElement('canvas');
+  normalCanvas.width = width;
+  normalCanvas.height = height;
+  const nCtx = normalCanvas.getContext('2d');
+  nCtx.fillStyle = '#8080ff';
+  nCtx.fillRect(0, 0, width, height);
+
+  // Central quill cylindrical ridge
+  nCtx.strokeStyle = '#80b0ff';
+  nCtx.lineWidth = 8.0;
+  nCtx.beginPath();
+  nCtx.moveTo(quillBaseX, quillBaseY);
+  nCtx.lineTo(tipX, tipY);
+  nCtx.stroke();
+
+  const normalTex = new THREE.CanvasTexture(normalCanvas);
+  normalTex.wrapS = THREE.ClampToEdgeWrapping;
+  normalTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  const result = { map: diffuseTex, normal: normalTex };
+  textureCache.set('falcon_feather', result);
+  return result;
+}
+
+/**
+ * 7f. Apollo Lunar Geologic Hammer Handle Texture (Centimeter Scale & Diamond Knurling)
+ */
+export function createHammerHandleTexture() {
+  if (textureCache.has('hammer_handle')) return textureCache.get('hammer_handle');
+
+  const width = 256;
+  const height = 1024;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  // Brushed 2024-T4 aerospace aluminum base
+  ctx.fillStyle = '#a6afba';
+  ctx.fillRect(0, 0, width, height);
+
+  // Diamond knurled grip on lower 45% of handle
+  ctx.fillStyle = '#7a828e';
+  ctx.fillRect(0, 560, width, 464);
+
+  ctx.strokeStyle = '#3e4450';
+  ctx.lineWidth = 1.6;
+  for (let i = -width; i < width + height; i += 12) {
+    ctx.beginPath(); ctx.moveTo(i, 560); ctx.lineTo(i + 464, 1024); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(i + 464, 560); ctx.lineTo(i, 1024); ctx.stroke();
+  }
+
+  // Specular knurl peaks
+  ctx.fillStyle = '#d8e0eb';
+  for (let y = 560; y < 1024; y += 12) {
+    for (let x = 0; x < width; x += 12) {
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+    }
+  }
+
+  // Centimeter measurement graduation lines on upper handle (0 to 30 cm scale)
+  ctx.strokeStyle = '#22262d';
+  ctx.fillStyle = '#1c2026';
+  ctx.font = 'bold 18px monospace';
+  ctx.textAlign = 'right';
+
+  for (let cm = 0; cm <= 30; cm++) {
+    const y = 80 + cm * 15;
+    const isMajor = cm % 5 === 0;
+    ctx.lineWidth = isMajor ? 3.0 : 1.5;
+
+    ctx.beginPath();
+    ctx.moveTo(isMajor ? 40 : 100, y);
+    ctx.lineTo(240, y);
+    ctx.stroke();
+
+    if (isMajor && cm > 0) {
+      ctx.fillText(cm.toString(), 90, y + 6);
+    }
+  }
+
+  const diffuseTex = new THREE.CanvasTexture(canvas);
+  diffuseTex.wrapS = THREE.RepeatWrapping;
+  diffuseTex.wrapT = THREE.RepeatWrapping;
+
+  // Normal Map
+  const normalCanvas = document.createElement('canvas');
+  normalCanvas.width = width;
+  normalCanvas.height = height;
+  const nCtx = normalCanvas.getContext('2d');
+  nCtx.fillStyle = '#8080ff';
+  nCtx.fillRect(0, 0, width, height);
+
+  // Knurling relief in normal map
+  nCtx.strokeStyle = '#9070ff';
+  nCtx.lineWidth = 1.5;
+  for (let i = -width; i < width + height; i += 12) {
+    nCtx.beginPath(); nCtx.moveTo(i, 560); nCtx.lineTo(i + 464, 1024); nCtx.stroke();
+    nCtx.beginPath(); nCtx.moveTo(i + 464, 560); nCtx.lineTo(i, 1024); nCtx.stroke();
+  }
+
+  const normalTex = new THREE.CanvasTexture(normalCanvas);
+  normalTex.wrapS = THREE.RepeatWrapping;
+  normalTex.wrapT = THREE.RepeatWrapping;
+
+  const result = { map: diffuseTex, normal: normalTex };
+  textureCache.set('hammer_handle', result);
   return result;
 }
 

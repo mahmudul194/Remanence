@@ -128,9 +128,9 @@ export async function createMoonScene() {
   group.add(lrv);
   machines.lrv = lrv;
 
-  // Apollo 15 Hammer & Feather site in Hadley terrain (y = -2.619)
+  // Apollo 15 Hammer & Feather site in Hadley terrain (y = -1.214 on surface)
   const hammerFeather = await getOrCreateModel('hammer_feather');
-  hammerFeather.position.set(22, -2.619, -72);
+  hammerFeather.position.set(22, -1.214, -72);
   group.add(hammerFeather);
   machines.hammer_feather = hammerFeather;
 

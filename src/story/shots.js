@@ -32,12 +32,18 @@ export function computeHardwareBoundingBox(object) {
       // Exclude ground plane decals (flat plane rotated to lay horizontally, tracks, berms, etc.)
       const isGroundDecal =
         (child.geometry.type === 'PlaneGeometry' && (child.position.y < 0.1 || childSize.y < 0.1)) ||
+        child.geometry.type === 'CircleGeometry' ||
         child.name.includes('track') ||
         child.name.includes('berm') ||
         child.name.includes('footprint') ||
         child.name.includes('blast') ||
         child.name.includes('crater') ||
-        (childSize.y < 0.05 && (childSize.x > 1.0 || childSize.z > 1.0));
+        child.name.includes('bed') ||
+        child.name.includes('ground') ||
+        child.name.includes('divot') ||
+        child.name.includes('soil') ||
+        child.name.includes('pebble') ||
+        (childSize.y < 0.08 && (childSize.x > 0.5 || childSize.z > 0.5));
 
       // Exclude skybeams / lasers
       const isBeam =
@@ -306,28 +312,29 @@ export const SHOT_DEFINITIONS = [
     sectionId: 'section-hammer-feather',
     cardSide: 'right', // Card on right, Memorial on left
     subjectTarget: {
-      desktop: { ndcX: -0.38, ndcY: 0.0, heightRatio: 0.52 },
-      mobile:  { ndcX: 0.0, ndcY: 0.28, heightRatio: 0.38 }
+      desktop: { ndcX: -0.48, ndcY: 0.0, heightRatio: 0.58 },
+      mobile:  { ndcX: 0.0, ndcY: 0.28, heightRatio: 0.40 }
     },
     camera: {
-      fov: 45,
-      azimuth: 0.38,
-      elevation: 0.46,
+      fov: 44,
+      azimuth: 0.52,
+      elevation: 0.52,
       driftAzimuth: 0.045,
-      driftElevation: 0.012
+      driftElevation: 0.012,
+      baseDistance: 1.05
     },
     getSubject: (app) => (app.moonScene ? app.moonScene.machines.hammer_feather : null),
     hotspots: [
       {
         id: 'geology_hammer',
-        localAnchor: new THREE.Vector3(0.18, 0.12, -0.05),
+        localAnchor: new THREE.Vector3(0.14, 0.07, -0.01),
         label: 'Geologist Hammer',
         desc: 'Steel head dropped by Apollo 15 Commander David Scott in vacuum.',
         category: 'GRAVITY DEMO'
       },
       {
         id: 'falcon_feather',
-        localAnchor: new THREE.Vector3(-0.22, 0.08, 0.10),
+        localAnchor: new THREE.Vector3(-0.06, 0.05, 0.10),
         label: 'Falcon Feather',
         desc: 'White gyrfalcon feather that hit the regolith simultaneously with the hammer.',
         category: 'GALILEO PROOF'
@@ -1035,13 +1042,13 @@ export class ShotManager {
       }
     });
 
-    // Collision resolution: Sort by screen Y and enforce >= 28px separation
+    // Collision resolution: Sort by screen Y and enforce >= 48px separation (prevent overlapping label cards)
     projectedList.sort((a, b) => a.anchorY - b.anchorY);
     for (let i = 1; i < projectedList.length; i++) {
       const prev = projectedList[i - 1];
       const curr = projectedList[i];
-      if (curr.labelY - prev.labelY < 28) {
-        curr.labelY = prev.labelY + 28;
+      if (curr.labelY - prev.labelY < 48) {
+        curr.labelY = prev.labelY + 48;
       }
     }
 
@@ -1050,14 +1057,21 @@ export class ShotManager {
       if (isMobile) {
         item.targetX = Math.max(24, Math.min(width - 24, item.anchorX));
         item.targetY = Math.min(height * 0.52, item.labelY);
+        item.alignClass = '';
       } else if (shot.cardSide === 'right') {
-        // Must stay in left zone
-        item.targetX = Math.min(width * 0.46, item.anchorX);
+        // Card is on right half: labels sit safely in left zone, anchored to the left of targetX
+        const cardLeft = cardRect ? cardRect.left : width * 0.52;
+        item.targetX = Math.min(cardLeft - 40, item.anchorX - 20);
+        item.targetX = Math.max(160, item.targetX);
         item.targetY = item.labelY;
+        item.alignClass = 'align-left';
       } else {
-        // Must stay in right zone
-        item.targetX = Math.max(width * 0.54, item.anchorX);
+        // Card is on left half: labels sit safely in right zone
+        const cardRight = cardRect ? cardRect.right : width * 0.48;
+        item.targetX = Math.max(cardRight + 40, item.anchorX + 20);
+        item.targetX = Math.min(width - 180, item.targetX);
         item.targetY = item.labelY;
+        item.alignClass = '';
       }
     });
 
@@ -1066,7 +1080,7 @@ export class ShotManager {
     let svgLines = '';
 
     projectedList.forEach((item) => {
-      const { data, index, anchorX, anchorY, targetX, targetY } = item;
+      const { data, index, anchorX, anchorY, targetX, targetY, alignClass } = item;
 
       if (isMobile) {
         html += `
@@ -1076,7 +1090,7 @@ export class ShotManager {
         `;
       } else {
         html += `
-          <div class="shot-hotspot-label" style="left:${targetX}px; top:${targetY}px;" data-id="${data.id}">
+          <div class="shot-hotspot-label ${alignClass || ''}" style="left:${targetX}px; top:${targetY}px;" data-id="${data.id}">
             <span class="sh-cat">${data.category}</span>
             <span class="sh-text">${data.label}</span>
           </div>
