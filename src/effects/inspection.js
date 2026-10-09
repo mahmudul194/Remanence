@@ -34,27 +34,45 @@ export class InspectionManager {
     }
     this.container = layer;
 
-    // 2. Inspection Technical Card
-    let card = document.getElementById('inspection-card');
-    if (!card) {
-      card = document.createElement('div');
+    // 2. Inspection Technical Modal Dialog
+    let overlay = document.getElementById('inspection-modal-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'inspection-modal-overlay';
+      overlay.className = 'modal-backdrop-overlay';
+      overlay.setAttribute('aria-hidden', 'true');
+
+      const card = document.createElement('div');
       card.id = 'inspection-card';
-      card.className = 'inspection-card';
+      card.className = 'modal-dialog inspection-card';
+      card.setAttribute('role', 'dialog');
+      card.setAttribute('aria-modal', 'true');
+      card.setAttribute('aria-labelledby', 'card-title');
+      card.setAttribute('tabindex', '-1');
+
       card.innerHTML = `
         <div class="card-inner">
           <div class="card-header">
             <span class="card-category" id="card-cat">PROPULSION</span>
-            <button class="card-close" id="card-close" title="Dismiss">✕</button>
+            <button class="card-close" id="card-close" aria-label="Close dialog" title="Dismiss">✕</button>
           </div>
           <h3 class="card-title" id="card-title">Descent Propulsion System</h3>
           <p class="card-desc" id="card-desc">Gimbaled 10,500 lbf throttleable rocket engine.</p>
           <div class="card-footer">
-            <span class="card-ref">APOLLO 11 // NASA MSC-01855</span>
+            <span class="card-ref" id="card-ref">APOLLO 11 · NASA MSC-01855</span>
             <span class="card-status">ARTIFACT SECURED</span>
           </div>
         </div>
       `;
-      document.body.appendChild(card);
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+
+      // Close on backdrop click
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          this.closeCard();
+        }
+      });
 
       const closeBtn = card.querySelector('#card-close');
       if (closeBtn) {
@@ -63,8 +81,12 @@ export class InspectionManager {
           this.closeCard();
         });
       }
+      this.cardElement = card;
+      this.modalOverlay = overlay;
+    } else {
+      this.modalOverlay = overlay;
+      this.cardElement = document.getElementById('inspection-card');
     }
-    this.cardElement = card;
 
     // 3. Weathering Chronology Slider Widget
     let wCtrl = document.getElementById('weathering-control');
@@ -180,16 +202,73 @@ export class InspectionManager {
 
   showCard(hs) {
     if (!this.cardElement) return;
+    this.lastFocusedElement = document.activeElement;
+
     this.cardElement.querySelector('#card-cat').textContent = hs.category;
     this.cardElement.querySelector('#card-title').textContent = hs.title;
     this.cardElement.querySelector('#card-desc').textContent = hs.description;
+
+    // Show backdrop overlay & dialog
+    if (this.modalOverlay) {
+      this.modalOverlay.classList.add('active');
+      this.modalOverlay.setAttribute('aria-hidden', 'false');
+    }
     this.cardElement.classList.add('visible');
+
+    // Lock page scroll
+    document.body.classList.add('modal-open');
+
+    // Trap focus and set up Escape listener
+    const closeBtn = this.cardElement.querySelector('#card-close');
+    if (closeBtn) closeBtn.focus();
+
+    this.onModalKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.closeCard();
+        return;
+      }
+      if (e.key === 'Tab') {
+        const focusable = this.cardElement.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', this.onModalKeyDown);
+
     audio.playBeep();
   }
 
   closeCard() {
+    if (this.modalOverlay) {
+      this.modalOverlay.classList.remove('active');
+      this.modalOverlay.setAttribute('aria-hidden', 'true');
+    }
     if (this.cardElement) {
       this.cardElement.classList.remove('visible');
+    }
+
+    // Unlock page scroll
+    document.body.classList.remove('modal-open');
+
+    // Remove key listener
+    if (this.onModalKeyDown) {
+      window.removeEventListener('keydown', this.onModalKeyDown);
+      this.onModalKeyDown = null;
+    }
+
+    // Restore focus
+    if (this.lastFocusedElement && typeof this.lastFocusedElement.focus === 'function') {
+      this.lastFocusedElement.focus();
     }
   }
 

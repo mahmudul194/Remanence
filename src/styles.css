@@ -25,11 +25,11 @@
   --chapter-highlight: var(--ping-cyan);
 
   /* ========================================================================
-     2. TYPOGRAPHY SYSTEM
+     2. TYPOGRAPHY SYSTEM & CLS-PROOF FALLBACKS
      ======================================================================== */
-  --font-serif: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
-  --font-sans: "Manrope", Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "IBM Plex Mono", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-serif: "Instrument Serif", "Instrument Serif Fallback", "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Manrope", "Manrope Fallback", Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "IBM Plex Mono", "IBM Plex Mono Fallback", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Fluid Type Scale (clamp-based) */
   --type-hero: clamp(3.5rem, 12vw, 11rem);
@@ -47,6 +47,69 @@
   /* Easing curves */
   --ease-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-out-fast: cubic-bezier(0.2, 0.9, 0.2, 1);
+
+  /* ========================================================================
+     3. 12-COLUMN GRID, 8PX SPACING & CLEARANCE TOKENS
+     ======================================================================== */
+  --content-max-width: 1440px;
+  --page-margin: clamp(1rem, 4vw, 4rem);
+  --grid-columns: 12;
+  --grid-gap: clamp(1rem, 2vw, 2rem);
+
+  /* 8px Spacing Scale */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 40px;
+  --space-6: 48px;
+
+  /* Component Dimensions */
+  --card-width: min(520px, 90vw);
+  --card-radius: 16px;
+  --panel-radius: 12px;
+
+  /* Safe Area Insets (iOS notch / dynamic island / edge-to-edge support) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  /* Viewport Component Clearances */
+  --nav-height: 80px;
+  --dock-height: 72px;
+  --rail-width: 60px;
+  --clearance-edge: 16px;
+}
+
+/* ==========================================================================
+   METRIC-MATCHED FONT FALLBACKS (Zero Cumulative Layout Shift / CLS)
+   ========================================================================== */
+@font-face {
+  font-family: "Instrument Serif Fallback";
+  src: local("Georgia");
+  ascent-override: 95%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+  size-adjust: 100%;
+}
+
+@font-face {
+  font-family: "Manrope Fallback";
+  src: local("Arial");
+  ascent-override: 98%;
+  descent-override: 26%;
+  line-gap-override: 0%;
+  size-adjust: 100%;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono Fallback";
+  src: local("Courier New");
+  ascent-override: 88%;
+  descent-override: 24%;
+  line-gap-override: 0%;
+  size-adjust: 95%;
 }
 
 /* ==========================================================================
@@ -97,18 +160,23 @@ html {
   font-feature-settings: "kern" 1, "liga" 1;
   width: 100%;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: auto;
 }
 
 body {
   width: 100%;
   min-height: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
   overflow-y: visible;
   position: relative;
   background-color: var(--space-black);
   cursor: none; /* Custom magnetic cursor takes over */
+}
+
+/* Modal Open Scroll Lock */
+body.modal-open {
+  overflow: hidden !important;
 }
 
 /* Lenis scroll container */
@@ -174,10 +242,9 @@ body.cursor-hover .cursor-dot {
    ========================================================================== */
 #webgl-canvas {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 0;
   display: block;
 }
@@ -203,10 +270,9 @@ body.cursor-hover .cursor-dot {
    ========================================================================== */
 .intro-screen {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 50;
   display: flex;
   align-items: center;
@@ -402,12 +468,15 @@ body.cursor-hover .cursor-dot {
   top: 0;
   left: 0;
   width: 100%;
-  padding: 2.2rem 3.5rem;
+  padding-top: calc(1.8rem + var(--safe-top));
+  padding-bottom: 1.4rem;
+  padding-left: calc(var(--page-margin) + var(--safe-left));
+  padding-right: calc(var(--page-margin) + var(--safe-right));
   display: flex;
   align-items: center;
   justify-content: space-between;
   z-index: 100;
-  background: linear-gradient(to bottom, rgba(5, 6, 10, 0.82) 0%, rgba(5, 6, 10, 0.4) 65%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(5, 6, 10, 0.85) 0%, rgba(5, 6, 10, 0.45) 65%, transparent 100%);
   pointer-events: none;
 }
 
@@ -472,12 +541,12 @@ body.cursor-hover .cursor-dot {
 
 /* ==========================================================================
    PROGRESS TIMELINE RAIL (Right)
-   Uses --signal-amber and --moon-white only
+   Strictly offset from screen edge to eliminate card collision
    ========================================================================== */
 .chapter-rail {
   position: fixed;
   top: 50%;
-  right: 2.8rem;
+  right: calc(2rem + var(--safe-right));
   transform: translateY(-50%);
   display: flex;
   align-items: center;
@@ -537,13 +606,16 @@ body.cursor-hover .cursor-dot {
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 1.5rem 3.5rem;
+  padding-top: 1.2rem;
+  padding-bottom: calc(1.4rem + var(--safe-bottom));
+  padding-left: calc(var(--page-margin) + var(--safe-left));
+  padding-right: calc(var(--page-margin) + var(--safe-right));
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   z-index: 100;
   pointer-events: none;
-  background: linear-gradient(to top, rgba(5, 6, 10, 0.85) 0%, rgba(5, 6, 10, 0.25) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(5, 6, 10, 0.88) 0%, rgba(5, 6, 10, 0.28) 60%, transparent 100%);
 }
 
 .metadata-col {
@@ -587,34 +659,72 @@ body.cursor-hover .cursor-dot {
 
 /* ==========================================================================
    SCROLL-DRIVEN EDITORIAL STORY MOMENTS
+   12-Column Grid System with Unified Margins & Strict Clearances
    ========================================================================== */
 .scroll-container {
   position: relative;
   width: 100%;
   z-index: 10;
   pointer-events: none;
+  overflow-x: clip;
 }
 
 .story-section {
   min-height: 120vh;
+  min-height: 120dvh;
   width: 100%;
-  display: flex;
+  max-width: var(--content-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  column-gap: var(--grid-gap);
   align-items: center;
-  padding: 6rem 4rem;
   position: relative;
   pointer-events: none;
+  padding-top: calc(var(--nav-height) + var(--clearance-edge) + var(--safe-top));
+  padding-bottom: calc(var(--dock-height) + var(--clearance-edge) + var(--safe-bottom));
+  padding-left: calc(var(--page-margin) + var(--safe-left));
+  padding-right: calc(var(--page-margin) + var(--rail-width) + var(--clearance-edge) + var(--safe-right));
 }
 
-/* Alternating side layout: text sits opposite to bright 3D focal assets */
-.story-section:nth-child(even) {
-  justify-content: flex-end;
+/* Station Layout Positions */
+.story-section.layout-left .moment-wrap {
+  grid-column: 1 / span 6;
+  justify-self: start;
 }
 
-.story-section.section-intro,
-.story-section.section-transit,
-.story-section.section-finale {
+.story-section.layout-right .moment-wrap {
+  grid-column: 7 / span 6;
+  justify-self: end;
+}
+
+.story-section.layout-center {
+  display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   text-align: center;
+  padding-right: calc(var(--page-margin) + var(--safe-right));
+}
+
+.story-section.layout-center .moment-wrap,
+.story-section.layout-center .hero-wrap {
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Fallback for sections without explicit layout class */
+.story-section:not(.layout-left):not(.layout-right):not(.layout-center):nth-child(even) .moment-wrap {
+  grid-column: 7 / span 6;
+  justify-self: end;
+}
+.story-section:not(.layout-left):not(.layout-right):not(.layout-center):nth-child(odd) .moment-wrap {
+  grid-column: 1 / span 6;
+  justify-self: start;
 }
 
 /* Hero Title Container: Floating freely in cosmic space (zero box, zero blur, zero border) */
@@ -649,21 +759,23 @@ body.cursor-hover .cursor-dot {
   border: none !important;
 }
 
-/* Sleek, Architectural Side-docked Story Moments */
+/* Sleek, Architectural Standardized Story Moments (8px Spacing System) */
 .moment-wrap {
   position: relative;
-  width: 100%;
-  max-width: 48ch;
-  padding: 2.2rem 2.6rem;
-  border-radius: 14px;
+  width: var(--card-width);
+  max-width: var(--card-width);
+  box-sizing: border-box;
+  padding: var(--space-4);
+  border-radius: var(--card-radius);
   pointer-events: auto;
   opacity: 0;
   transform: translateY(24px);
-  background: linear-gradient(135deg, rgba(8, 12, 22, 0.78) 0%, rgba(5, 7, 12, 0.62) 100%);
-  border: 1px solid rgba(245, 242, 234, 0.08);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  background: linear-gradient(135deg, rgba(8, 12, 22, 0.88) 0%, rgba(5, 7, 12, 0.78) 100%);
+  border: 1px solid rgba(245, 242, 234, 0.12);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+  transition: opacity 0.6s var(--ease-cinematic), transform 0.6s var(--ease-cinematic);
 }
 
 .moment-wrap.active {
@@ -672,17 +784,19 @@ body.cursor-hover .cursor-dot {
 }
 
 .moment-wrap.moment-center {
-  max-width: 56ch;
-  margin: 0 auto;
+  width: min(640px, 90vw);
+  max-width: min(640px, 90vw);
+  margin-left: auto;
+  margin-right: auto;
 }
 
-/* Huge background year numerals (Instrument Serif, low opacity / outline, decorative) */
+/* Background year numerals */
 .moment-year-bg {
   position: absolute;
-  top: -3.8rem;
-  right: -1.2rem;
+  top: -3.2rem;
+  right: 0.5rem;
   font-family: var(--font-serif);
-  font-size: clamp(6.5rem, 15vw, 14rem);
+  font-size: clamp(6rem, 14vw, 13rem);
   line-height: 0.9;
   font-weight: 400;
   color: transparent;
@@ -699,7 +813,7 @@ body.cursor-hover .cursor-dot {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  margin-bottom: 1.2rem;
+  margin-bottom: var(--space-2);
 }
 
 .kicker-num {
@@ -724,7 +838,7 @@ body.cursor-hover .cursor-dot {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--signal-amber);
-  margin-bottom: 1.2rem;
+  margin-bottom: var(--space-2);
   text-shadow: var(--text-shadow-protect);
 }
 
@@ -736,8 +850,9 @@ body.cursor-hover .cursor-dot {
   line-height: 1.02;
   letter-spacing: -0.01em;
   color: var(--moon-white);
-  margin-bottom: 1.6rem;
+  margin-bottom: var(--space-3);
   text-wrap: balance;
+  overflow-wrap: break-word;
   text-shadow: var(--text-shadow-protect);
 }
 
@@ -758,7 +873,7 @@ body.cursor-hover .cursor-dot {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--moon-white);
-  margin-bottom: 1.2rem;
+  margin-bottom: var(--space-2);
   text-wrap: balance;
   text-shadow: var(--text-shadow-protect);
 }
@@ -773,7 +888,7 @@ body.cursor-hover .cursor-dot {
   font-size: clamp(1.6rem, 3.2vw, 2.8rem);
   color: var(--moon-silver);
   letter-spacing: 0.04em;
-  margin-bottom: 2rem;
+  margin-bottom: var(--space-3);
   text-shadow: var(--text-shadow-protect);
 }
 
@@ -803,7 +918,7 @@ body.cursor-hover .cursor-dot {
 /* ==========================================================================
    MACHINE INFO PANELS (Section 5 Spec)
    Dark glass: background rgba(11,16,32,0.72), backdrop-filter blur(14px),
-   1px border rgba(245,242,234,0.12), radius 14px.
+   1px border rgba(245,242,234,0.12), radius var(--panel-radius).
    Inside: label (mono, amber), machine name (Instrument Serif, 2.4rem, moon-white),
    data rows (label in dust-gray mono, value in moon-white Manrope),
    status "SILENT" in --danger-dim.
@@ -813,9 +928,9 @@ body.cursor-hover .cursor-dot {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(245, 242, 234, 0.12);
-  border-radius: 14px;
-  padding: 1.6rem 1.9rem;
-  margin: 1.8rem 0;
+  border-radius: var(--panel-radius);
+  padding: var(--space-3);
+  margin: var(--space-3) 0;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
@@ -826,7 +941,7 @@ body.cursor-hover .cursor-dot {
   text-transform: uppercase;
   color: var(--signal-amber);
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: var(--space-1);
   text-shadow: var(--text-shadow-protect);
 }
 
@@ -836,7 +951,7 @@ body.cursor-hover .cursor-dot {
   font-weight: 400;
   color: var(--moon-white);
   line-height: 1.15;
-  margin-bottom: 1.2rem;
+  margin-bottom: var(--space-2);
   text-wrap: balance;
   text-shadow: var(--text-shadow-protect);
 }
@@ -844,14 +959,14 @@ body.cursor-hover .cursor-dot {
 .panel-grid {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-1);
 }
 
 .spec-item {
   display: grid;
-  grid-template-columns: 135px 1fr;
+  grid-template-columns: 120px 1fr;
   align-items: baseline;
-  gap: 1.2rem;
+  column-gap: var(--space-2);
 }
 
 .spec-item .sk {
@@ -860,6 +975,7 @@ body.cursor-hover .cursor-dot {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--dust-gray);
+  text-align: left;
   text-shadow: var(--text-shadow-protect);
 }
 
@@ -869,6 +985,7 @@ body.cursor-hover .cursor-dot {
   font-weight: 500;
   color: var(--moon-white);
   line-height: 1.45;
+  text-align: left;
   text-shadow: var(--text-shadow-protect);
 }
 
@@ -1092,10 +1209,9 @@ body.cursor-hover .cursor-dot {
    ========================================================================== */
 .storm-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   background: radial-gradient(circle at center, rgba(140, 45, 15, 0.95), rgba(8, 3, 2, 0.99));
   z-index: 50;
   pointer-events: none;
@@ -1184,30 +1300,55 @@ body.cursor-hover .cursor-dot {
   100% { transform: translateY(-50%) scale(2.2); opacity: 0; }
 }
 
-.inspection-card {
+/* ==========================================================================
+   CENTERED ACCESSIBLE MODAL SYSTEM (Hardware Inspection Dialog)
+   ========================================================================== */
+.modal-backdrop-overlay {
   position: fixed;
-  bottom: 5.5rem;
-  left: 3.5rem;
-  max-width: 380px;
-  background: rgba(11, 16, 32, 0.88);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(245, 242, 234, 0.14);
-  border-left: 2px solid var(--signal-amber);
-  border-radius: 14px;
-  padding: 1.5rem 1.8rem;
-  z-index: 20;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 6, 10, 0.78);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 1000;
+  padding: var(--space-3);
   opacity: 0;
-  transform: translateY(20px);
+  visibility: hidden;
   pointer-events: none;
-  transition: opacity 0.4s var(--ease-cinematic), transform 0.4s var(--ease-cinematic);
+  transition: opacity 0.35s var(--ease-cinematic), visibility 0.35s var(--ease-cinematic);
 }
 
-.inspection-card.visible {
+.modal-backdrop-overlay.active {
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
   pointer-events: auto;
+}
+
+.modal-dialog.inspection-card {
+  position: relative;
+  width: min(520px, 92vw);
+  max-height: 85dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: rgba(11, 16, 32, 0.94);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(245, 242, 234, 0.16);
+  border-left: 3px solid var(--signal-amber);
+  border-radius: var(--card-radius);
+  padding: var(--space-4);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.85);
+  opacity: 0;
+  transform: scale(0.96) translateY(12px);
+  transition: opacity 0.35s var(--ease-cinematic), transform 0.35s var(--ease-cinematic);
+  pointer-events: auto;
+}
+
+.modal-backdrop-overlay.active .modal-dialog.inspection-card,
+.modal-dialog.inspection-card.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
 }
 
 .card-header {
@@ -1382,28 +1523,41 @@ body.cursor-hover .cursor-dot {
    RESPONSIVE DESIGN & MOBILE OPTIMIZATION
    Mobile body min 17px, no text under 12px anywhere
    ========================================================================== */
+/* ==========================================================================
+   RESPONSIVE DESIGN & MOBILE BOTTOM SHEET SYSTEM
+   Strict adherence to safe areas, 16px clearances, and zero 3D obstruction
+   ========================================================================== */
 @media (max-width: 1024px) {
   .hud-top {
-    padding: 1.6rem 2rem;
+    padding-left: calc(var(--page-margin) + var(--safe-left));
+    padding-right: calc(var(--page-margin) + var(--safe-right));
   }
   .hud-bottom {
-    padding: 1.6rem 2rem;
-  }
-  .story-section {
-    padding: 5rem 2.2rem;
+    padding-left: calc(var(--page-margin) + var(--safe-left));
+    padding-right: calc(var(--page-margin) + var(--safe-right));
   }
   .chapter-rail {
-    right: 1.2rem;
+    right: calc(1.2rem + var(--safe-right));
+  }
+  .story-section {
+    padding-right: calc(var(--page-margin) + 3.2rem + var(--safe-right));
+  }
+  .story-section.layout-left .moment-wrap {
+    grid-column: 1 / span 7;
+  }
+  .story-section.layout-right .moment-wrap {
+    grid-column: 6 / span 7;
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   :root {
     --type-body: 17px; /* Strict requirement: Minimum body size 17px on mobile */
+    --card-width: 100%;
   }
 
   .hud-top {
-    padding: 1.2rem 1.5rem;
+    padding: calc(1rem + var(--safe-top)) 1.2rem 1rem 1.2rem;
   }
   .chapter-indicator {
     display: none;
@@ -1414,33 +1568,121 @@ body.cursor-hover .cursor-dot {
   .hud-bottom {
     display: none;
   }
+
+  /* Mobile Bottom Sheet Layout for Story Sections */
   .story-section {
-    padding: 4rem 1.5rem;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: flex-end !important;
+    align-items: stretch !important;
     min-height: 100vh;
-    justify-content: center !important;
+    min-height: 100dvh;
+    padding: calc(var(--nav-height) + var(--safe-top)) 0 var(--safe-bottom) 0 !important;
+    box-sizing: border-box;
   }
+
+  /* Station Cards convert to Bottom Sheets */
   .moment-wrap {
-    max-width: 100%;
-    padding: 2rem 1.6rem;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 60dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 20px 20px 0 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: none !important;
+    padding: var(--space-3) var(--space-3) calc(var(--space-4) + var(--safe-bottom)) var(--space-3);
+    margin-top: auto;
+    margin-bottom: 0;
+    background: linear-gradient(180deg, rgba(11, 16, 32, 0.94) 0%, rgba(5, 7, 12, 0.98) 100%);
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8);
   }
+
+  /* Centered Intro and Transit Sections stay floating */
+  .section-intro,
+  .section-transit {
+    justify-content: center !important;
+    padding: 2rem 1.2rem !important;
+  }
+
+  .section-intro .moment-wrap,
+  .section-intro .hero-wrap,
+  .section-transit .moment-wrap {
+    max-height: none !important;
+    overflow-y: visible !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: var(--space-2) !important;
+  }
+
+  /* Sources & Archive Section */
+  .section-sources {
+    justify-content: flex-start !important;
+    padding: 4rem 1.2rem !important;
+  }
+
+  .section-sources .moment-wrap {
+    border-radius: 16px !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    border: 1px solid rgba(245, 242, 234, 0.12) !important;
+    background: rgba(11, 16, 32, 0.85) !important;
+  }
+
+  .moment-year-bg,
+  .moment-distance-bg {
+    display: none;
+  }
+
   .spec-item {
-    grid-template-columns: 110px 1fr;
-    gap: 0.6rem;
+    grid-template-columns: 105px 1fr;
+    gap: var(--space-1);
   }
+
   .credits-footer {
     flex-direction: column;
     gap: 0.6rem;
   }
-  .inspection-card {
-    left: 1.2rem;
-    right: 1.2rem;
-    bottom: 5.5rem;
-    max-width: none;
-  }
+
   .weathering-control {
     right: 1.2rem;
     left: 1.2rem;
-    bottom: 16rem;
+    bottom: 5.5rem;
+    max-width: none;
+  }
+}
+
+/* ==========================================================================
+   SHORT VIEWPORT OPTIMIZATION (e.g. 1366x600, laptops with devtools / bars)
+   ========================================================================== */
+@media (max-height: 700px) {
+  .story-section {
+    padding-top: calc(60px + var(--safe-top));
+    padding-bottom: calc(56px + var(--safe-bottom));
+  }
+
+  .moment-wrap {
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--space-3);
+  }
+
+  .moment-title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    margin-bottom: var(--space-2);
+  }
+
+  .machine-panel {
+    margin: var(--space-2) 0;
+    padding: var(--space-2);
+  }
+
+  .chapter-rail {
+    transform: translateY(-50%) scale(0.85);
   }
 }
 
@@ -1579,9 +1821,16 @@ body.cursor-hover .cursor-dot {
   color: var(--moon-silver);
 }
 
-.model-sources-table {
-  margin-top: 1.8rem;
+.table-scroll-wrap {
   width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 1.8rem;
+}
+
+.model-sources-table {
+  width: 100%;
+  min-width: 500px;
   border-collapse: collapse;
   font-family: var(--font-mono);
   font-size: 11px;
