@@ -282,43 +282,36 @@ export class InspectionManager {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
-    const parentPos = this.currentMachine.parent
-      ? this.currentMachine.parent.position
-      : new THREE.Vector3();
-
-    const tempV = new THREE.Vector3();
+    const worldPos = new THREE.Vector3();
+    const ndcPos = new THREE.Vector3();
 
     this.activeHotspots.forEach((hs) => {
-      // Calculate world position: hotspot local + machine local + moon scene group
-      tempV.copy(hs.pos3D)
-        .add(this.currentMachine.position)
-        .add(parentPos);
+      // Calculate true world position using Three.js scene graph transformation
+      worldPos.copy(hs.pos3D);
+      this.currentMachine.localToWorld(worldPos);
+
+      // Distance check for fading
+      const dist = this.camera.position.distanceTo(worldPos);
+      if (dist > 45 || dist < 0.8) {
+        hs.element.style.display = 'none';
+        return;
+      }
 
       // Project into normalized device coordinates [-1, 1]
-      tempV.project(this.camera);
+      ndcPos.copy(worldPos).project(this.camera);
 
       // Check if behind camera or outside frustum
-      const isBehind = tempV.z > 1.0 || tempV.z < -1.0;
-      if (isBehind) {
+      if (ndcPos.z > 1.0 || ndcPos.z < -1.0 || Math.abs(ndcPos.x) > 1.1 || Math.abs(ndcPos.y) > 1.1) {
         hs.element.style.display = 'none';
         return;
       }
 
       // Screen coordinates
-      const screenX = (tempV.x * 0.5 + 0.5) * width;
-      const screenY = (-(tempV.y * 0.5) + 0.5) * height;
+      const screenX = (ndcPos.x * 0.5 + 0.5) * width;
+      const screenY = (-(ndcPos.y * 0.5) + 0.5) * height;
 
-      // Distance check for fading
-      const dist = this.camera.position.distanceTo(
-        hs.pos3D.clone().add(this.currentMachine.position).add(parentPos)
-      );
-
-      if (dist > 35 || dist < 1.0) {
-        hs.element.style.display = 'none';
-      } else {
-        hs.element.style.display = 'flex';
-        hs.element.style.transform = `translate3d(${screenX}px, ${screenY}px, 0)`;
-      }
+      hs.element.style.display = 'flex';
+      hs.element.style.transform = `translate3d(${screenX}px, ${screenY}px, 0)`;
     });
   }
 }

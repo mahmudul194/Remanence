@@ -347,12 +347,11 @@ export function createFootpadBermTexture() {
 
   ctx.clearRect(0, 0, 256, 256);
 
-  // Center contact depression shadow
-  const grad = ctx.createRadialGradient(128, 128, 15, 128, 128, 115);
-  grad.addColorStop(0.0, 'rgba(10, 12, 16, 0.95)');
-  grad.addColorStop(0.45, 'rgba(20, 24, 30, 0.85)');
-  grad.addColorStop(0.68, 'rgba(80, 85, 95, 0.45)'); // Raised berm lip rim
-  grad.addColorStop(0.9, 'rgba(30, 34, 42, 0.15)');
+  // Soft ambient contact occlusion shadow (pure dark shadow, zero glowing halo)
+  const grad = ctx.createRadialGradient(128, 128, 10, 128, 128, 118);
+  grad.addColorStop(0.0, 'rgba(4, 5, 8, 0.92)');
+  grad.addColorStop(0.45, 'rgba(8, 10, 14, 0.65)');
+  grad.addColorStop(0.75, 'rgba(12, 14, 18, 0.22)');
   grad.addColorStop(1.0, 'rgba(0, 0, 0, 0.0)');
 
   ctx.fillStyle = grad;
@@ -375,33 +374,33 @@ export function getAerospaceMaterials() {
   const scorchTex = createEngineScorchTexture();
 
   return {
-    // 1. Hand-wrapped Gold Kapton Foil (Primary descent stage facets)
+    // 1. Hand-wrapped Gold Kapton Foil (Zero self-glow in vacuum)
     goldKapton: new THREE.MeshPhysicalMaterial({
       color: 0xdeb846,
-      emissive: 0x1f1402,
-      emissiveIntensity: 0.15,
+      emissive: 0x000000,
+      emissiveIntensity: 0.0,
       metalness: 1.0,
-      roughness: 0.18,
+      roughness: 0.22,
       roughnessMap: foilTex.roughness,
       normalMap: foilTex.normal,
-      normalScale: new THREE.Vector2(0.95, 0.95),
+      normalScale: new THREE.Vector2(0.9, 0.9),
       clearcoat: 0.85,
-      clearcoatRoughness: 0.15,
+      clearcoatRoughness: 0.18,
       reflectivity: 0.98
     }),
 
-    // 2. Amber/Copper Mylar Blanket (Interspersed thermal insulation panels)
+    // 2. Amber/Copper Mylar Blanket (Zero self-glow in vacuum)
     amberKapton: new THREE.MeshPhysicalMaterial({
       color: 0xbf6724,
-      emissive: 0x160802,
-      emissiveIntensity: 0.1,
+      emissive: 0x000000,
+      emissiveIntensity: 0.0,
       metalness: 0.98,
-      roughness: 0.22,
+      roughness: 0.26,
       roughnessMap: foilTex.roughness,
       normalMap: foilTex.normal,
       normalScale: new THREE.Vector2(0.85, 0.85),
       clearcoat: 0.8,
-      clearcoatRoughness: 0.2
+      clearcoatRoughness: 0.22
     }),
 
     // 3. Black Inconel & Pyromark Thermal Shield (Top deck & engine heat shielding)
@@ -571,53 +570,228 @@ export function createLRVWheelTexture() {
 }
 
 /**
- * 8. Lunar Regolith Chevron Rover Tire Tracks
+ * 8. Lunar Regolith Chevron Rover Tire Tracks (PBR Decal with Distance Fade)
  */
 export function createLRVTracksTexture() {
-  if (textureCache.has('lrv_tracks')) return textureCache.get('lrv_tracks');
+  if (textureCache.has('lrv_tracks_pbr')) return textureCache.get('lrv_tracks_pbr');
 
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
+  const width = 256;
+  const height = 1024;
 
-  ctx.clearRect(0, 0, 256, 512);
+  const albedoCanvas = document.createElement('canvas');
+  albedoCanvas.width = width;
+  albedoCanvas.height = height;
+  const aCtx = albedoCanvas.getContext('2d');
+
+  const normalCanvas = document.createElement('canvas');
+  normalCanvas.width = width;
+  normalCanvas.height = height;
+  const nCtx = normalCanvas.getContext('2d');
+
+  // Fill transparent
+  aCtx.clearRect(0, 0, width, height);
+  nCtx.fillStyle = '#8080ff'; // Flat tangent normal
+  nCtx.fillRect(0, 0, width, height);
 
   // Twin tire track impressions (spaced 1.8m wheel track apart)
   const leftX = 54;
   const rightX = 202;
 
   [leftX, rightX].forEach((cx) => {
-    // Compressed dark soil impression
-    ctx.fillStyle = 'rgba(28, 30, 36, 0.75)';
-    ctx.fillRect(cx - 24, 0, 48, 512);
+    // Compressed dark regolith impression
+    aCtx.fillStyle = 'rgba(20, 22, 28, 0.88)';
+    aCtx.fillRect(cx - 24, 0, 48, height);
 
     // Chevron cleat depressions
-    ctx.strokeStyle = 'rgba(12, 14, 18, 0.95)';
-    ctx.lineWidth = 4;
-    for (let y = 0; y < 512; y += 20) {
-      ctx.beginPath();
-      ctx.moveTo(cx - 20, y);
-      ctx.lineTo(cx, y + 10);
-      ctx.lineTo(cx + 20, y);
-      ctx.stroke();
+    aCtx.strokeStyle = 'rgba(10, 12, 16, 0.98)';
+    aCtx.lineWidth = 5;
+    for (let y = 0; y < height; y += 22) {
+      aCtx.beginPath();
+      aCtx.moveTo(cx - 20, y);
+      aCtx.lineTo(cx, y + 12);
+      aCtx.lineTo(cx + 20, y);
+      aCtx.stroke();
     }
 
-    // Displaced berm edges (raised dust lips along track borders)
-    ctx.strokeStyle = 'rgba(165, 168, 175, 0.35)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(cx - 26, 0);
-    ctx.lineTo(cx - 26, 512);
-    ctx.moveTo(cx + 26, 0);
-    ctx.lineTo(cx + 26, 512);
-    ctx.stroke();
+    // Displaced berm edges (raised lighter dust along outer rims)
+    aCtx.strokeStyle = 'rgba(110, 115, 125, 0.45)';
+    aCtx.lineWidth = 4;
+    aCtx.beginPath();
+    aCtx.moveTo(cx - 26, 0);
+    aCtx.lineTo(cx - 26, height);
+    aCtx.moveTo(cx + 26, 0);
+    aCtx.lineTo(cx + 26, height);
+    aCtx.stroke();
   });
 
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(1, 8);
-  textureCache.set('lrv_tracks', tex);
-  return tex;
+  // Apply distance fade along Y (alpha fades smoothly toward top/far end)
+  const imgData = aCtx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+  for (let y = 0; y < height; y++) {
+    // y = 0 is far end (fade to 0), y = height is under rover (full opacity)
+    const factor = Math.min(1.0, Math.pow(y / (height * 0.75), 1.4));
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      data[idx + 3] = Math.round(data[idx + 3] * factor);
+    }
+  }
+  aCtx.putImageData(imgData, 0, 0);
+
+  // Create normal map from chevron shapes
+  const nImg = nCtx.getImageData(0, 0, width, height);
+  const nData = nImg.data;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const idx = (y * width + x) * 4;
+      const aL = data[(y * width + (x - 1)) * 4 + 3];
+      const aR = data[(y * width + (x + 1)) * 4 + 3];
+      const aU = data[((y - 1) * width + x) * 4 + 3];
+      const aD = data[((y + 1) * width + x) * 4 + 3];
+
+      const dx = (aR - aL) / 255.0 * 2.5;
+      const dy = (aD - aU) / 255.0 * 2.5;
+      const dz = 1.0;
+      const len = Math.hypot(dx, dy, dz);
+
+      nData[idx] = Math.round(((dx / len) * 0.5 + 0.5) * 255);
+      nData[idx + 1] = Math.round(((-dy / len) * 0.5 + 0.5) * 255);
+      nData[idx + 2] = Math.round(((dz / len) * 0.5 + 0.5) * 255);
+      nData[idx + 3] = 255;
+    }
+  }
+  nCtx.putImageData(nImg, 0, 0);
+
+  const albedoTex = new THREE.CanvasTexture(albedoCanvas);
+  albedoTex.wrapS = THREE.ClampToEdgeWrapping;
+  albedoTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  const normalTex = new THREE.CanvasTexture(normalCanvas);
+  normalTex.wrapS = THREE.ClampToEdgeWrapping;
+  normalTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  const result = { map: albedoTex, normal: normalTex };
+  textureCache.set('lrv_tracks_pbr', result);
+  return result;
 }
+
+/**
+ * 9. Martian Sand Rover Tire Tracks (PBR Decal with Distance Fade)
+ */
+export function createMarsTracksTexture(isOpportunity = false) {
+  const cacheKey = isOpportunity ? 'mars_tracks_oppy' : 'mars_tracks_spirit';
+  if (textureCache.has(cacheKey)) return textureCache.get(cacheKey);
+
+  const width = 256;
+  const height = 1024;
+
+  const albedoCanvas = document.createElement('canvas');
+  albedoCanvas.width = width;
+  albedoCanvas.height = height;
+  const aCtx = albedoCanvas.getContext('2d');
+
+  const normalCanvas = document.createElement('canvas');
+  normalCanvas.width = width;
+  normalCanvas.height = height;
+  const nCtx = normalCanvas.getContext('2d');
+
+  aCtx.clearRect(0, 0, width, height);
+  nCtx.fillStyle = '#8080ff';
+  nCtx.fillRect(0, 0, width, height);
+
+  // MER wheel track spacing
+  const leftX = 52;
+  const rightX = 204;
+
+  [leftX, rightX].forEach((cx, colIdx) => {
+    const isStuckWheel = !isOpportunity && colIdx === 1; // Spirit right-front stuck wheel furrow!
+
+    if (isStuckWheel) {
+      // Deep dragged furrow rut in Troy sand
+      aCtx.fillStyle = 'rgba(40, 16, 10, 0.95)';
+      aCtx.fillRect(cx - 28, 0, 56, height);
+
+      // Exposed silica bright sand core
+      aCtx.fillStyle = 'rgba(235, 230, 215, 0.75)';
+      aCtx.fillRect(cx - 10, 0, 20, height);
+
+      // Raised berm walls
+      aCtx.strokeStyle = 'rgba(120, 52, 28, 0.65)';
+      aCtx.lineWidth = 6;
+      aCtx.beginPath();
+      aCtx.moveTo(cx - 30, 0); aCtx.lineTo(cx - 30, height);
+      aCtx.moveTo(cx + 30, 0); aCtx.lineTo(cx + 30, height);
+      aCtx.stroke();
+    } else {
+      // Regular rotating wheel tracks
+      aCtx.fillStyle = 'rgba(55, 22, 12, 0.90)';
+      aCtx.fillRect(cx - 22, 0, 44, height);
+
+      // Straight cleat depressions
+      aCtx.strokeStyle = 'rgba(28, 10, 6, 0.98)';
+      aCtx.lineWidth = 4;
+      for (let y = 0; y < height; y += 18) {
+        aCtx.beginPath();
+        aCtx.moveTo(cx - 18, y);
+        aCtx.lineTo(cx + 18, y);
+        aCtx.stroke();
+      }
+
+      // Berm edges
+      aCtx.strokeStyle = 'rgba(145, 62, 34, 0.50)';
+      aCtx.lineWidth = 4;
+      aCtx.beginPath();
+      aCtx.moveTo(cx - 24, 0); aCtx.lineTo(cx - 24, height);
+      aCtx.moveTo(cx + 24, 0); aCtx.lineTo(cx + 24, height);
+      aCtx.stroke();
+    }
+  });
+
+  // Distance fade
+  const imgData = aCtx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+  for (let y = 0; y < height; y++) {
+    const factor = Math.min(1.0, Math.pow(y / (height * 0.75), 1.4));
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * 4;
+      data[idx + 3] = Math.round(data[idx + 3] * factor);
+    }
+  }
+  aCtx.putImageData(imgData, 0, 0);
+
+  // Generate normal map
+  const nImg = nCtx.getImageData(0, 0, width, height);
+  const nData = nImg.data;
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const idx = (y * width + x) * 4;
+      const aL = data[(y * width + (x - 1)) * 4 + 3];
+      const aR = data[(y * width + (x + 1)) * 4 + 3];
+      const aU = data[((y - 1) * width + x) * 4 + 3];
+      const aD = data[((y + 1) * width + x) * 4 + 3];
+
+      const dx = (aR - aL) / 255.0 * 2.5;
+      const dy = (aD - aU) / 255.0 * 2.5;
+      const dz = 1.0;
+      const len = Math.hypot(dx, dy, dz);
+
+      nData[idx] = Math.round(((dx / len) * 0.5 + 0.5) * 255);
+      nData[idx + 1] = Math.round(((-dy / len) * 0.5 + 0.5) * 255);
+      nData[idx + 2] = Math.round(((dz / len) * 0.5 + 0.5) * 255);
+      nData[idx + 3] = 255;
+    }
+  }
+  nCtx.putImageData(nImg, 0, 0);
+
+  const albedoTex = new THREE.CanvasTexture(albedoCanvas);
+  albedoTex.wrapS = THREE.ClampToEdgeWrapping;
+  albedoTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  const normalTex = new THREE.CanvasTexture(normalCanvas);
+  normalTex.wrapS = THREE.ClampToEdgeWrapping;
+  normalTex.wrapT = THREE.ClampToEdgeWrapping;
+
+  const result = { map: albedoTex, normal: normalTex };
+  textureCache.set(cacheKey, result);
+  return result;
+}
+

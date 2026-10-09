@@ -22,6 +22,7 @@ import { STORY_DATA } from './story/data.js';
 import { audio } from './audio.js';
 import { InspectionManager } from './effects/inspection.js';
 import { ContrastGuard } from './typography.js';
+import { FlightController, FLIGHT_STATIONS } from './flight/flightController.js';
 
 const APP_START_TIME = performance.now();
 
@@ -34,9 +35,14 @@ class RemanenceApp {
     // Check system preference for reduced motion
     this.prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    // Lazy load state for Mars scene
+    // Journey start flag
+    this.journeyStarted = false;
+    this.flightController = null;
+
+    // Persistent scenes
+    this.spaceScene = null;
+    this.moonScene = null;
     this.marsScene = null;
-    this.marsLoadingPromise = null;
 
     this.initWebGL();
     this.initLenis();
@@ -50,13 +56,15 @@ class RemanenceApp {
     this.scene.background = new THREE.Color(0x020306);
     this.scene.fog = new THREE.FogExp2(0x020306, 0.0018);
 
-    this.camera = new THREE.PerspectiveCamera(48, this.width / this.height, 0.1, 2000);
+    this.camera = new THREE.PerspectiveCamera(48, this.width / this.height, 0.1, 25000);
     this.camera.position.set(0, 0, 16); // Initial camera position facing the particle text
 
-    // 2. WebGL Renderer
+    // 2. WebGL Renderer with Logarithmic Depth Buffer (prevents z-fighting across planetary scales)
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvas,
       antialias: true,
+      logarithmicDepthBuffer: true,
+      preserveDrawingBuffer: true,
       powerPreference: 'high-performance'
     });
     this.renderer.setSize(this.width, this.height);
@@ -64,7 +72,7 @@ class RemanenceApp {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    this.renderer.toneMappingExposure = 0.95;
 
     // 3. Image-Based Lighting (IBL) Environment Map (Rolex watch standard)
     new RGBELoader().load('./textures/lobe.hdr', (envTexture) => {
@@ -196,19 +204,33 @@ class RemanenceApp {
     // 1. Create GPU Particle Text in scene
     this.particleText = createParticleText(this.scene);
 
-    // 2. Build Initial Scenes: Space and Moon Scene
+    // 2. Build Persistent Unified Solar System (Earth, Moon, Mars co-located)
     this.spaceScene = createSpaceScene();
     this.scene.add(this.spaceScene.group);
 
     this.moonScene = await createMoonScene();
     this.scene.add(this.moonScene.group);
 
-    // Initial scene isolation: Space visible, Moon and Mars hidden
+    this.marsScene = await createMarsScene();
+    this.scene.add(this.marsScene.group);
+
+    // Persistent Unified Universe: dynamically managed during continuous flight
     this.spaceScene.group.visible = true;
-    this.moonScene.group.visible = false;
+    this.moonScene.group.visible = false; // Hidden in Earth orbit to prevent terrain clipping
+    this.marsScene.group.visible = false;
+
+    // Initial calibrated sunlight (only Earth sun active at launch)
+    if (this.spaceScene.sunLight) this.spaceScene.sunLight.intensity = 1.35;
+    if (this.moonScene.lunarSun) this.moonScene.lunarSun.intensity = 0.0;
+    if (this.marsScene.marsSun) this.marsScene.marsSun.intensity = 0.0;
+
+    // Master Flight Controller
+    this.flightController = new FlightController(this);
+    window.flightController = this.flightController;
 
     // 3. Timeline & GSAP triggers
     this.timeline = new StoryTimeline(this);
+    window.timeline = this.timeline;
     this.inspection = new InspectionManager(this);
     this.contrastGuard = new ContrastGuard(this.canvas, false);
 
@@ -274,6 +296,7 @@ class RemanenceApp {
     const startJourney = () => {
       if (journeyStarted) return;
       journeyStarted = true;
+      this.journeyStarted = true;
 
       clearInterval(progressTimer);
       if (ringFill) ringFill.style.strokeDashoffset = 0;
@@ -309,13 +332,13 @@ class RemanenceApp {
       }
 
       // 3. Dolly camera from particle text toward Earth overview
-      const dollyDuration = this.prefersReducedMotion ? 0.2 : 1.6;
+      const dollyDuration = this.prefersReducedMotion ? 0.2 : 0.75;
       gsap.to(this.camera.position, {
         x: 0,
         y: 6,
         z: 54,
         duration: dollyDuration,
-        ease: 'power3.out',
+        ease: 'power2.out',
         onComplete: () => {
           // Enable smooth scroll as camera reaches destination
           this.lenis.start();
@@ -329,7 +352,7 @@ class RemanenceApp {
         }
       });
 
-      // Quick fallback: ensure scroll is active within 500ms
+      // Quick fallback: ensure scroll is active within 150ms so UI is immediately responsive
       setTimeout(() => {
         this.lenis.start();
         this.lenis.resize();
@@ -337,7 +360,7 @@ class RemanenceApp {
         if (this.timeline) {
           this.timeline.onSectionActive(0);
         }
-      }, 500);
+      }, 150);
 
       // Warm up Mars assets lazily in the background after enter
       setTimeout(() => {
@@ -398,14 +421,16 @@ class RemanenceApp {
   }
 
   initChapterRail() {
-    const sections = document.querySelectorAll('.story-section');
     const dots = document.querySelectorAll('.rail-dot');
 
     dots.forEach((dot) => {
       dot.addEventListener('click', () => {
         const idx = parseInt(dot.dataset.index, 10);
-        if (sections[idx]) {
-          this.lenis.scrollTo(sections[idx], { offset: 0, duration: this.prefersReducedMotion ? 0.1 : 1.4 });
+        if (FLIGHT_STATIONS[idx]) {
+          const targetS = FLIGHT_STATIONS[idx].s;
+          const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+          const targetY = targetS * maxScroll;
+          this.lenis.scrollTo(targetY, { duration: this.prefersReducedMotion ? 0.1 : 1.4 });
           audio.playPing(920, 0.4);
         }
       });
@@ -527,12 +552,25 @@ class RemanenceApp {
       this.inspection.update();
     }
 
-    // Render through Post-processing pipeline
-    this.postfx.render(elapsedTime);
+    // Update Master Spacecraft Flight Controller
+    if (this.flightController && this.journeyStarted) {
+      this.flightController.update(delta);
+    }
+
+    // Update Story Timeline & Card / Caption Synchronization
+    if (this.timeline && this.journeyStarted) {
+      this.timeline.update(delta);
+    }
+
+    // Render through Post-processing pipeline with spacecraft velocity
+    const flightSpeed = this.flightController ? this.flightController.speedNormalized : 0;
+    const scrollVelocity = this.lenis ? this.lenis.velocity : 0;
+    this.postfx.render(elapsedTime, Math.max(flightSpeed * 0.0006, Math.abs(scrollVelocity) * 0.0001));
   }
 }
 
 // Instantiate on DOM load
 window.addEventListener('DOMContentLoaded', () => {
-  new RemanenceApp();
+  window.app = new RemanenceApp();
+  window.timeline = window.app.timeline;
 });

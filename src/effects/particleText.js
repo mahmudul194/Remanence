@@ -270,7 +270,10 @@ export function createParticleText(scene) {
     return gsap.to(uniforms.uProgress, {
       value: 2.0,
       duration,
-      ease: 'power2.in'
+      ease: 'power2.in',
+      onComplete: () => {
+        group.visible = false;
+      }
     });
   }
 

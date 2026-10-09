@@ -34,7 +34,14 @@ export async function createMarsScene() {
       craterMod = -Math.cos((crater1 / 40) * Math.PI) * 4.2;
     }
 
-    posAttr.setY(i, dunes + craterMod);
+    // Planetary curvature skirt: outer rim slopes downward into the underlying Martian globe
+    const distRim = Math.hypot(x, z);
+    if (distRim > 135) {
+      const drop = (distRim - 135) / 85;
+      posAttr.setY(i, (dunes + craterMod) - drop * drop * 38.0);
+    } else {
+      posAttr.setY(i, dunes + craterMod);
+    }
   }
   terrainGeo.computeVertexNormals();
 
@@ -82,7 +89,7 @@ export async function createMarsScene() {
 
   // EDL Descent Debris in crater furrow (y = -3.179)
   const descentDebris = await getOrCreateModel('descent_debris');
-  descentDebris.position.set(-15, -3.179, -35);
+  descentDebris.position.set(-20, -3.179, -35);
   group.add(descentDebris);
   machines.descent_debris = descentDebris;
 
@@ -117,7 +124,7 @@ export async function createMarsScene() {
   machines.ingenuity = ingenuity;
 
   // 4. Martian Atmospheric Lighting (Deep contrast sunlight)
-  const marsSun = new THREE.DirectionalLight(0xffecd4, 3.6);
+  const marsSun = new THREE.DirectionalLight(0xffecd4, 1.45);
   marsSun.position.set(-80, 85, -60);
   marsSun.castShadow = true;
   marsSun.shadow.mapSize.width = 2048;
@@ -134,7 +141,7 @@ export async function createMarsScene() {
   group.add(marsAmbient);
 
   function setStormDarkness(factor) {
-    marsSun.intensity = THREE.MathUtils.lerp(3.6, 0.08, factor);
+    marsSun.intensity = THREE.MathUtils.lerp(1.45, 0.08, factor);
     marsAmbient.intensity = THREE.MathUtils.lerp(0.22, 0.02, factor);
     marsSun.color.setHex(factor > 0.6 ? 0x551a0d : 0xffecd4);
     marsAmbient.color.setHex(factor > 0.6 ? 0x180905 : 0x401f12);

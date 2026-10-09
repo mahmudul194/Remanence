@@ -135,6 +135,16 @@ class AudioManager {
     }
   }
 
+  setFlightVelocity(speedNorm) {
+    if (!this.audioCtx || !this.droneGain) return;
+    const now = this.audioCtx.currentTime;
+    const boost = Math.min(0.35, speedNorm * 0.35);
+    this.droneGain.gain.setTargetAtTime(0.3 + boost, now, 0.08);
+    if (this.staticGain) {
+      this.staticGain.gain.setTargetAtTime(0.03 + speedNorm * 0.04, now, 0.08);
+    }
+  }
+
   _initGenerators() {
     if (!this.audioCtx) return;
 

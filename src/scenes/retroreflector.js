@@ -28,16 +28,16 @@ export function createDetailedRetroreflector() {
     goldKapton: applyWeathering(rawMats.goldKapton, { planet: 'moon' })
   };
 
-  // High-purity optical Suprasil quartz material (physical transmission & refraction)
+  // High-purity optical Suprasil quartz material (physical transmission & refraction, zero self-glow)
   const quartzMat = new THREE.MeshPhysicalMaterial({
-    color: 0xedffff,
-    emissive: 0x003318,
-    emissiveIntensity: 0.35,
-    metalness: 0.04,
-    roughness: 0.02,
-    transmission: 0.95,
+    color: 0xf4faff,
+    emissive: 0x000000,
+    emissiveIntensity: 0.0,
+    metalness: 0.02,
+    roughness: 0.04,
+    transmission: 0.92,
     ior: 1.54,
-    reflectivity: 0.98,
+    reflectivity: 0.95,
     clearcoat: 1.0,
     clearcoatRoughness: 0.02
   });
@@ -188,13 +188,9 @@ export function createDetailedRetroreflector() {
 
   root.add(beamGroup);
 
-  // Telemetry Beacon
+  // Non-luminous reference anchor for inspection
   const beaconGroup = new THREE.Group();
-  const ledGeo = new THREE.SphereGeometry(0.035, 12, 12);
-  const ledMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-  beaconGroup.add(new THREE.Mesh(ledGeo, ledMat));
-  beaconGroup.add(new THREE.PointLight(0x00ff88, 0.5, 6, 2.0));
-  beaconGroup.position.set(0, 0.85, 0);
+  beaconGroup.position.set(0, 0.45, 0);
   root.add(beaconGroup);
 
   root.userData = { beacon: beaconGroup };

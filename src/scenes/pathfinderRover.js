@@ -14,7 +14,7 @@
  */
 
 import * as THREE from 'three';
-import { getAerospaceMaterials, createFootpadBermTexture } from '../materials/aerospaceMaterials.js';
+import { getAerospaceMaterials, createFootpadBermTexture, createMarsTracksTexture } from '../materials/aerospaceMaterials.js';
 import { applyWeathering } from '../materials/weatheringShader.js';
 
 export function createDetailedPathfinder() {
@@ -229,26 +229,30 @@ export function createDetailedPathfinder() {
   rock.castShadow = true;
   sojournerGroup.add(rock);
 
-  // Sojourner wheel tracks in sand leading from the ramp
+  // Sojourner wheel tracks in sand leading from the ramp with distance fade
   const trackGeo = new THREE.PlaneGeometry(0.52, 1.8);
   trackGeo.rotateX(-Math.PI / 2);
-  const trackMat = new THREE.MeshBasicMaterial({
-    color: 0x44160a,
+  const trackMaps = createMarsTracksTexture(true);
+  const trackMat = new THREE.MeshStandardMaterial({
+    map: trackMaps.map,
+    normalMap: trackMaps.normal,
+    normalScale: new THREE.Vector2(1.0, 1.0),
+    roughness: 0.94,
+    metalness: 0.04,
     transparent: true,
-    opacity: 0.75,
+    opacity: 0.88,
     depthWrite: false
   });
   const tracks = new THREE.Mesh(trackGeo, trackMat);
+  tracks.name = 'ground_tracks';
   tracks.position.set(1.45, 0.012, 1.25);
   tracks.rotation.y = 0.65;
+  tracks.receiveShadow = true;
   root.add(tracks);
 
-  // Telemetry Beacon indicator
+  // Reference anchor for inspection
   const beaconGroup = new THREE.Group();
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffb84d }));
-  beaconGroup.add(led);
-  beaconGroup.add(new THREE.PointLight(0xffb84d, 0.5, 6, 2.0));
-  beaconGroup.position.set(0, 1.25, 0);
+  beaconGroup.position.set(0, 0.85, 0);
   root.add(beaconGroup);
 
   root.userData = { beacon: beaconGroup };

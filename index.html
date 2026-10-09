@@ -103,11 +103,31 @@
       </div>
       <div class="hud-actions">
         <span id="chapter-indicator" class="chapter-indicator">Chapter 00 · Origin</span>
+        <button id="btn-free-flight" class="hud-pill" title="Toggle Free Flight Mode (Ctrl+F)" aria-label="Toggle Free Flight Mode">
+          <span class="pill-label">Free Flight</span>
+        </button>
         <button id="btn-audio" class="hud-pill" title="Toggle Soundscape" aria-label="Toggle Soundscape">
           <span id="audio-icon" class="pill-label">Sound off</span>
         </button>
       </div>
     </header>
+
+    <!-- FREE FLIGHT FLOATING RETURN TO TOUR BUTTON -->
+    <button id="btn-return-tour" class="return-tour-pill" aria-label="Return to Guided Tour">
+      <span class="pill-arrow">&larr;</span>
+      <span class="pill-text">Return to Tour</span>
+    </button>
+
+    <!-- FLIGHT HUD COMPASS -->
+    <div id="flight-hud-compass" class="flight-hud-compass">
+      <span class="compass-marker">&#x2316;</span>
+      <span id="compass-poi" class="compass-poi">HDG 000° · EARTH ORBIT · 0m</span>
+    </div>
+
+    <!-- IN-FLIGHT CINEMATIC CAPTION (Single sentence during continuous flight) -->
+    <div id="cinematic-caption-wrap" class="cinematic-caption-wrap" aria-live="polite">
+      <p id="cinematic-caption-text" class="cinematic-caption-text"></p>
+    </div>
 
     <!-- RIGHT-SIDE VERTICAL CHAPTER TIMELINE RAIL -->
     <nav class="chapter-rail" id="chapter-rail" aria-label="Chapter Timeline">
@@ -152,6 +172,9 @@
 
     <!-- SCROLL-DRIVEN EDITORIAL STORY MOMENTS -->
     <div class="scroll-container">
+      <!-- Continuous Virtual Flight Scroll Track (Smooth Lenis Momentum Track) -->
+      <div id="scroll-track" class="scroll-track"></div>
+
       <!-- Section 0: Title Opening -->
       <section class="story-section section-intro layout-center" id="section-intro" data-theme="earth">
         <div class="hero-wrap active">
@@ -667,8 +690,8 @@
       </section>
 
       <!-- Section 14: Finale - Retroreflectors -->
-      <section class="story-section section-finale layout-center" id="section-finale" data-theme="finale">
-        <div class="moment-wrap moment-center">
+      <section class="story-section section-finale layout-left" id="section-retroreflector" data-theme="finale">
+        <div class="moment-wrap">
           <span class="moment-year-bg" aria-hidden="true">1969</span>
           <div class="moment-kicker">
             <span class="kicker-num">13</span>

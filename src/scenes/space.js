@@ -53,19 +53,23 @@ function createInvertedRoughnessMap(url) {
  */
 function createTransparentCloudsMap(url) {
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+  canvas.width = 2048;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.ClampToEdgeWrapping;
   texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 8;
 
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.drawImage(img, 0, 0);
+    // Upsample with soft bilateral blur to eliminate 8-bit palette stepping
+    ctx.filter = 'blur(2.5px)';
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imgData.data;
     for (let i = 0; i < data.length; i += 4) {
@@ -73,8 +77,10 @@ function createTransparentCloudsMap(url) {
       data[i] = 255;
       data[i + 1] = 255;
       data[i + 2] = 255;
-      // Below threshold is transparent atmosphere; above is cloud density
-      data[i + 3] = brightness > 30 ? Math.floor(Math.min(235, (brightness - 25) * 1.1)) : 0;
+      // Soft continuous atmospheric density falloff
+      const norm = brightness / 255;
+      const smoothAlpha = Math.pow(Math.max(0, (norm - 0.12) / 0.88), 1.6) * 190;
+      data[i + 3] = Math.round(smoothAlpha);
     }
     ctx.putImageData(imgData, 0, 0);
     texture.needsUpdate = true;
@@ -89,84 +95,75 @@ export function createSpaceScene() {
 
   const textureLoader = new THREE.TextureLoader();
 
-  // 1. Official High-Resolution NASA Textures
+  // 1. Official High-Resolution NASA Textures with Anisotropic Filtering & Mipmaps
   const earthMap = textureLoader.load('./textures/earth_atmos_2048.jpg');
   earthMap.colorSpace = THREE.SRGBColorSpace;
+  earthMap.generateMipmaps = true;
+  earthMap.minFilter = THREE.LinearMipmapLinearFilter;
+  earthMap.magFilter = THREE.LinearFilter;
+  earthMap.anisotropy = 8;
 
   const earthNormal = textureLoader.load('./textures/earth_normal_2048.jpg');
+  earthNormal.generateMipmaps = true;
+  earthNormal.minFilter = THREE.LinearMipmapLinearFilter;
+  earthNormal.anisotropy = 8;
+
   const earthRoughness = createInvertedRoughnessMap('./textures/earth_specular_2048.jpg');
   const earthClouds = createTransparentCloudsMap('./textures/earth_clouds_1024.png');
+
   const earthLights = textureLoader.load('./textures/earth_lights_2048.png');
   earthLights.colorSpace = THREE.SRGBColorSpace;
+  earthLights.generateMipmaps = true;
+  earthLights.minFilter = THREE.LinearMipmapLinearFilter;
+  earthLights.anisotropy = 8;
 
   const moonMap = textureLoader.load('./textures/moon_1024.jpg');
   moonMap.colorSpace = THREE.SRGBColorSpace;
+  moonMap.generateMipmaps = true;
+  moonMap.minFilter = THREE.LinearMipmapLinearFilter;
+  moonMap.anisotropy = 8;
 
   const marsMap = textureLoader.load('./textures/mars_2048.webp');
   marsMap.colorSpace = THREE.SRGBColorSpace;
+  marsMap.generateMipmaps = true;
+  marsMap.minFilter = THREE.LinearMipmapLinearFilter;
+  marsMap.anisotropy = 8;
 
   // Cinematic Sunlight Vector (natural exposure, no harsh blowout)
-  const sunLight = new THREE.DirectionalLight(0xfff8ee, 2.8);
+  const sunLight = new THREE.DirectionalLight(0xfff8ee, 1.4);
   sunLight.position.set(80, 36, 60);
   group.add(sunLight);
 
   // Subtle deep-space cosmic fill
-  const spaceAmbient = new THREE.AmbientLight(0x040810, 0.12);
+  const spaceAmbient = new THREE.AmbientLight(0x040810, 0.04);
   group.add(spaceAmbient);
 
   const sunDir = sunLight.position.clone().normalize();
 
-  // 2. Photorealistic Earth Sphere (PBR Material with Zero Metalness)
+  // 2. Photorealistic Earth Sphere (PBR Material with Zero Metalness & Zero Self-Glow)
   const earthGeo = new THREE.SphereGeometry(18, 128, 128);
   const earthMat = new THREE.MeshStandardMaterial({
     map: earthMap,
     normalMap: earthNormal,
     normalScale: new THREE.Vector2(0.85, 0.85),
     roughnessMap: earthRoughness,
-    roughness: 0.75,
+    roughness: 0.82,
     metalness: 0.0, // Natural silicate & liquid water, never metal!
-    emissiveMap: earthLights,
-    emissive: new THREE.Color(0xffbf66),
-    emissiveIntensity: 1.3
+    emissive: new THREE.Color(0x000000),
+    emissiveIntensity: 0.0
   });
 
-  // Inject physically accurate day/night modulation for city lights:
-  earthMat.onBeforeCompile = (shader) => {
-    shader.fragmentShader = shader.fragmentShader.replace(
-      '#include <emissivemap_fragment>',
-      `#include <emissivemap_fragment>
-       #if NUM_DIR_LIGHTS > 0
-         float sunDot = dot(normalize(geometryNormal), normalize(directionalLights[0].direction));
-         // Night factor: 0.0 on bright daylit side, smoothly 1.0 on deep dark side
-         float nightFactor = smoothstep(0.08, -0.22, sunDot);
-         totalEmissiveRadiance *= nightFactor;
-       #endif
-      `
-    );
-  };
-
   const earthMesh = new THREE.Mesh(earthGeo, earthMat);
+  earthMesh.name = 'earth_sphere';
   earthMesh.position.set(0, 0, 0);
   earthMesh.rotation.y = 2.4;
   earthMesh.rotation.x = 0.25; // Authentic 23.5° axial tilt
   earthMesh.receiveShadow = true;
   group.add(earthMesh);
 
-  // 3. Floating 3D Cloud Layer (pure white clouds over crystal transparent oceans)
-  const cloudsGeo = new THREE.SphereGeometry(18.16, 96, 96);
-  const cloudsMat = new THREE.MeshStandardMaterial({
-    map: earthClouds,
-    transparent: true,
-    opacity: 0.85,
-    blending: THREE.NormalBlending,
-    roughness: 0.95,
-    metalness: 0.0,
-    depthWrite: false
-  });
-  const cloudsMesh = new THREE.Mesh(cloudsGeo, cloudsMat);
-  cloudsMesh.rotation.y = 2.4;
-  cloudsMesh.rotation.x = 0.25;
-  group.add(cloudsMesh);
+  // 3. Floating 3D Cloud Layer: earth_atmos_2048.jpg already contains authentic high-resolution clouds
+  // Omitting secondary low-res mesh eliminates pixelated palette patches completely
+  const cloudsMesh = null;
 
   // 4. Photorealistic Rayleigh Atmospheric Scattering Rim (Delicate, sharp halo)
   const atmoGeo = new THREE.SphereGeometry(18.42, 64, 64);
@@ -192,7 +189,7 @@ export function createSpaceScene() {
       void main() {
         // Razor-sharp limb Fresnel hugging the planetary edge
         float fresnel = 1.0 - max(dot(vWorldNormal, vViewDir), 0.0);
-        fresnel = pow(fresnel, 4.5);
+        fresnel = pow(fresnel, 5.0);
 
         // Sunlight alignment: atmosphere only scatters light on the illuminated side
         float sunDot = dot(vWorldNormal, normalize(uSunDir));
@@ -205,7 +202,7 @@ export function createSpaceScene() {
         vec3 color = mix(dayAtmosphere, sunsetTwilight, terminator * 0.4);
 
         float intensity = fresnel * sunFactor;
-        gl_FragColor = vec4(color * (intensity * 1.8), 1.0);
+        gl_FragColor = vec4(color * (intensity * 0.45), 1.0);
       }
     `,
     blending: THREE.AdditiveBlending,
@@ -216,27 +213,66 @@ export function createSpaceScene() {
   const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
   group.add(atmoMesh);
 
-  // 5. NASA Moon Sphere in Space
-  const distantMoonGeo = new THREE.SphereGeometry(4.8, 64, 64);
+  // 5. NASA Moon Sphere in Space (aligned with lunar terrain)
+  const distantMoonGeo = new THREE.SphereGeometry(52, 96, 96);
   const distantMoonMat = new THREE.MeshStandardMaterial({
     map: moonMap,
     roughness: 0.96,
     metalness: 0.04
   });
   const distantMoon = new THREE.Mesh(distantMoonGeo, distantMoonMat);
-  distantMoon.position.set(110, 22, -180);
+  distantMoon.position.set(0, -62, -220);
+  distantMoon.rotation.y = 1.1;
+  distantMoon.receiveShadow = true;
   group.add(distantMoon);
 
-  // 6. NASA Mars 2K Sphere (for Interplanetary Transit view)
-  const distantMarsGeo = new THREE.SphereGeometry(6.4, 64, 64);
+  // 6. NASA Mars 2K Sphere (aligned with Martian terrain)
+  const distantMarsGeo = new THREE.SphereGeometry(68, 96, 96);
   const distantMarsMat = new THREE.MeshStandardMaterial({
     map: marsMap,
     roughness: 0.88,
-    metalness: 0.10
+    metalness: 0.08
   });
   const distantMars = new THREE.Mesh(distantMarsGeo, distantMarsMat);
-  distantMars.position.set(40, -10, 420);
+  distantMars.position.set(0, -78, 760);
+  distantMars.rotation.y = 2.4;
+  distantMars.receiveShadow = true;
   group.add(distantMars);
+
+  // Martian Atmospheric Rayleigh Limb Glow
+  const marsAtmoGeo = new THREE.SphereGeometry(69.2, 64, 64);
+  const marsAtmoMat = new THREE.ShaderMaterial({
+    uniforms: { uSunDir: { value: sunDir } },
+    vertexShader: `
+      varying vec3 vWorldNormal;
+      varying vec3 vViewDir;
+      void main() {
+        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+        vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
+        vViewDir = normalize(cameraPosition - worldPos.xyz);
+        gl_Position = projectionMatrix * viewMatrix * worldPos;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uSunDir;
+      varying vec3 vWorldNormal;
+      varying vec3 vViewDir;
+      void main() {
+        float fresnel = pow(1.0 - max(dot(vWorldNormal, vViewDir), 0.0), 4.0);
+        float sunDot = dot(vWorldNormal, normalize(uSunDir));
+        float sunFactor = smoothstep(-0.2, 0.35, sunDot);
+        vec3 haze = vec3(0.95, 0.42, 0.22);
+        gl_FragColor = vec4(haze * (fresnel * sunFactor * 1.6), 1.0);
+      }
+    `,
+    blending: THREE.AdditiveBlending,
+    side: THREE.FrontSide,
+    transparent: true,
+    depthWrite: false
+  });
+  const marsAtmoMesh = new THREE.Mesh(marsAtmoGeo, marsAtmoMat);
+  marsAtmoMesh.position.set(0, -78, 760);
+  group.add(marsAtmoMesh);
 
   // 7. Cinematic Multi-Spectral Starfield (Points with Stellar Classifications & Twinkle)
   const starfield = createCinematicStarfield();
@@ -249,7 +285,7 @@ export function createSpaceScene() {
   // Animation update
   function update(delta, time = 0) {
     earthMesh.rotation.y += delta * 0.012;
-    cloudsMesh.rotation.y += delta * 0.018; // clouds rotate slightly faster
+    if (cloudsMesh) cloudsMesh.rotation.y += delta * 0.018;
     distantMoon.rotation.y += delta * 0.005;
     distantMars.rotation.y += delta * 0.008;
 
@@ -261,6 +297,7 @@ export function createSpaceScene() {
   return {
     group,
     earth: earthMesh,
+    earthMesh,
     clouds: cloudsMesh,
     distantMoon,
     distantMars,

@@ -480,19 +480,25 @@ export function createDetailedLRV() {
   // =========================================================================
   // 7. GROUND TRACKS & SCATTERED REGOLITH DEBRIS
   // =========================================================================
-  // 18-meter long twin chevron rover tire tracks in regolith
+  // 18-meter long twin chevron rover tire tracks in regolith with distance fade
   const trackGeo = new THREE.PlaneGeometry(2.1, 18.0, 1, 32);
   trackGeo.rotateX(-Math.PI / 2);
-  const trackTex = createLRVTracksTexture();
-  const trackMat = new THREE.MeshBasicMaterial({
-    map: trackTex,
+  const trackMaps = createLRVTracksTexture();
+  const trackMat = new THREE.MeshStandardMaterial({
+    map: trackMaps.map,
+    normalMap: trackMaps.normal,
+    normalScale: new THREE.Vector2(1.2, 1.2),
+    roughness: 0.94,
+    metalness: 0.04,
     transparent: true,
-    opacity: 0.88,
+    opacity: 0.92,
     depthWrite: false
   });
   const tracksMesh = new THREE.Mesh(trackGeo, trackMat);
+  tracksMesh.name = 'ground_tracks';
   // Stretches out behind the rear wheels along Z negative
   tracksMesh.position.set(0, 0.012, -9.5);
+  tracksMesh.receiveShadow = true;
   root.add(tracksMesh);
 
   // Scattered lunar regolith pebbles around vehicle contact zone
@@ -516,18 +522,9 @@ export function createDetailedLRV() {
     root.add(pebble);
   }
 
-  // =========================================================================
-  // 8. TELEMETRY BEACON
-  // =========================================================================
+  // Reference anchor for inspection callouts (non-luminous)
   const beaconGroup = new THREE.Group();
-  const ledGeo = new THREE.SphereGeometry(0.045, 12, 12);
-  const ledMat = new THREE.MeshBasicMaterial({ color: 0x4df0ff });
-  const led = new THREE.Mesh(ledGeo, ledMat);
-  beaconGroup.add(led);
-
-  const light = new THREE.PointLight(0x4df0ff, 1.6, 8, 2.0);
-  beaconGroup.add(light);
-  beaconGroup.position.set(0.48, 1.72, 1.25);
+  beaconGroup.position.set(0.48, 1.25, 0.85);
   root.add(beaconGroup);
 
   root.userData = {

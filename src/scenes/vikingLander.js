@@ -241,12 +241,9 @@ export function createDetailedViking() {
   windSensor.position.set(-0.68, busGroundClearance + 1.88, -0.42);
   landerGroup.add(windSensor);
 
-  // Telemetry Beacon indicator (Delicate LED, no blinding searchlight)
+  // Reference anchor for inspection
   const beaconGroup = new THREE.Group();
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffa544 }));
-  beaconGroup.add(led);
-  beaconGroup.add(new THREE.PointLight(0xffa544, 0.5, 6, 2.0));
-  beaconGroup.position.set(-0.68, busGroundClearance + 1.95, -0.42);
+  beaconGroup.position.set(-0.68, busGroundClearance + 1.2, -0.42);
   root.add(beaconGroup);
 
   root.userData = { beacon: beaconGroup };

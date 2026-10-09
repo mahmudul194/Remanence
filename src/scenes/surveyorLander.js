@@ -308,13 +308,9 @@ export function createDetailedSurveyor() {
     root.add(fMesh);
   });
 
-  // Telemetry Beacon indicator
+  // Reference anchor for inspection
   const beaconGroup = new THREE.Group();
-  const ledGeo = new THREE.SphereGeometry(0.04, 12, 12);
-  const ledMat = new THREE.MeshBasicMaterial({ color: 0xfff4b8 });
-  beaconGroup.add(new THREE.Mesh(ledGeo, ledMat));
-  beaconGroup.add(new THREE.PointLight(0xfff4b8, 0.55, 6, 2.0));
-  beaconGroup.position.set(0, 2.92, 0);
+  beaconGroup.position.set(0, 1.8, 0);
   root.add(beaconGroup);
 
   root.userData = { beacon: beaconGroup };

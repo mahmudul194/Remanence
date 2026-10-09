@@ -14,7 +14,7 @@
  */
 
 import * as THREE from 'three';
-import { getAerospaceMaterials, createFootpadBermTexture } from '../materials/aerospaceMaterials.js';
+import { getAerospaceMaterials, createFootpadBermTexture, createMarsTracksTexture } from '../materials/aerospaceMaterials.js';
 import { applyWeathering } from '../materials/weatheringShader.js';
 
 export function createDetailedMERRover(isOpportunity = true) {
@@ -354,61 +354,25 @@ export function createDetailedMERRover(isOpportunity = true) {
   const trackGeo = new THREE.PlaneGeometry(1.4, trackLength, 1, 24);
   trackGeo.rotateX(-Math.PI / 2);
 
-  // Procedural 6-wheel track texture
-  const trackCanvas = document.createElement('canvas');
-  trackCanvas.width = 128;
-  trackCanvas.height = 512;
-  const tCtx = trackCanvas.getContext('2d');
-  tCtx.clearRect(0, 0, 128, 512);
-
-  // Left & right wheel tire marks
-  [24, 104].forEach((tx) => {
-    tCtx.fillStyle = 'rgba(70, 24, 12, 0.82)';
-    tCtx.fillRect(tx - 10, 0, 20, 512);
-    // Cleat ribs
-    tCtx.strokeStyle = 'rgba(30, 10, 5, 0.95)';
-    tCtx.lineWidth = 2.5;
-    for (let y = 0; y < 512; y += 16) {
-      tCtx.beginPath();
-      tCtx.moveTo(tx - 9, y);
-      tCtx.lineTo(tx + 9, y + 4);
-      tCtx.stroke();
-    }
-  });
-
-  // If Spirit, draw the deep dragged furrow of the stuck right-front wheel!
-  if (!isOpportunity) {
-    tCtx.fillStyle = 'rgba(40, 12, 6, 0.95)';
-    tCtx.fillRect(94, 0, 22, 512); // Deep dragged furrow
-    tCtx.strokeStyle = 'rgba(185, 95, 45, 0.6)'; // Raised berm lip
-    tCtx.lineWidth = 3;
-    tCtx.beginPath();
-    tCtx.moveTo(92, 0); tCtx.lineTo(92, 512);
-    tCtx.moveTo(117, 0); tCtx.lineTo(117, 512);
-    tCtx.stroke();
-  }
-
-  const trackTex = new THREE.CanvasTexture(trackCanvas);
-  trackTex.wrapS = THREE.RepeatWrapping;
-  trackTex.wrapT = THREE.RepeatWrapping;
-  trackTex.repeat.set(1, 4);
-
-  const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshBasicMaterial({
-    map: trackTex,
+  const trackMaps = createMarsTracksTexture(isOpportunity);
+  const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshStandardMaterial({
+    map: trackMaps.map,
+    normalMap: trackMaps.normal,
+    normalScale: new THREE.Vector2(1.2, 1.2),
+    roughness: 0.94,
+    metalness: 0.04,
     transparent: true,
-    opacity: 0.85,
+    opacity: 0.92,
     depthWrite: false
   }));
+  trackMesh.name = 'ground_tracks';
   trackMesh.position.set(0, 0.012, -7.5);
+  trackMesh.receiveShadow = true;
   root.add(trackMesh);
 
-  // Telemetry Beacon
+  // Reference anchor for inspection
   const beaconGroup = new THREE.Group();
-  const ledColor = isOpportunity ? 0xffb84d : 0x6fe3ff;
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), new THREE.MeshBasicMaterial({ color: ledColor }));
-  beaconGroup.add(led);
-  beaconGroup.add(new THREE.PointLight(ledColor, 0.5, 6, 2.0));
-  beaconGroup.position.set(-0.18, chassisGroundClearance + 1.48, 0.32);
+  beaconGroup.position.set(-0.18, chassisGroundClearance + 0.95, 0.32);
   root.add(beaconGroup);
 
   root.userData = { beacon: beaconGroup };

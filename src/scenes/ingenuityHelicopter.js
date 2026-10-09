@@ -400,16 +400,9 @@ export function createDetailedIngenuity() {
     root.add(bermMesh);
   });
 
-  // =========================================================================
-  // 6. TELEMETRY BEACON INDICATOR
-  // =========================================================================
+  // Reference anchor for inspection
   const beaconGroup = new THREE.Group();
-  const ledGeo = new THREE.SphereGeometry(0.025, 12, 12);
-  const ledMat = new THREE.MeshBasicMaterial({ color: 0xffa544 });
-  beaconGroup.add(new THREE.Mesh(ledGeo, ledMat));
-  // Delicate low intensity LED, no blinding bloom
-  beaconGroup.add(new THREE.PointLight(0xffa544, 0.45, 5, 2.0));
-  beaconGroup.position.set(0.04, solarPanelY + 0.30, 0);
+  beaconGroup.position.set(0.04, solarPanelY + 0.15, 0);
   root.add(beaconGroup);
 
   root.userData = { beacon: beaconGroup };

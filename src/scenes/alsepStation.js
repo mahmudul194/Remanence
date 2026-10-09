@@ -114,11 +114,13 @@ export function createDetailedALSEP() {
   const helixCurve = new THREE.CatmullRomCurve3(helixPoints);
   const helixGeo = new THREE.TubeGeometry(helixCurve, 60, 0.005, 6, false);
   const helixMat = new THREE.MeshPhysicalMaterial({
-    color: 0xdf843a, // Copper/gold helix wire
-    metalness: 0.95,
-    roughness: 0.2
+    color: 0xb56528, // Authentic copper antenna wire
+    metalness: 0.88,
+    roughness: 0.32,
+    clearcoat: 0.15
   });
   const helixMesh = new THREE.Mesh(helixGeo, helixMat);
+  helixMesh.castShadow = true;
   antGroup.add(helixMesh);
 
   // Ground plane reflector disk behind helix
@@ -249,12 +251,9 @@ export function createDetailedALSEP() {
     root.add(fMesh);
   });
 
-  // Telemetry Beacon
+  // Non-luminous reference anchor for telemetry callout
   const beaconGroup = new THREE.Group();
-  const led = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 12), new THREE.MeshBasicMaterial({ color: 0xffb84d }));
-  beaconGroup.add(led);
-  beaconGroup.add(new THREE.PointLight(0xffb84d, 0.5, 6, 2.0));
-  beaconGroup.position.set(0.24, 1.62, -0.15);
+  beaconGroup.position.set(0.24, 1.45, -0.15);
   root.add(beaconGroup);
 
   root.userData = { beacon: beaconGroup };

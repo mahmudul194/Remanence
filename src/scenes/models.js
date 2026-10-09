@@ -26,26 +26,14 @@ import { createDetailedIngenuity } from './ingenuityHelicopter.js';
 import { createDetailedDescentDebris } from './descentDebris.js';
 
 /**
- * Creates a calibrated telemetry beacon with subtle point light.
+ * Creates a non-luminous reference anchor for inspection callouts.
  */
-function createBeacon(colorHex, intensity = 0.5) {
+function createBeacon(colorHex, intensity = 0) {
   const beaconGroup = new THREE.Group();
-
-  const ledGeo = new THREE.SphereGeometry(0.04, 12, 12);
-  const ledMat = new THREE.MeshBasicMaterial({ color: colorHex });
-  const led = new THREE.Mesh(ledGeo, ledMat);
-  beaconGroup.add(led);
-
-  const light = new THREE.PointLight(colorHex, intensity, 6, 2.0);
-  beaconGroup.add(light);
-
   beaconGroup.userData = {
     baseColor: colorHex,
-    baseIntensity: intensity,
-    light: light,
-    ledMat: ledMat
+    baseIntensity: 0
   };
-
   return beaconGroup;
 }
 

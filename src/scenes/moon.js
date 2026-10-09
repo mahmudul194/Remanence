@@ -55,6 +55,13 @@ export async function createMoonScene() {
       y = y * blend;
     }
 
+    // Planetary curvature skirt: outer rim slopes downward into the underlying lunar globe
+    const distRim = Math.hypot(x, z);
+    if (distRim > 105) {
+      const drop = (distRim - 105) / 70;
+      y -= drop * drop * 32.0;
+    }
+
     posAttr.setY(i, y);
   }
   terrainGeo.computeVertexNormals();
@@ -117,13 +124,13 @@ export async function createMoonScene() {
   // Lunar Roving Vehicle parked near crater slope (y = -4.159)
   const lrv = await getOrCreateModel('lrv_rover');
   lrv.position.set(38, -4.159, -55);
-  lrv.rotation.y = -0.6;
+  lrv.rotation.y = 0.65;
   group.add(lrv);
   machines.lrv = lrv;
 
   // Apollo 15 Hammer & Feather site in Hadley terrain (y = -2.619)
   const hammerFeather = await getOrCreateModel('hammer_feather');
-  hammerFeather.position.set(30, -2.619, -72);
+  hammerFeather.position.set(22, -2.619, -72);
   group.add(hammerFeather);
   machines.hammer_feather = hammerFeather;
 
@@ -140,8 +147,8 @@ export async function createMoonScene() {
   group.add(retro);
   machines.retroreflector = retro;
 
-  // 5. Stark Lunar Sunlight (Authentic 16° low sun elevation, pitch-black razor-sharp shadows in vacuum)
-  const lunarSun = new THREE.DirectionalLight(0xfff8ee, 5.0);
+  // 5. Stark Lunar Sunlight (Authentic 16° low sun elevation, natural PBR exposure)
+  const lunarSun = new THREE.DirectionalLight(0xfff8ee, 1.5);
   lunarSun.position.set(110, 32, 55);
   lunarSun.castShadow = true;
   lunarSun.shadow.mapSize.width = 4096;
