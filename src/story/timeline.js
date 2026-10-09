@@ -103,12 +103,12 @@ export class StoryTimeline {
   initScrollTrigger() {
     const scrollContainer = document.querySelector('.scroll-container');
 
-    // Master continuous spline flight trigger (NO PINNING - Silky smooth Lenis momentum scroll)
+    // Master continuous spline flight trigger (Direct, responsive coupling to Lenis smooth scroll)
     ScrollTrigger.create({
       trigger: scrollContainer,
       start: 'top top',
       end: 'bottom bottom',
-      scrub: 1.0,
+      scrub: 0.1,
       onUpdate: (self) => {
         this.updateCameraFlight(self.progress);
       }
@@ -273,12 +273,6 @@ export class StoryTimeline {
     const sectionData = STORY_DATA.sections[index];
     if (!sectionData || !item) return;
 
-    if (this.app.flightController && FLIGHT_STATIONS[index]) {
-      this.app.flightController.currentProgress = FLIGHT_STATIONS[index].s;
-      this.app.flightController.targetProgress = FLIGHT_STATIONS[index].s;
-      this.app.flightController.progressVelocity = 0;
-    }
-
     // 1. Activate target section in DOM and deactivate all others
     const sections = document.querySelectorAll('.story-section');
     sections.forEach((sec, i) => {
@@ -303,12 +297,7 @@ export class StoryTimeline {
       d.classList.toggle('active', i === index);
     });
 
-    // 2. Audio Atmosphere & Glitch Burst
-    if (index > 1) {
-      this.postfx.triggerGlitch(0.25);
-      audio.playGlitch();
-    }
-
+    // 2. Audio Atmosphere & Specialized Soundscapes
     if (index === 7) {
       audio.playHeartbeat();
     } else if (index >= 14 && sectionData.laserActive) {
@@ -551,8 +540,8 @@ export class StoryTimeline {
       spaceScene.updateMoonProgress(s);
     }
 
-    // 1. Earth Orbit (s <= 0.11)
-    if (s <= 0.11) {
+    // 1. Earth Orbit (s <= 0.08)
+    if (s <= 0.08) {
       if (spaceScene.sunLight) spaceScene.sunLight.intensity = 1.35;
       if (moonScene.lunarSun) moonScene.lunarSun.intensity = 0.0;
       if (marsScene && marsScene.marsSun) marsScene.marsSun.intensity = 0.0;
@@ -562,19 +551,30 @@ export class StoryTimeline {
       if (marsScene) marsScene.group.visible = false;
       spaceScene.group.visible = true;
     }
-    // 2. Approach to Moon (0.11 < s < 0.16)
-    else if (s > 0.11 && s < 0.16) {
-      const t = (s - 0.11) / 0.05;
+    // 2. Translunar Cruise (0.08 < s < 0.16): Deep space flight toward 3D Moon sphere
+    else if (s > 0.08 && s < 0.16) {
+      const t = (s - 0.08) / 0.08;
+      moonScene.group.visible = false; // 3D Moon sphere distantMoon in spaceScene is active
+      if (marsScene) marsScene.group.visible = false;
+      spaceScene.group.visible = true;
+
+      if (spaceScene.sunLight) spaceScene.sunLight.intensity = Math.max(0.35, (1.0 - t * 0.7) * 1.35);
+      if (moonScene.lunarSun) moonScene.lunarSun.intensity = 0.0;
+      if (marsScene && marsScene.marsSun) marsScene.marsSun.intensity = 0.0;
+    }
+    // 3. Lunar Orbital Capture & Descent (0.16 <= s < 0.20): Surface resolves beneath lander
+    else if (s >= 0.16 && s < 0.20) {
+      const t = (s - 0.16) / 0.04;
       moonScene.group.visible = true;
       if (marsScene) marsScene.group.visible = false;
       spaceScene.group.visible = true;
 
-      if (spaceScene.sunLight) spaceScene.sunLight.intensity = (1.0 - t) * 1.35;
+      if (spaceScene.sunLight) spaceScene.sunLight.intensity = (1.0 - t) * 0.35;
       if (moonScene.lunarSun) moonScene.lunarSun.intensity = t * 1.5;
       if (marsScene && marsScene.marsSun) marsScene.marsSun.intensity = 0.0;
     }
-    // 3. Moon Surface & Exploration (0.16 <= s < 0.52)
-    else if (s >= 0.16 && s < 0.52) {
+    // 4. Moon Surface & Exploration (0.20 <= s < 0.52)
+    else if (s >= 0.20 && s < 0.52) {
       moonScene.group.visible = true;
       if (marsScene) marsScene.group.visible = false;
       spaceScene.group.visible = true;

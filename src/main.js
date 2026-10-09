@@ -91,9 +91,9 @@ class RemanenceApp {
   }
 
   initLenis() {
-    // Lenis Smooth Scroll synchronised with GSAP's ticker
+    // Lenis Smooth Scroll synchronised with GSAP's ticker (snappy, buttery smooth momentum)
     this.lenis = new Lenis({
-      duration: this.prefersReducedMotion ? 0.01 : 1.25,
+      duration: this.prefersReducedMotion ? 0.01 : 0.95,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       orientation: 'vertical',
       smoothWheel: !this.prefersReducedMotion,

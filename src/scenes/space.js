@@ -450,7 +450,9 @@ export function createSpaceScene() {
     emissiveMap: moonPhoto,
     emissive: new THREE.Color(0xdad8d2),
     emissiveIntensity: 0.35,
-    color: new THREE.Color(0xffffff)
+    color: new THREE.Color(0xffffff),
+    transparent: true,
+    opacity: 1.0
   });
   const distantMoon = new THREE.Mesh(distantMoonGeo, distantMoonMat);
   distantMoon.name = 'distant_moon';
@@ -482,25 +484,36 @@ export function createSpaceScene() {
     const celestialPos = getCelestialMoonPos();
     if (s <= 0.055) {
       distantMoon.position.copy(celestialPos);
-      distantMoon.lookAt(new THREE.Vector3(0, 6, 48));
       distantMoon.visible = true;
+      distantMoonMat.opacity = 1.0;
       moonFillLight.intensity = 0.75;
-    } else if (s > 0.055 && s < 0.16) {
-      const t = THREE.MathUtils.smoothstep(s, 0.055, 0.16);
-      distantMoon.position.lerpVectors(celestialPos, orbitalMoonPos, t);
-      distantMoon.visible = true;
-      moonFillLight.intensity = (1.0 - t) * 0.75;
-    } else if (s >= 0.16 && s < 0.52) {
-      // On lunar surface: terrain mesh in moonScene is active
+    } else if (s > 0.055 && s < 0.165) {
+      const t = (s - 0.055) / 0.11;
+      // Smoothly guide the celestial Moon down the translunar flight line
+      distantMoon.position.lerpVectors(celestialPos, new THREE.Vector3(4, 2, -180), t);
+      if (s > 0.135) {
+        // High lunar orbit capture: sphere dissolves smoothly into high-res terrain
+        distantMoonMat.opacity = Math.max(0, 1.0 - (s - 0.135) / 0.03);
+      } else {
+        distantMoonMat.opacity = 1.0;
+      }
+      distantMoon.visible = distantMoonMat.opacity > 0.01;
+      moonFillLight.intensity = distantMoonMat.opacity * 0.75;
+    } else if (s >= 0.165 && s < 0.52) {
+      // On lunar surface: high-detail terrain mesh and hardware active
       distantMoon.visible = false;
+      distantMoonMat.opacity = 0.0;
       moonFillLight.intensity = 0.0;
     } else if (s >= 0.52 && s < 0.70) {
       // Lunar ascent: Moon recedes in rearview
-      distantMoon.position.copy(orbitalMoonPos);
+      const climb = THREE.MathUtils.smoothstep(s, 0.52, 0.58);
+      distantMoon.position.set(0, -10, -220);
       distantMoon.visible = true;
-      moonFillLight.intensity = 0.5;
+      distantMoonMat.opacity = climb;
+      moonFillLight.intensity = climb * 0.5;
     } else {
       distantMoon.visible = false;
+      distantMoonMat.opacity = 0.0;
       moonFillLight.intensity = 0.0;
     }
   }
@@ -566,6 +579,9 @@ export function createSpaceScene() {
     earthMesh.rotation.y += delta * 0.012;
     if (cloudsMesh) cloudsMesh.rotation.y += delta * 0.018;
     // Note: Moon is tidally locked to Earth; near side permanently faces observer
+    if (typeof window !== 'undefined' && window.app && window.app.camera && distantMoon.visible) {
+      distantMoon.lookAt(window.app.camera.position);
+    }
     distantMars.rotation.y += delta * 0.008;
 
     if (starfield && starfield.update) {

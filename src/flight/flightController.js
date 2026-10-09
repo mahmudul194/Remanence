@@ -69,12 +69,12 @@ export class FlightController {
     this.camera = app.camera;
     this.scene = app.scene;
 
-    // Critically damped spring physics state
+    // Critically damped spring physics state (responsive, zero-lag flight coupling)
     this.targetProgress = 0.0;
     this.currentProgress = 0.0;
     this.progressVelocity = 0.0;
-    this.springK = 18.0;     // Spring stiffness
-    this.dampingC = 8.5;     // Damping factor (critically damped)
+    this.springK = 45.0;     // Responsive spring stiffness
+    this.dampingC = 13.5;    // Critically damped factor (smooth, zero overshoot)
 
     // Speed tracking
     this.speed = 0.0;             // meters / sec equivalent
@@ -111,58 +111,59 @@ export class FlightController {
     const camPoints = [
       // SEGMENT 0: Launch / Earth Orbit (s: 0.00 - 0.06)
       new THREE.Vector3(0, 6, 54),           // 0: Hero Title
-      new THREE.Vector3(0, 6, 48),           // 1: Earth Overview
+      new THREE.Vector3(0, 6, 50),           // 1: Hero to Earth
+      new THREE.Vector3(0, 6, 48),           // 2: Earth Overview (s = 0.055)
 
       // SEGMENT 1: Translunar Insertion & Cruise (s: 0.06 - 0.16)
-      new THREE.Vector3(4, 10, 15),          // 2: Accelerating out of Earth orbit
-      new THREE.Vector3(12, 16, -60),        // 3: Translunar cruise, Earth shrinking
-      new THREE.Vector3(14, 12, -125),       // 4: Mid-course correction, Moon growing ahead
+      new THREE.Vector3(6, 12, 12),          // 3: Translunar Injection, turning toward Moon
+      new THREE.Vector3(16, 16, -55),        // 4: Translunar cruise, Moon straight ahead
+      new THREE.Vector3(12, 8, -120),        // 5: Mid-course correction, Moon growing ahead
 
       // SEGMENT 2: Moon Approach & Descent (s: 0.16 - 0.20)
-      new THREE.Vector3(8, 2, -155),         // 5: Moon orbital capture & braking
-      new THREE.Vector3(4, -4, -166),        // 6: Descent toward Tranquility Base
+      new THREE.Vector3(6, 0, -155),         // 6: Moon orbital capture over lunar limb
+      new THREE.Vector3(2.5, -4.5, -168),    // 7: Descent toward Tranquility Base, regolith rising
 
       // SEGMENT 3: Lunar Surface Glide (s: 0.20 - 0.52)
-      new THREE.Vector3(4.8, -7.8, -172),    // 7: Apollo 11 Lunar Module
-      new THREE.Vector3(8, -8.6, -185),      // 8: Low surface glide over regolith
-      new THREE.Vector3(17.8, -8.8, -194),   // 9: ALSEP Station
-      new THREE.Vector3(26, -10.2, -212),    // 10: Skimming crater rim
-      new THREE.Vector3(32.5, -12.4, -226.5),// 11: Lunar Roving Vehicle (3/4 perspective)
-      new THREE.Vector3(36, -12.2, -240),    // 12: Along Hadley slope
-      new THREE.Vector3(23.8, -11.9, -249.5),// 13: The Hammer & Feather
-      new THREE.Vector3(0, -11.0, -262),     // 14: Entering Surveyor crater slope
-      new THREE.Vector3(-36.8, -12.4, -270), // 15: Surveyor 3 Lander
+      new THREE.Vector3(4.8, -7.8, -172),    // 8: Apollo 11 Lunar Module
+      new THREE.Vector3(8, -8.6, -185),      // 9: Low surface glide over regolith
+      new THREE.Vector3(17.8, -8.8, -194),   // 10: ALSEP Station
+      new THREE.Vector3(26, -10.2, -212),    // 11: Skimming crater rim
+      new THREE.Vector3(32.5, -12.4, -226.5),// 12: Lunar Roving Vehicle (3/4 perspective)
+      new THREE.Vector3(36, -12.2, -240),    // 13: Along Hadley slope
+      new THREE.Vector3(23.8, -11.9, -249.5),// 14: The Hammer & Feather
+      new THREE.Vector3(0, -11.0, -262),     // 15: Entering Surveyor crater slope
+      new THREE.Vector3(-36.8, -12.4, -270), // 16: Surveyor 3 Lander
 
       // SEGMENT 4: Lunar Ascent & Earth-Moon Pull (s: 0.52 - 0.56)
-      new THREE.Vector3(-22, 18, -235),      // 16: Lunar liftoff thrusters firing
-      new THREE.Vector3(-5, 34, -110),       // 17: Climbing above Moon horizon
+      new THREE.Vector3(-22, 18, -235),      // 17: Lunar liftoff thrusters firing
+      new THREE.Vector3(-5, 34, -110),       // 18: Climbing above Moon horizon
 
       // SEGMENT 5: Interplanetary Cruise to Mars (s: 0.56 - 0.68)
-      new THREE.Vector3(12, 42, 60),         // 18: Passing Earth in rearview
-      new THREE.Vector3(22, 46, 250),        // 19: Deep space transit cruise (The Crossing)
-      new THREE.Vector3(20, 36, 440),        // 20: Approaching red planet Mars
+      new THREE.Vector3(12, 42, 60),         // 19: Passing Earth in rearview
+      new THREE.Vector3(22, 46, 250),        // 20: Deep space transit cruise (The Crossing)
+      new THREE.Vector3(20, 36, 440),        // 21: Approaching red planet Mars
 
       // SEGMENT 6: Martian Atmospheric Entry & Descent (s: 0.68 - 0.74)
-      new THREE.Vector3(10, 16, 560),        // 21: Upper atmospheric entry, plasma heating
-      new THREE.Vector3(-6, -3, 595),        // 22: Deceleration into Chryse dust haze
+      new THREE.Vector3(10, 16, 560),        // 22: Upper atmospheric entry, plasma heating
+      new THREE.Vector3(-6, -3, 595),        // 23: Deceleration into Chryse dust haze
 
       // SEGMENT 7: Martian Surface Glide (s: 0.74 - 0.94)
-      new THREE.Vector3(-27.0, -10.8, 626),  // 23: EDL Descent Debris & Parachute
-      new THREE.Vector3(-8, -9.5, 636),      // 24: Skimming Chryse sand dunes
-      new THREE.Vector3(3.5, -8.2, 656),     // 25: Viking 1 Lander
-      new THREE.Vector3(22, -8.6, 682),      // 26: Flight along Ares Vallis channel
-      new THREE.Vector3(40.5, -8.8, 714),    // 27: Pathfinder & Sojourner
-      new THREE.Vector3(2, -9.8, 746),       // 28: Low glide across basalt plains
-      new THREE.Vector3(-33.5, -10.5, 779),  // 29: Spirit MER Rover
-      new THREE.Vector3(-10, -10.4, 812),    // 30: Glide into twilight dusk storm
-      new THREE.Vector3(15.5, -10.2, 850),   // 31: Opportunity in Twilight
-      new THREE.Vector3(-6, -8.6, 882),      // 32: Climbing toward Valinor ridge
-      new THREE.Vector3(-26.2, -7.2, 914),   // 33: Ingenuity Helicopter
+      new THREE.Vector3(-27.0, -10.8, 626),  // 24: EDL Descent Debris & Parachute
+      new THREE.Vector3(-8, -9.5, 636),      // 25: Skimming Chryse sand dunes
+      new THREE.Vector3(3.5, -8.2, 656),     // 26: Viking 1 Lander
+      new THREE.Vector3(22, -8.6, 682),      // 27: Flight along Ares Vallis channel
+      new THREE.Vector3(40.5, -8.8, 714),    // 28: Pathfinder & Sojourner
+      new THREE.Vector3(2, -9.8, 746),       // 29: Low glide across basalt plains
+      new THREE.Vector3(-33.5, -10.5, 779),  // 30: Spirit MER Rover
+      new THREE.Vector3(-10, -10.4, 812),    // 31: Glide into twilight dusk storm
+      new THREE.Vector3(15.5, -10.2, 850),   // 32: Opportunity in Twilight
+      new THREE.Vector3(-6, -8.6, 882),      // 33: Climbing toward Valinor ridge
+      new THREE.Vector3(-26.2, -7.2, 914),   // 34: Ingenuity Helicopter
 
       // SEGMENT 8: Final Ascent & Laser Signal (s: 0.94 - 1.00)
-      new THREE.Vector3(0, 16, 520),         // 34: Rocketing out of Mars atmosphere
-      new THREE.Vector3(18.5, -7.8, -129),   // 35: Retroreflector array & green laser beam
-      new THREE.Vector3(26.0, 4.0, -100)     // 36: Wide cosmic solar archive view
+      new THREE.Vector3(0, 16, 520),         // 35: Rocketing out of Mars atmosphere
+      new THREE.Vector3(18.5, -7.8, -129),   // 36: Retroreflector array & green laser beam
+      new THREE.Vector3(26.0, 4.0, -100)     // 37: Wide cosmic solar archive view
     ];
 
     // 2. Master Look-at Targets (precisely aimed at planets, hardware, and forward flight vectors)
@@ -170,18 +171,19 @@ export class FlightController {
       // SEGMENT 0: Earth
       new THREE.Vector3(0, 0, 0),
       new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, 0),
 
-      // SEGMENT 1: Forward Moon vector
-      new THREE.Vector3(0, -10, -100),
-      new THREE.Vector3(0, -40, -210),
-      new THREE.Vector3(0, -20, -195),
+      // SEGMENT 1: Forward Moon vector (Aiming directly at the Moon ahead)
+      new THREE.Vector3(26, 20, -55),        // 3: Pointing at Moon in translunar injection
+      new THREE.Vector3(12, 6, -145),        // 4: Pointing directly at approaching Moon center
+      new THREE.Vector3(2, -4, -175),        // 5: Pointing at giant lunar disk filling windscreen
 
-      // SEGMENT 2: Tranquility Base
-      new THREE.Vector3(0, -9.5, -180),
-      new THREE.Vector3(0, -9.0, -180),
+      // SEGMENT 2: Moon Approach & Descent
+      new THREE.Vector3(0, -9.0, -180),      // 6: Overlooking Mare Tranquillitatis plain
+      new THREE.Vector3(0, -9.5, -180),      // 7: Aiming directly at Tranquility Base landing site
 
       // SEGMENT 3: Lunar Hardware
-      new THREE.Vector3(0, -8.8, -180),      // Apollo 11
+      new THREE.Vector3(0, -8.8, -180),      // 8: Apollo 11
       new THREE.Vector3(10, -9.2, -195),
       new THREE.Vector3(14, -9.4, -200),     // ALSEP
       new THREE.Vector3(30, -11.0, -225),
@@ -337,7 +339,7 @@ export class FlightController {
         closest = st;
       }
     }
-    return { station: closest, diff: minDiff, inHold: minDiff < 0.018 };
+    return { station: closest, diff: minDiff, inHold: minDiff < 0.024 };
   }
 
   toggleFreeFlight() {
@@ -483,22 +485,18 @@ export class FlightController {
     const height = window.innerHeight;
     const isMobile = width < 768;
 
-    // Calculate interpolated NDC X based on station offsets
-    const stationCount = FLIGHT_STATIONS.length;
     let targetNdcX = 0.0;
     let targetNdcY = isMobile ? 0.28 : 0.0;
 
-    for (let i = 0; i < stationCount - 1; i++) {
-      const curr = FLIGHT_STATIONS[i];
-      const next = FLIGHT_STATIONS[i + 1];
-      if (this.currentProgress >= curr.s && this.currentProgress <= next.s) {
-        const u = (this.currentProgress - curr.s) / (next.s - curr.s);
-        const smoothU = u * u * (3 - 2 * u);
-        targetNdcX = THREE.MathUtils.lerp(curr.ndcX, next.ndcX, smoothU);
-        if (curr.cardSide === 'center' && next.cardSide === 'center') {
-          targetNdcY = 0.0;
-        }
-        break;
+    // Only apply optical offset when near a station hold; during in-transit flight keep centered
+    const { station, diff } = this.getClosestStation();
+    if (station && diff < 0.035) {
+      const holdBlend = THREE.MathUtils.smoothstep(0.035 - diff, 0.0, 0.015);
+      if (!isMobile) {
+        targetNdcX = (station.ndcX || 0.0) * holdBlend;
+      }
+      if (station.cardSide === 'center') {
+        targetNdcY = 0.0;
       }
     }
 
@@ -509,7 +507,8 @@ export class FlightController {
     this.currentNdcX = THREE.MathUtils.lerp(this.currentNdcX, targetNdcX, dt * 6.0);
     this.currentNdcY = THREE.MathUtils.lerp(this.currentNdcY, targetNdcY, dt * 6.0);
 
-    if (Math.abs(this.currentNdcX) > 0.002 || Math.abs(this.currentNdcY) > 0.002) {
+    const hasOffset = Math.abs(this.currentNdcX) > 0.002 || Math.abs(this.currentNdcY) > 0.002;
+    if (hasOffset) {
       this.camera.setViewOffset(
         width,
         height,
@@ -518,10 +517,13 @@ export class FlightController {
         width,
         height
       );
+      this.camera.updateProjectionMatrix();
     } else {
-      this.camera.clearViewOffset();
+      if (this.camera.view && this.camera.view.enabled) {
+        this.camera.clearViewOffset();
+        this.camera.updateProjectionMatrix();
+      }
     }
-    this.camera.updateProjectionMatrix();
   }
 
   updateFreeFlight(dt) {
