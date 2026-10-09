@@ -223,11 +223,11 @@ function createLunarRoughnessMap(url) {
  */
 function createEnhancedLunarAlbedoMap(url) {
   const canvas = document.createElement('canvas');
-  canvas.width = 1024;
-  canvas.height = 512;
+  canvas.width = 2048;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#909090';
-  ctx.fillRect(0, 0, 1024, 512);
+  ctx.fillRect(0, 0, 2048, 1024);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
@@ -241,11 +241,11 @@ function createEnhancedLunarAlbedoMap(url) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
-    canvas.width = img.width;
-    canvas.height = img.height;
-    ctx.drawImage(img, 0, 0);
+    canvas.width = 2048;
+    canvas.height = 1024;
+    ctx.drawImage(img, 0, 0, 2048, 1024);
 
-    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const imgData = ctx.getImageData(0, 0, 2048, 1024);
     const data = imgData.data;
     for (let i = 0; i < data.length; i += 4) {
       const r = data[i] / 255.0;
@@ -253,12 +253,20 @@ function createEnhancedLunarAlbedoMap(url) {
       const b = data[i + 2] / 255.0;
       const lum = r * 0.299 + g * 0.587 + b * 0.114;
 
-      // Sigmoid contrast enhancement for rich lunar basalt depth and radiant rays
-      let enhancedLum = Math.pow(lum, 1.15) * 1.12;
-      // Slight warm tan hue balance matching unfiltered solar regolith reflectance
-      data[i]     = Math.min(255, Math.max(0, Math.round(enhancedLum * 255 * 1.02)));
-      data[i + 1] = Math.min(255, Math.max(0, Math.round(enhancedLum * 255 * 1.00)));
-      data[i + 2] = Math.min(255, Math.max(0, Math.round(enhancedLum * 255 * 0.97)));
+      // Authentic photographic S-curve matching real full-moon telescope imagery
+      let cLum = lum;
+      if (cLum < 0.40) {
+        // Volcanic basalt maria: deep, rich charcoal tones (Mare Tranquillitatis, Oceanus Procellarum, Mare Imbrium)
+        cLum = Math.pow(cLum / 0.40, 1.45) * 0.24;
+      } else {
+        // Brilliant highlands, crater rims, and dazzling impact ray blankets (Tycho, Copernicus, Kepler)
+        const t = (cLum - 0.40) / 0.60;
+        cLum = 0.24 + Math.pow(t, 0.70) * 0.76;
+      }
+
+      data[i]     = Math.min(255, Math.max(0, Math.round(cLum * 255 * 1.05)));
+      data[i + 1] = Math.min(255, Math.max(0, Math.round(cLum * 255 * 1.03)));
+      data[i + 2] = Math.min(255, Math.max(0, Math.round(cLum * 255 * 0.98)));
       data[i + 3] = 255;
     }
     ctx.putImageData(imgData, 0, 0);
@@ -394,27 +402,63 @@ export function createSpaceScene() {
 
   // 5. Authentic NASA Proportional Moon Sphere in Space
   // Real physical ratio: Moon radius 1,737.4 km / Earth radius 6,371 km = 0.2727 => radius 4.92 for Earth radius 18
-  const moonAlbedo = createEnhancedLunarAlbedoMap('./textures/moon_1024.jpg');
-  const moonNormal = createLunarNormalMap('./textures/moon_1024.jpg', 3.4);
-  const moonRoughness = createLunarRoughnessMap('./textures/moon_1024.jpg');
+  // 5. Authentic Real NASA / Telescope Photorealistic Moon Sphere
+  // Maps the authentic real photograph provided by user directly onto the 3D sphere mesh
+  const moonPhoto = textureLoader.load('./textures/moon_photo_reference.png');
+  moonPhoto.colorSpace = THREE.SRGBColorSpace;
+  moonPhoto.generateMipmaps = true;
+  moonPhoto.minFilter = THREE.LinearMipmapLinearFilter;
+  moonPhoto.magFilter = THREE.LinearFilter;
+  moonPhoto.anisotropy = 8;
 
-  const distantMoonGeo = new THREE.SphereGeometry(4.92, 128, 128);
+  const moonNormal = createLunarNormalMap('./textures/moon_photo_reference.png', 2.8);
+  const moonRoughness = createLunarRoughnessMap('./textures/moon_photo_reference.png');
+
+  // Prominent, realistic celestial size (radius 7.2 => ~155px diameter vs Earth's 910px)
+  const distantMoonGeo = new THREE.SphereGeometry(7.2, 128, 128);
+
+  // Map the real photograph of the Moon's near side onto the 3D sphere
+  const mPos = distantMoonGeo.attributes.position;
+  const mUv = distantMoonGeo.attributes.uv;
+  const imgW = 508, imgH = 432;
+  const cx = 270, cy = 220, rDisk = 208;
+  for (let i = 0; i < mPos.count; i++) {
+    const x = mPos.getX(i);
+    const y = mPos.getY(i);
+    const z = mPos.getZ(i);
+    const r = Math.hypot(x, y, z) || 1.0;
+    const nx = x / r;
+    const ny = y / r;
+    const rad = Math.hypot(nx, ny);
+    const clampedRad = Math.min(0.985, rad);
+    const scale = rad > 0 ? (clampedRad / rad) : 1.0;
+    const projX = nx * scale;
+    const projY = ny * scale;
+    const u = (cx + projX * rDisk) / imgW;
+    const v = 1.0 - (cy - projY * rDisk) / imgH;
+    mUv.setXY(i, u, v);
+  }
+  mUv.needsUpdate = true;
+
   const distantMoonMat = new THREE.MeshStandardMaterial({
-    map: moonAlbedo,
+    map: moonPhoto,
     normalMap: moonNormal,
-    normalScale: new THREE.Vector2(2.4, 2.4),
+    normalScale: new THREE.Vector2(2.2, 2.2),
     roughnessMap: moonRoughness,
-    roughness: 0.95,
+    roughness: 0.85,
     metalness: 0.0,
-    color: new THREE.Color(0xdad8d2)
+    emissiveMap: moonPhoto,
+    emissive: new THREE.Color(0xdad8d2),
+    emissiveIntensity: 0.35,
+    color: new THREE.Color(0xffffff)
   });
   const distantMoon = new THREE.Mesh(distantMoonGeo, distantMoonMat);
   distantMoon.name = 'distant_moon';
 
-  // Desktop: (44, 34, -85) - upper-right starfield (X: 1697, Y: 285, diam: 90px, clear of Earth: 72px, right margin: 178px)
-  // Mobile: (18, 44, -85) - upper cosmic sky (X: 323, Y: 151, diam: 70px, clear of Earth: 19px, below navbar)
-  const celestialMoonDesktop = new THREE.Vector3(44, 34, -85);
-  const celestialMoonMobile = new THREE.Vector3(18, 44, -85);
+  // Desktop: (32, 24, -65) - upper-right starfield (X: ~860, Y: ~125, diam: 155px, clear of Earth & SOUND ON)
+  // Mobile: (18, 42, -80) - upper cosmic sky (X: 325, Y: 155, diam: 95px, clear of Earth: 24px, below navbar)
+  const celestialMoonDesktop = new THREE.Vector3(32, 24, -65);
+  const celestialMoonMobile = new THREE.Vector3(18, 42, -80);
   const orbitalMoonPos = new THREE.Vector3(0, -14.9, -180);
 
   function getCelestialMoonPos() {
@@ -424,28 +468,40 @@ export function createSpaceScene() {
   }
 
   distantMoon.position.copy(getCelestialMoonPos());
-  distantMoon.rotation.y = 1.25;
+  distantMoon.lookAt(new THREE.Vector3(0, 6, 48)); // Lock photo face directly toward Earth camera
   distantMoon.receiveShadow = true;
   group.add(distantMoon);
+
+  // Dedicated soft solar fill light for the Moon so near side is illuminated brightly
+  const moonFillLight = new THREE.DirectionalLight(0xfff6ea, 0.75);
+  moonFillLight.position.set(20, 25, 50);
+  moonFillLight.target = distantMoon;
+  group.add(moonFillLight);
 
   function updateMoonProgress(s) {
     const celestialPos = getCelestialMoonPos();
     if (s <= 0.055) {
       distantMoon.position.copy(celestialPos);
+      distantMoon.lookAt(new THREE.Vector3(0, 6, 48));
       distantMoon.visible = true;
+      moonFillLight.intensity = 0.75;
     } else if (s > 0.055 && s < 0.16) {
       const t = THREE.MathUtils.smoothstep(s, 0.055, 0.16);
       distantMoon.position.lerpVectors(celestialPos, orbitalMoonPos, t);
       distantMoon.visible = true;
+      moonFillLight.intensity = (1.0 - t) * 0.75;
     } else if (s >= 0.16 && s < 0.52) {
       // On lunar surface: terrain mesh in moonScene is active
       distantMoon.visible = false;
+      moonFillLight.intensity = 0.0;
     } else if (s >= 0.52 && s < 0.70) {
       // Lunar ascent: Moon recedes in rearview
       distantMoon.position.copy(orbitalMoonPos);
       distantMoon.visible = true;
+      moonFillLight.intensity = 0.5;
     } else {
       distantMoon.visible = false;
+      moonFillLight.intensity = 0.0;
     }
   }
 
@@ -509,7 +565,7 @@ export function createSpaceScene() {
   function update(delta, time = 0) {
     earthMesh.rotation.y += delta * 0.012;
     if (cloudsMesh) cloudsMesh.rotation.y += delta * 0.018;
-    distantMoon.rotation.y += delta * 0.005;
+    // Note: Moon is tidally locked to Earth; near side permanently faces observer
     distantMars.rotation.y += delta * 0.008;
 
     if (starfield && starfield.update) {

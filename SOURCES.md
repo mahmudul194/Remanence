@@ -134,4 +134,5 @@ All hardware surfaces in REMANENCE are rendered using Three.js `MeshPhysicalMate
 
 ## 📜 LICENSES & REPOSITORY POLICIES
 - **NASA Data Policy:** NASA media, imagery, and 3D technical resources are in the public domain under Title 17, U.S. Code, § 105.
-- **Application:** Built for the NASA Space Apps Challenge under the creative title **REMANENCE** (*"What remains."*).
+- **Lunar Near-Side Photographic Reference:** Authentic telescopic photograph of the lunar near-side disk (`moon_photo_reference.png`), capturing the volcanic maria (Oceanus Procellarum, Mare Imbrium, Mare Tranquillitatis) and radiant impact crater systems (Tycho, Copernicus, Kepler), mapped onto the 3D Moon sphere with spherical orthographic projection, normal relief, and regolith PBR response.
+- **Application:** Technical storytelling experience titled **REMANENCE** (*"What remains."*).
