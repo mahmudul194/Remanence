@@ -165,13 +165,23 @@ async function main() {
         }
         if (window.timeline) {
           window.timeline.updatePlanetaryLighting(${st.s});
-          const stationObj = window.flightController ? window.flightController.findStationAtProgress(${st.s}) : null;
-          if (stationObj) {
-            const secIdx = window.timeline.getSectionIndexForStation ? window.timeline.getSectionIndexForStation(stationObj.id) : -1;
-            if (secIdx >= 0) window.timeline.onSectionActive(secIdx);
-            if (window.timeline.shotManager) {
-              window.timeline.shotManager.updateStation(stationObj.id, 0.50);
+          const sections = Array.from(document.querySelectorAll('.story-section'));
+          const sec = document.querySelector('.story-section[id*="' + '${st.id}' + '"]') ||
+                      document.getElementById('section-' + '${st.id}');
+          const secIdx = sec ? sections.indexOf(sec) : -1;
+          if (secIdx >= 0) {
+            window.timeline.onSectionActive(secIdx);
+            if (sec) {
+              const moment = sec.querySelector('.moment-wrap');
+              if (moment) {
+                moment.classList.add('active');
+                moment.style.opacity = '1';
+                moment.style.transform = 'translateY(0)';
+              }
             }
+          }
+          if (window.timeline.shotManager) {
+            window.timeline.shotManager.updateStation('${st.id}', 0.50);
           }
         }
       })()

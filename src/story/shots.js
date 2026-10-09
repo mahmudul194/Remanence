@@ -285,7 +285,7 @@ export const SHOT_DEFINITIONS = [
       },
       {
         id: 'high_gain_dish',
-        localAnchor: new THREE.Vector3(-0.48, 1.6, 1.25),
+        localAnchor: new THREE.Vector3(0.48, 1.65, 1.25),
         label: 'High-Gain Antenna Dish',
         desc: 'Umbrella-mesh parabolic antenna pointed directly toward Earth tracking stations.',
         category: 'TELEMETRY'

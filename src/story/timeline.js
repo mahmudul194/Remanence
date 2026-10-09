@@ -130,6 +130,10 @@ export class StoryTimeline {
     });
   }
 
+  getSectionIndexForStation(stationId) {
+    return SECTION_MAP.findIndex(item => item.id === stationId);
+  }
+
   updateCameraFlight(progress) {
     if (!this.app.flightController) return;
     this.app.flightController.setTargetProgress(progress);

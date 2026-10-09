@@ -414,11 +414,11 @@ export function getAerospaceMaterials() {
 
     // 4. Anodized / Bare Structural 7075 Aluminum (Struts, ladder, trusses)
     aluminumAlloy: new THREE.MeshStandardMaterial({
-      color: 0xdde2ea,
-      metalness: 0.95,
-      roughness: 0.22,
+      color: 0x98a0ab,
+      metalness: 0.92,
+      roughness: 0.32,
       normalMap: alloyTex.normal,
-      normalScale: new THREE.Vector2(0.4, 0.4)
+      normalScale: new THREE.Vector2(0.35, 0.35)
     }),
 
     // 5. DPS Engine Rocket Nozzle (Scorched titanium/niobium alloy)
@@ -439,9 +439,9 @@ export function getAerospaceMaterials() {
 
     // 7. White Thermal Beta Cloth (Blankets & protective wraps)
     betaCloth: new THREE.MeshStandardMaterial({
-      color: 0xe8ebf0,
-      metalness: 0.04,
-      roughness: 0.82
+      color: 0xd4d8de,
+      metalness: 0.06,
+      roughness: 0.85
     }),
 
     // 8. Contact Sensors & Wiring (Thin spring-steel probes)
@@ -451,121 +451,532 @@ export function getAerospaceMaterials() {
       roughness: 0.3
     }),
 
-    // 9. LRV Wire-Mesh Tire with Titanium Chevron Cleats
+    // 9. LRV Wire-Mesh Tire with Titanium Chevron Cleats (Alpha-tested open wire weave)
     lrvWheelMesh: new THREE.MeshPhysicalMaterial({
       map: createLRVWheelTexture().map,
       normalMap: createLRVWheelTexture().normal,
-      normalScale: new THREE.Vector2(1.2, 1.2),
-      metalness: 0.94,
-      roughness: 0.28,
-      clearcoat: 0.3,
-      clearcoatRoughness: 0.2,
+      normalScale: new THREE.Vector2(1.8, 1.8),
+      metalness: 0.95,
+      roughness: 0.32,
+      clearcoat: 0.35,
+      clearcoatRoughness: 0.22,
+      transparent: true,
+      alphaTest: 0.26,
+      depthWrite: true,
       side: THREE.DoubleSide
     }),
 
     // 10. LRV Seat Webbing (Woven olive/gray nylon straps)
     seatWebbing: new THREE.MeshStandardMaterial({
-      color: 0x5a6358,
+      color: 0x4e544a,
       metalness: 0.08,
-      roughness: 0.88
+      roughness: 0.92
     }),
 
     // 11. Apollo 17 Taped Lunar Map Fender Repair (Laminated maps & gray duct tape)
     tapedFender: new THREE.MeshStandardMaterial({
-      color: 0x8a9098,
+      map: createApollo17TapedMapTexture(),
+      metalness: 0.12,
+      roughness: 0.72,
+      side: THREE.DoubleSide
+    }),
+
+    // 12. LRV Display & Control Console Instrument Panel
+    lrvConsole: new THREE.MeshStandardMaterial({
+      map: createLRVConsoleTexture(),
+      metalness: 0.5,
+      roughness: 0.45
+    }),
+
+    // 13. LRV Slotted Floor Bed Corrugated Grid
+    lrvFloor: new THREE.MeshStandardMaterial({
+      map: createLRVFloorGridTexture().map,
+      normalMap: createLRVFloorGridTexture().normal,
+      normalScale: new THREE.Vector2(1.2, 1.2),
+      metalness: 0.90,
+      roughness: 0.36
+    }),
+
+    // 14. Specular Quartz Thermal Mirror Tiles (Battery radiators)
+    quartzMirror: new THREE.MeshPhysicalMaterial({
+      color: 0xf5f8ff,
+      metalness: 0.98,
+      roughness: 0.04,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.02,
+      reflectivity: 0.99
+    }),
+
+    // 15. High-Gain S-Band Dish Golden Wire Mesh
+    goldDishMesh: new THREE.MeshStandardMaterial({
+      color: 0xdaa520,
+      metalness: 0.96,
+      roughness: 0.25,
+      side: THREE.DoubleSide
+    }),
+
+    // 16. Optical Camera Lens Glass
+    opticalLens: new THREE.MeshPhysicalMaterial({
+      color: 0x050c18,
       metalness: 0.15,
-      roughness: 0.65
+      roughness: 0.05,
+      transmission: 0.35,
+      reflectivity: 0.95
+    }),
+
+    // 17. Titanium Chevron Tread Cleat Alloy
+    titaniumCleat: new THREE.MeshStandardMaterial({
+      color: 0x767d88,
+      metalness: 0.94,
+      roughness: 0.35
     })
   };
 }
 
 /**
- * 7. LRV Wire-Mesh Tire Texture with Titanium Chevron Cleats
+ * 7. LRV Wire-Mesh Tire Texture with Titanium Chevron Cleats (Alpha-tested open wire lattice)
  */
 export function createLRVWheelTexture() {
   if (textureCache.has('lrv_wheel')) return textureCache.get('lrv_wheel');
 
+  const width = 1024;
+  const height = 512;
+
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 256;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext('2d');
 
-  // Zinc-coated steel wire mesh background
-  ctx.fillStyle = '#6e747f';
-  ctx.fillRect(0, 0, 512, 256);
+  // Clear completely to transparent for see-through wire mesh
+  ctx.clearRect(0, 0, width, height);
 
-  // Woven wire cross-hatch pattern
-  ctx.strokeStyle = '#9ca5b5';
-  ctx.lineWidth = 1.8;
-  for (let x = -256; x < 768; x += 12) {
+  // Woven zinc-coated steel wire mesh lattice
+  const spacing = 16;
+  const wireWidth = 2.4;
+
+  // Drop shadow under cross points
+  ctx.strokeStyle = 'rgba(35, 40, 48, 0.75)';
+  ctx.lineWidth = wireWidth + 1.2;
+  for (let x = -height; x < width + height; x += spacing) {
     ctx.beginPath();
     ctx.moveTo(x, 0);
-    ctx.lineTo(x + 256, 256);
+    ctx.lineTo(x + height, height);
     ctx.stroke();
-
+  }
+  for (let x = -height; x < width + height; x += spacing) {
     ctx.beginPath();
-    ctx.moveTo(x + 256, 0);
-    ctx.lineTo(x, 256);
+    ctx.moveTo(x + height, 0);
+    ctx.lineTo(x, height);
     ctx.stroke();
   }
 
-  // Titanium chevron tread cleats (V-shaped traction bars riveted to mesh)
-  ctx.fillStyle = '#949ca8';
-  ctx.strokeStyle = '#3e434c';
-  ctx.lineWidth = 2.5;
-
-  for (let x = 0; x < 512; x += 32) {
+  // Metallic zinc-coated high-tensile steel wire strands
+  ctx.strokeStyle = '#9ca5b2';
+  ctx.lineWidth = wireWidth;
+  for (let x = -height; x < width + height; x += spacing) {
     ctx.beginPath();
-    ctx.moveTo(x, 24);
-    ctx.lineTo(x + 14, 128);
-    ctx.lineTo(x, 232);
-    ctx.lineTo(x + 9, 232);
-    ctx.lineTo(x + 23, 128);
-    ctx.lineTo(x + 9, 24);
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + height, height);
+    ctx.stroke();
+  }
+  for (let x = -height; x < width + height; x += spacing) {
+    ctx.beginPath();
+    ctx.moveTo(x + height, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+
+  // Specular wire weave nodes
+  ctx.fillStyle = '#dbe2ec';
+  for (let y = 0; y <= height; y += spacing) {
+    for (let x = 0; x <= width; x += spacing) {
+      ctx.fillRect(x - 1, y - 1, 2, 2);
+    }
+  }
+
+  // Titanium chevron tread cleats (V-shaped traction bars riveted to mesh)
+  // Herringbone pattern riveted around circumference
+  const cleatStep = 32;
+  const cleatW = 16;
+  const topY = 36;
+  const midY = height / 2;
+  const botY = height - 36;
+
+  for (let x = 0; x < width; x += cleatStep) {
+    // Chevron body
+    ctx.fillStyle = '#6e7682';
+    ctx.strokeStyle = '#22262d';
+    ctx.lineWidth = 2.2;
+
+    ctx.beginPath();
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x + 16, midY);
+    ctx.lineTo(x, botY);
+    ctx.lineTo(x + cleatW, botY);
+    ctx.lineTo(x + cleatW + 16, midY);
+    ctx.lineTo(x + cleatW, topY);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // Rivet dots on cleat tips
-    ctx.fillStyle = '#d2d8e4';
+    // Top beveled highlight edge
+    ctx.strokeStyle = '#b8c0cc';
+    ctx.lineWidth = 1.4;
     ctx.beginPath();
-    ctx.arc(x + 4, 32, 2.2, 0, Math.PI * 2);
-    ctx.arc(x + 18, 128, 2.2, 0, Math.PI * 2);
-    ctx.arc(x + 4, 224, 2.2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#949ca8';
+    ctx.moveTo(x, topY);
+    ctx.lineTo(x + 16, midY);
+    ctx.lineTo(x, botY);
+    ctx.stroke();
+
+    // Rivet dots securing cleat to wire mesh
+    [topY + 18, midY, botY - 18].forEach((ry, idx) => {
+      const rx = idx === 1 ? x + cleatW / 2 + 16 : x + cleatW / 2;
+      ctx.fillStyle = '#e8edf6';
+      ctx.beginPath();
+      ctx.arc(rx, ry, 2.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#1b1d22';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    });
   }
+
+  // Clinging lunar dust along tire edges
+  ctx.fillStyle = 'rgba(135, 130, 120, 0.25)';
+  ctx.fillRect(0, 0, width, 18);
+  ctx.fillRect(0, height - 18, width, 18);
 
   const diffuseTex = new THREE.CanvasTexture(canvas);
   diffuseTex.wrapS = THREE.RepeatWrapping;
   diffuseTex.wrapT = THREE.RepeatWrapping;
 
-  // Normal map for chevron relief
+  // Tangent Normal Map
   const normalCanvas = document.createElement('canvas');
-  normalCanvas.width = 512;
-  normalCanvas.height = 256;
+  normalCanvas.width = width;
+  normalCanvas.height = height;
   const nCtx = normalCanvas.getContext('2d');
   nCtx.fillStyle = '#8080ff';
-  nCtx.fillRect(0, 0, 512, 256);
+  nCtx.fillRect(0, 0, width, height);
 
-  for (let x = 0; x < 512; x += 32) {
-    nCtx.fillStyle = '#a880ff';
+  for (let x = 0; x < width; x += cleatStep) {
+    nCtx.fillStyle = '#b080ff';
     nCtx.beginPath();
-    nCtx.moveTo(x, 24);
-    nCtx.lineTo(x + 14, 128);
-    nCtx.lineTo(x, 232);
-    nCtx.lineTo(x + 9, 232);
-    nCtx.lineTo(x + 23, 128);
-    nCtx.lineTo(x + 9, 24);
+    nCtx.moveTo(x, topY);
+    nCtx.lineTo(x + 16, midY);
+    nCtx.lineTo(x, botY);
+    nCtx.lineTo(x + cleatW, botY);
+    nCtx.lineTo(x + cleatW + 16, midY);
+    nCtx.lineTo(x + cleatW, topY);
     nCtx.closePath();
     nCtx.fill();
   }
+
   const normalTex = new THREE.CanvasTexture(normalCanvas);
   normalTex.wrapS = THREE.RepeatWrapping;
   normalTex.wrapT = THREE.RepeatWrapping;
 
   const result = { map: diffuseTex, normal: normalTex };
   textureCache.set('lrv_wheel', result);
+  return result;
+}
+
+/**
+ * 7b. Apollo 17 Taped Lunar Chronomap Fender Repair Texture
+ */
+export function createApollo17TapedMapTexture() {
+  if (textureCache.has('apollo17_map')) return textureCache.get('apollo17_map');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  // Cream/ivory laminated paper background
+  ctx.fillStyle = '#eae5d4';
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Topographic shading
+  const grad = ctx.createRadialGradient(256, 256, 20, 256, 256, 280);
+  grad.addColorStop(0, 'rgba(155, 150, 135, 0.40)');
+  grad.addColorStop(1, 'rgba(195, 190, 175, 0.12)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Contour rings & crater circles
+  ctx.strokeStyle = 'rgba(85, 75, 60, 0.35)';
+  ctx.lineWidth = 1.5;
+  [[120, 140, 48], [340, 160, 64], [220, 360, 52], [380, 380, 40]].forEach(([cx, cy, r]) => {
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+  });
+
+  for (let r = 80; r < 240; r += 38) {
+    ctx.beginPath();
+    ctx.ellipse(256, 256, r * 1.2, r * 0.8, 0.35, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Grid coordinates
+  ctx.strokeStyle = 'rgba(60, 55, 45, 0.35)';
+  ctx.lineWidth = 1.0;
+  for (let x = 64; x < 512; x += 96) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0); ctx.lineTo(x, 512);
+    ctx.stroke();
+  }
+  for (let y = 64; y < 512; y += 96) {
+    ctx.beginPath();
+    ctx.moveTo(0, y); ctx.lineTo(512, y);
+    ctx.stroke();
+  }
+
+  // Navigation text
+  ctx.fillStyle = '#28251e';
+  ctx.font = 'bold 15px monospace';
+  ctx.fillText('TAURUS-LITTROW EVA-2', 28, 44);
+  ctx.font = '11px monospace';
+  ctx.fillText('LAT 20°09\'55"N  LONG 30°46\'18"E', 28, 64);
+  ctx.fillText('STATION 2 - SOUTH MASSIF', 28, 82);
+  ctx.fillText('STATION 4 - SHORTY CRATER', 28, 100);
+
+  // Apollo gray duct tape cross seams
+  const tapeColor = '#4a5058';
+  const tapeHighlight = '#707680';
+
+  // Horizontal tape seam
+  ctx.fillStyle = tapeColor;
+  ctx.fillRect(0, 238, 512, 38);
+  ctx.fillStyle = tapeHighlight;
+  ctx.fillRect(0, 239, 512, 2);
+
+  // Vertical tape seam
+  ctx.fillStyle = tapeColor;
+  ctx.fillRect(236, 0, 38, 512);
+  ctx.fillStyle = tapeHighlight;
+  ctx.fillRect(237, 0, 2, 512);
+
+  // Perimeter tape bands
+  ctx.fillStyle = tapeColor;
+  ctx.fillRect(0, 0, 512, 26);
+  ctx.fillRect(0, 486, 512, 26);
+
+  // Tape wrinkles
+  ctx.strokeStyle = 'rgba(25, 27, 30, 0.55)';
+  ctx.lineWidth = 1.0;
+  for (let i = 0; i < 512; i += 16) {
+    ctx.beginPath();
+    ctx.moveTo(i, 238); ctx.lineTo(i + 14, 276);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(236, i); ctx.lineTo(274, i + 14);
+    ctx.stroke();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.ClampToEdgeWrapping;
+  tex.wrapT = THREE.ClampToEdgeWrapping;
+  textureCache.set('apollo17_map', tex);
+  return tex;
+}
+
+/**
+ * 7c. LRV Display & Control Console Instrument Panel Texture
+ */
+export function createLRVConsoleTexture() {
+  if (textureCache.has('lrv_console')) return textureCache.get('lrv_console');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  // Dark matte aerospace anodized aluminum panel
+  ctx.fillStyle = '#15171c';
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Bezel border
+  ctx.strokeStyle = '#323640';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(6, 6, 500, 500);
+
+  // Sun Compass dial
+  ctx.fillStyle = '#1e222a';
+  ctx.beginPath();
+  ctx.arc(256, 100, 72, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#4e5666';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.strokeStyle = '#cfd4dc';
+  ctx.lineWidth = 1.5;
+  for (let a = 0; a < Math.PI * 2; a += Math.PI / 12) {
+    ctx.beginPath();
+    ctx.moveTo(256 + Math.cos(a) * 58, 100 + Math.sin(a) * 58);
+    ctx.lineTo(256 + Math.cos(a) * 70, 100 + Math.sin(a) * 70);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#e8ecf2';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SUN COMPASS', 256, 105);
+
+  // Attitude 8-Ball (Left)
+  ctx.fillStyle = '#101216';
+  ctx.beginPath();
+  ctx.arc(105, 230, 56, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#e0e4eb';
+  ctx.beginPath();
+  ctx.arc(105, 230, 54, Math.PI, 0, false);
+  ctx.fill();
+  ctx.strokeStyle = '#f5a623';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(70, 230); ctx.lineTo(140, 230);
+  ctx.stroke();
+  ctx.fillText('ATTITUDE', 105, 305);
+
+  // Speedometer (Right)
+  ctx.fillStyle = '#101216';
+  ctx.beginPath();
+  ctx.arc(405, 230, 56, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#cfd4dc';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  for (let s = 0; s <= 20; s += 2) {
+    const ang = Math.PI * 0.75 + (s / 20) * Math.PI * 1.5;
+    ctx.beginPath();
+    ctx.moveTo(405 + Math.cos(ang) * 40, 230 + Math.sin(ang) * 40);
+    ctx.lineTo(405 + Math.cos(ang) * 52, 230 + Math.sin(ang) * 52);
+    ctx.stroke();
+  }
+  ctx.strokeStyle = '#ff3b30';
+  ctx.lineWidth = 2.5;
+  const needAng = Math.PI * 0.75 + (8 / 20) * Math.PI * 1.5;
+  ctx.beginPath();
+  ctx.moveTo(405, 230);
+  ctx.lineTo(405 + Math.cos(needAng) * 46, 230 + Math.sin(needAng) * 46);
+  ctx.stroke();
+  ctx.fillStyle = '#e8ecf2';
+  ctx.fillText('SPEED KM/H', 405, 305);
+
+  // Center Battery & Motor Meters
+  ctx.fillStyle = '#1b1e25';
+  ctx.fillRect(176, 195, 160, 125);
+  ctx.strokeStyle = '#464e5c';
+  ctx.strokeRect(176, 195, 160, 125);
+  ctx.fillStyle = '#8e96a4';
+  ctx.font = '10px monospace';
+  ctx.fillText('BAT 1: 36.2V  118Ah', 256, 220);
+  ctx.fillText('BAT 2: 36.1V  115Ah', 256, 240);
+  ctx.fillText('MOTORS: LF RF LR RR', 256, 270);
+  ctx.fillStyle = '#34c759';
+  ctx.fillText('TEMP:  NORM (52°C)', 256, 290);
+
+  // Lower Toggle Switches
+  ctx.fillStyle = '#1f232c';
+  ctx.fillRect(36, 355, 440, 115);
+  ctx.strokeStyle = '#363c48';
+  ctx.strokeRect(36, 355, 440, 115);
+
+  ctx.fillStyle = '#d0d6e0';
+  ctx.font = '9px sans-serif';
+  const switches = ['STEER FWD', 'STEER REAR', 'DRIVE PWR', 'PWM 1', 'PWM 2', 'AUX PWR'];
+  switches.forEach((label, idx) => {
+    const swX = 68 + idx * 68;
+    ctx.strokeStyle = '#6f7784';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(swX - 12, 380, 24, 42);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(swX, 401, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#9ea7b4';
+    ctx.fillText(label, swX, 445);
+  });
+
+  // Plaque
+  ctx.fillStyle = '#c5a059';
+  ctx.font = 'bold 11px sans-serif';
+  ctx.fillText('LUNAR ROVING VEHICLE • BOEING / DELCO', 256, 492);
+
+  const tex = new THREE.CanvasTexture(canvas);
+  textureCache.set('lrv_console', tex);
+  return tex;
+}
+
+/**
+ * 7d. LRV Slotted Floor Bed Corrugated Grid Texture
+ */
+export function createLRVFloorGridTexture() {
+  if (textureCache.has('lrv_floor')) return textureCache.get('lrv_floor');
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+
+  // Brushed aluminum
+  ctx.fillStyle = '#7a828c';
+  ctx.fillRect(0, 0, 512, 512);
+
+  // Perforated boot traction slots
+  ctx.fillStyle = '#22252a';
+  for (let y = 16; y < 512; y += 32) {
+    for (let x = 12; x < 512; x += 48) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, 32, 12, 4);
+      ctx.fill();
+      ctx.strokeStyle = '#9ca6b2';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  }
+
+  // Cross structural ribs
+  ctx.strokeStyle = '#4e545e';
+  ctx.lineWidth = 3;
+  for (let x = 0; x < 512; x += 128) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0); ctx.lineTo(x, 512);
+    ctx.stroke();
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(4, 4);
+
+  // Normal map
+  const normalCanvas = document.createElement('canvas');
+  normalCanvas.width = 512;
+  normalCanvas.height = 512;
+  const nCtx = normalCanvas.getContext('2d');
+  nCtx.fillStyle = '#8080ff';
+  nCtx.fillRect(0, 0, 512, 512);
+
+  for (let y = 16; y < 512; y += 32) {
+    for (let x = 12; x < 512; x += 48) {
+      nCtx.fillStyle = '#6060c0';
+      nCtx.beginPath();
+      nCtx.roundRect(x, y, 32, 12, 4);
+      nCtx.fill();
+    }
+  }
+
+  const normalTex = new THREE.CanvasTexture(normalCanvas);
+  normalTex.wrapS = THREE.RepeatWrapping;
+  normalTex.wrapT = THREE.RepeatWrapping;
+  normalTex.repeat.set(4, 4);
+
+  const result = { map: tex, normal: normalTex };
+  textureCache.set('lrv_floor', result);
   return result;
 }
 
