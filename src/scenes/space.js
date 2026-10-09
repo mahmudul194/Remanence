@@ -89,6 +89,185 @@ function createTransparentCloudsMap(url) {
   return texture;
 }
 
+/**
+ * Creates high-contrast Sobel normal map from lunar elevation/albedo texture:
+ * Generates physical 3D tangent-space normals for crater rims, crater bowls,
+ * central impact peaks, and rugged mountain rilles to cast razor-sharp shadows
+ * across the lunar terminator line.
+ */
+function createLunarNormalMap(url, bumpScale = 3.6) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#8080ff';
+  ctx.fillRect(0, 0, 1024, 512);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 8;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const srcData = ctx.getImageData(0, 0, w, h).data;
+    const outImgData = ctx.createImageData(w, h);
+    const outData = outImgData.data;
+
+    // Fast luminance lookup with cylindrical wrap-around
+    function getLum(x, y) {
+      const wx = (x + w) % w;
+      const wy = Math.max(0, Math.min(h - 1, y));
+      const idx = (wy * w + wx) * 4;
+      return (srcData[idx] * 0.299 + srcData[idx + 1] * 0.587 + srcData[idx + 2] * 0.114) / 255.0;
+    }
+
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        // Sobel 3x3 kernel
+        const tl = getLum(x - 1, y - 1);
+        const l  = getLum(x - 1, y);
+        const bl = getLum(x - 1, y + 1);
+        const tr = getLum(x + 1, y - 1);
+        const r  = getLum(x + 1, y);
+        const br = getLum(x + 1, y + 1);
+        const t  = getLum(x, y - 1);
+        const b  = getLum(x, y + 1);
+
+        const dx = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
+        const dy = (bl + 2.0 * b + br) - (tl + 2.0 * t + tr);
+
+        let nx = -dx * bumpScale;
+        let ny = -dy * bumpScale;
+        let nz = 1.0;
+        const len = Math.hypot(nx, ny, nz);
+        nx /= len;
+        ny /= len;
+        nz /= len;
+
+        const idx = (y * w + x) * 4;
+        outData[idx]     = Math.round((nx * 0.5 + 0.5) * 255);
+        outData[idx + 1] = Math.round((ny * 0.5 + 0.5) * 255);
+        outData[idx + 2] = Math.round((nz * 0.5 + 0.5) * 255);
+        outData[idx + 3] = 255;
+      }
+    }
+
+    ctx.putImageData(outImgData, 0, 0);
+    texture.needsUpdate = true;
+  };
+  img.src = url;
+  return texture;
+}
+
+/**
+ * Creates authentic PBR roughness map for the Moon:
+ * Basalt maria (smoother impact melt basalt plains) -> roughness ~0.90
+ * Anorthosite highlands & pulverized ejecta rays -> roughness ~0.98
+ */
+function createLunarRoughnessMap(url) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#f0f0f0';
+  ctx.fillRect(0, 0, 1024, 512);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.anisotropy = 8;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const lum = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114) / 255;
+      // Maria (lum near 0.25) -> rough 0.90 (230), Highlands (lum near 0.8) -> rough 0.98 (250)
+      const roughVal = Math.round(228 + lum * 24);
+      data[i] = roughVal;
+      data[i + 1] = roughVal;
+      data[i + 2] = roughVal;
+      data[i + 3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    texture.needsUpdate = true;
+  };
+  img.src = url;
+  return texture;
+}
+
+/**
+ * Calibrates authentic lunar albedo and contrast:
+ * Deepens basalt maria (Mare Tranquillitatis, Oceanus Procellarum) to authentic
+ * volcanic basalt tones, enhances ray systems (Tycho, Copernicus) to radiant white,
+ * and eliminates flat washed-out gray appearance.
+ */
+function createEnhancedLunarAlbedoMap(url) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1024;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#909090';
+  ctx.fillRect(0, 0, 1024, 512);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.ClampToEdgeWrapping;
+  texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = 8;
+
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    canvas.width = img.width;
+    canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+
+    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imgData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i] / 255.0;
+      const g = data[i + 1] / 255.0;
+      const b = data[i + 2] / 255.0;
+      const lum = r * 0.299 + g * 0.587 + b * 0.114;
+
+      // Sigmoid contrast enhancement for rich lunar basalt depth and radiant rays
+      let enhancedLum = Math.pow(lum, 1.15) * 1.12;
+      // Slight warm tan hue balance matching unfiltered solar regolith reflectance
+      data[i]     = Math.min(255, Math.max(0, Math.round(enhancedLum * 255 * 1.02)));
+      data[i + 1] = Math.min(255, Math.max(0, Math.round(enhancedLum * 255 * 1.00)));
+      data[i + 2] = Math.min(255, Math.max(0, Math.round(enhancedLum * 255 * 0.97)));
+      data[i + 3] = 255;
+    }
+    ctx.putImageData(imgData, 0, 0);
+    texture.needsUpdate = true;
+  };
+  img.src = url;
+  return texture;
+}
+
 export function createSpaceScene() {
   const group = new THREE.Group();
   group.name = 'space_scene';
@@ -213,18 +392,62 @@ export function createSpaceScene() {
   const atmoMesh = new THREE.Mesh(atmoGeo, atmoMat);
   group.add(atmoMesh);
 
-  // 5. NASA Moon Sphere in Space (aligned with lunar terrain)
-  const distantMoonGeo = new THREE.SphereGeometry(52, 96, 96);
+  // 5. Authentic NASA Proportional Moon Sphere in Space
+  // Real physical ratio: Moon radius 1,737.4 km / Earth radius 6,371 km = 0.2727 => radius 4.92 for Earth radius 18
+  const moonAlbedo = createEnhancedLunarAlbedoMap('./textures/moon_1024.jpg');
+  const moonNormal = createLunarNormalMap('./textures/moon_1024.jpg', 3.4);
+  const moonRoughness = createLunarRoughnessMap('./textures/moon_1024.jpg');
+
+  const distantMoonGeo = new THREE.SphereGeometry(4.92, 128, 128);
   const distantMoonMat = new THREE.MeshStandardMaterial({
-    map: moonMap,
-    roughness: 0.96,
-    metalness: 0.04
+    map: moonAlbedo,
+    normalMap: moonNormal,
+    normalScale: new THREE.Vector2(2.4, 2.4),
+    roughnessMap: moonRoughness,
+    roughness: 0.95,
+    metalness: 0.0,
+    color: new THREE.Color(0xdad8d2)
   });
   const distantMoon = new THREE.Mesh(distantMoonGeo, distantMoonMat);
-  distantMoon.position.set(0, -62, -220);
-  distantMoon.rotation.y = 1.1;
+  distantMoon.name = 'distant_moon';
+
+  // Desktop: (44, 34, -85) - upper-right starfield (X: 1697, Y: 285, diam: 90px, clear of Earth: 72px, right margin: 178px)
+  // Mobile: (18, 44, -85) - upper cosmic sky (X: 323, Y: 151, diam: 70px, clear of Earth: 19px, below navbar)
+  const celestialMoonDesktop = new THREE.Vector3(44, 34, -85);
+  const celestialMoonMobile = new THREE.Vector3(18, 44, -85);
+  const orbitalMoonPos = new THREE.Vector3(0, -14.9, -180);
+
+  function getCelestialMoonPos() {
+    return (typeof window !== 'undefined' && window.innerWidth < 768)
+      ? celestialMoonMobile
+      : celestialMoonDesktop;
+  }
+
+  distantMoon.position.copy(getCelestialMoonPos());
+  distantMoon.rotation.y = 1.25;
   distantMoon.receiveShadow = true;
   group.add(distantMoon);
+
+  function updateMoonProgress(s) {
+    const celestialPos = getCelestialMoonPos();
+    if (s <= 0.055) {
+      distantMoon.position.copy(celestialPos);
+      distantMoon.visible = true;
+    } else if (s > 0.055 && s < 0.16) {
+      const t = THREE.MathUtils.smoothstep(s, 0.055, 0.16);
+      distantMoon.position.lerpVectors(celestialPos, orbitalMoonPos, t);
+      distantMoon.visible = true;
+    } else if (s >= 0.16 && s < 0.52) {
+      // On lunar surface: terrain mesh in moonScene is active
+      distantMoon.visible = false;
+    } else if (s >= 0.52 && s < 0.70) {
+      // Lunar ascent: Moon recedes in rearview
+      distantMoon.position.copy(orbitalMoonPos);
+      distantMoon.visible = true;
+    } else {
+      distantMoon.visible = false;
+    }
+  }
 
   // 6. NASA Mars 2K Sphere (aligned with Martian terrain)
   const distantMarsGeo = new THREE.SphereGeometry(68, 96, 96);
@@ -302,6 +525,7 @@ export function createSpaceScene() {
     distantMoon,
     distantMars,
     sunLight,
+    updateMoonProgress,
     update
   };
 }

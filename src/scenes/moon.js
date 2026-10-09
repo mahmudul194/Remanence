@@ -71,10 +71,10 @@ export async function createMoonScene() {
   const terrainMat = new THREE.MeshStandardMaterial({
     map: diffuse,
     bumpMap: bump,
-    bumpScale: 0.25,
-    roughness: 0.96,
-    metalness: 0.04,
-    color: 0x767980
+    bumpScale: 0.35,
+    roughness: 0.95,
+    metalness: 0.02,
+    color: 0x6e7178
   });
   const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
   terrainMesh.receiveShadow = true;
@@ -176,64 +176,109 @@ export async function createMoonScene() {
 }
 
 /**
- * Creates high resolution procedural lunar regolith diffuse and bump textures
+ * Creates high resolution (1024x1024) procedural lunar regolith diffuse and bump textures:
+ * Features multi-scale micro-craters with raised ejecta rims, basalt volcanic dust specks,
+ * and high-frequency tactile regolith bump relief.
  */
 function createRegolithTextures() {
   const canvas = document.createElement('canvas');
-  canvas.width = 512;
-  canvas.height = 512;
+  canvas.width = 1024;
+  canvas.height = 1024;
   const ctx = canvas.getContext('2d');
 
-  ctx.fillStyle = '#7a7e85';
-  ctx.fillRect(0, 0, 512, 512);
+  // Baseline dark mare basalt
+  ctx.fillStyle = '#6b6e76';
+  ctx.fillRect(0, 0, 1024, 1024);
 
-  // Noise specks
-  for (let i = 0; i < 24000; i++) {
-    const x = Math.random() * 512;
-    const y = Math.random() * 512;
-    const shade = 90 + Math.random() * 65;
-    ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
-    ctx.fillRect(x, y, 1.5, 1.5);
-  }
-
-  // Micro-pits
-  for (let i = 0; i < 450; i++) {
-    const x = Math.random() * 512;
-    const y = Math.random() * 512;
-    const r = 2 + Math.random() * 10;
+  // Broad tonal albedo patches (highland dust vs basalt mare)
+  for (let i = 0; i < 40; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 1024;
+    const r = 60 + Math.random() * 160;
     const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
-    grad.addColorStop(0, 'rgba(30, 32, 36, 0.85)');
-    grad.addColorStop(0.7, 'rgba(60, 64, 70, 0.4)');
-    grad.addColorStop(1, 'rgba(140, 145, 155, 0.5)');
+    const alpha = 0.08 + Math.random() * 0.12;
+    const isBright = Math.random() > 0.45;
+    grad.addColorStop(0, isBright ? `rgba(165, 168, 175, ${alpha})` : `rgba(45, 48, 52, ${alpha})`);
+    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
 
+  // Multi-scale micro-crater bowls with raised rims
+  for (let i = 0; i < 750; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 1024;
+    const r = 2.5 + Math.random() * 14;
+    const grad = ctx.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, 'rgba(25, 27, 30, 0.90)');
+    grad.addColorStop(0.65, 'rgba(55, 58, 64, 0.50)');
+    grad.addColorStop(0.85, 'rgba(150, 155, 165, 0.45)'); // Raised ejecta rim
+    grad.addColorStop(1, 'rgba(110, 114, 122, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Dense fine particulate regolith dust specks (breccia & anorthosite grains)
+  for (let i = 0; i < 60000; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 1024;
+    const shade = 75 + Math.random() * 85;
+    ctx.fillStyle = `rgb(${shade},${shade},${shade})`;
+    ctx.fillRect(x, y, 1.4, 1.4);
+  }
+
   const diffuse = new THREE.CanvasTexture(canvas);
   diffuse.wrapS = THREE.RepeatWrapping;
   diffuse.wrapT = THREE.RepeatWrapping;
-  diffuse.repeat.set(12, 12);
+  diffuse.repeat.set(16, 16);
+  diffuse.generateMipmaps = true;
+  diffuse.minFilter = THREE.LinearMipmapLinearFilter;
+  diffuse.anisotropy = 8;
 
-  // High-contrast bump map
+  // High-frequency tactile regolith bump map
   const bumpCanvas = document.createElement('canvas');
-  bumpCanvas.width = 512;
-  bumpCanvas.height = 512;
+  bumpCanvas.width = 1024;
+  bumpCanvas.height = 1024;
   const bCtx = bumpCanvas.getContext('2d');
   bCtx.fillStyle = '#808080';
-  bCtx.fillRect(0, 0, 512, 512);
-  for (let i = 0; i < 15000; i++) {
-    const x = Math.random() * 512;
-    const y = Math.random() * 512;
-    const v = Math.random() > 0.5 ? 255 : 0;
-    bCtx.fillStyle = `rgba(${v},${v},${v}, 0.25)`;
-    bCtx.fillRect(x, y, 2, 2);
+  bCtx.fillRect(0, 0, 1024, 1024);
+
+  // Micro-pits and crater depths in bump
+  for (let i = 0; i < 600; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 1024;
+    const r = 3 + Math.random() * 12;
+    const bGrad = bCtx.createRadialGradient(x, y, 0, x, y, r);
+    bGrad.addColorStop(0, 'rgba(20, 20, 20, 0.85)');
+    bGrad.addColorStop(0.7, 'rgba(100, 100, 100, 0.3)');
+    bGrad.addColorStop(0.88, 'rgba(240, 240, 240, 0.7)'); // Raised crater rim
+    bGrad.addColorStop(1, 'rgba(128, 128, 128, 0)');
+    bCtx.fillStyle = bGrad;
+    bCtx.beginPath();
+    bCtx.arc(x, y, r, 0, Math.PI * 2);
+    bCtx.fill();
   }
+
+  // High-frequency grit
+  for (let i = 0; i < 35000; i++) {
+    const x = Math.random() * 1024;
+    const y = Math.random() * 1024;
+    const v = Math.random() > 0.5 ? 240 : 15;
+    bCtx.fillStyle = `rgba(${v},${v},${v}, 0.30)`;
+    bCtx.fillRect(x, y, 1.8, 1.8);
+  }
+
   const bump = new THREE.CanvasTexture(bumpCanvas);
   bump.wrapS = THREE.RepeatWrapping;
   bump.wrapT = THREE.RepeatWrapping;
-  bump.repeat.set(12, 12);
+  bump.repeat.set(16, 16);
+  bump.generateMipmaps = true;
+  bump.minFilter = THREE.LinearMipmapLinearFilter;
+  bump.anisotropy = 8;
 
   return { diffuse, bump };
 }

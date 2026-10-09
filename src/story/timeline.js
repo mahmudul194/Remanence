@@ -546,6 +546,11 @@ export class StoryTimeline {
 
     if (!spaceScene || !moonScene) return;
 
+    // Synchronize distant Moon celestial/orbital progression
+    if (spaceScene.updateMoonProgress) {
+      spaceScene.updateMoonProgress(s);
+    }
+
     // 1. Earth Orbit (s <= 0.11)
     if (s <= 0.11) {
       if (spaceScene.sunLight) spaceScene.sunLight.intensity = 1.35;
