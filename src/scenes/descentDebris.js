@@ -146,6 +146,29 @@ export function createDetailedDescentDebris() {
     backshellGroup.add(wire);
   }
 
+  // Impact divot & excavated sand furrow where backshell struck
+  const divotGeo = new THREE.CylinderGeometry(1.85, 1.2, 0.18, 24, 1, false);
+  const divotMat = new THREE.MeshStandardMaterial({
+    color: 0x38150a,
+    roughness: 0.95,
+    metalness: 0.04
+  });
+  const divot = new THREE.Mesh(divotGeo, divotMat);
+  divot.position.set(-0.75, -0.06, 0.15);
+  divot.receiveShadow = true;
+  debrisGroup.add(divot);
+
+  // Shattered SLA-561V tile shards and carbon composite fragments in furrow
+  const shardMat = new THREE.MeshStandardMaterial({ color: 0x1c1715, roughness: 0.88, metalness: 0.2 });
+  for (let s = 0; s < 16; s++) {
+    const sAng = (s * Math.PI * 2) / 16 + Math.random() * 0.3;
+    const sDist = 1.05 + Math.random() * 0.75;
+    const shard = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.035, 0.08), shardMat);
+    shard.position.set(-0.75 + Math.sin(sAng) * sDist, 0.02, 0.15 + Math.cos(sAng) * sDist);
+    shard.rotation.set(Math.random() * 0.4, Math.random() * Math.PI, Math.random() * 0.4);
+    debrisGroup.add(shard);
+  }
+
   // =========================================================================
   // 2. SUPERSONIC NYLON PARACHUTE CANOPY (21.5-meter Disk-Gap-Band)
   // =========================================================================
@@ -196,18 +219,21 @@ export function createDetailedDescentDebris() {
     side: THREE.DoubleSide
   }), { planet: 'mars' });
 
-  // Billowing terrain-conforming canopy geometry
-  const chuteGeo = new THREE.PlaneGeometry(3.6, 4.4, 24, 24);
+  // Circular Disk-Gap-Band canopy with central vent draped over dunes
+  const chuteGeo = new THREE.RingGeometry(0.35, 2.45, 48, 16);
   chuteGeo.rotateX(-Math.PI / 2);
   const cPos = chuteGeo.attributes.position;
   for (let i = 0; i < cPos.count; i++) {
     const px = cPos.getX(i);
     const pz = cPos.getZ(i);
-    // Radial wind billow folds across sand ripples
-    const wave1 = Math.sin(px * 3.5 + pz * 1.6) * 0.14;
-    const wave2 = Math.cos(px * 2.0 - pz * 2.9) * 0.09;
-    const edgeDip = Math.max(0, 1.0 - (Math.hypot(px, pz) / 2.3));
-    cPos.setY(i, (wave1 + wave2) * edgeDip + 0.04);
+    const r = Math.hypot(px, pz);
+    const theta = Math.atan2(pz, px);
+    // 32-gore radial pleats & wind billow waves
+    const goreWave = Math.sin(theta * 16.0) * 0.045 * (r / 2.45);
+    const windWave = Math.sin(px * 2.2 + pz * 1.5) * 0.08 + Math.cos(px * 1.4 - pz * 2.1) * 0.05;
+    // Draped over sand with outer edge touching ground
+    const drape = Math.sin((r / 2.45) * Math.PI) * 0.12;
+    cPos.setY(i, drape + goreWave + windWave + 0.03);
   }
   chuteGeo.computeVertexNormals();
 
@@ -216,17 +242,24 @@ export function createDetailedDescentDebris() {
   chuteMesh.receiveShadow = true;
   chuteGroup.add(chuteMesh);
 
+  // Central aerodynamic vent ring
+  const ventRingGeo = new THREE.TorusGeometry(0.35, 0.015, 6, 32);
+  ventRingGeo.rotateX(Math.PI / 2);
+  const ventRing = new THREE.Mesh(ventRingGeo, mats.springSteel);
+  ventRing.position.y = 0.04;
+  chuteGroup.add(ventRing);
+
   // Braided Technora Suspension Lines trailing toward the backshell
   const lineMat = new THREE.MeshStandardMaterial({ color: 0xd2c4a2, roughness: 0.72 });
-  for (let l = 0; l < 8; l++) {
-    const angle = (l / 8) * Math.PI * 0.7 - 0.35;
-    const startX = Math.sin(angle) * 1.5;
-    const startZ = Math.cos(angle) * 1.9;
+  for (let l = 0; l < 12; l++) {
+    const angle = (l / 12) * Math.PI * 0.8 - 0.4;
+    const startX = Math.sin(angle) * 1.6;
+    const startZ = Math.cos(angle) * 2.0;
 
     const curve = new THREE.CatmullRomCurve3([
       new THREE.Vector3(startX, 0.05, startZ),
-      new THREE.Vector3(startX * 0.5 - 0.8, 0.03, startZ * 0.4 - 0.3),
-      new THREE.Vector3(-2.1, 0.04, -0.2 + (l * 0.09))
+      new THREE.Vector3(startX * 0.5 - 0.9, 0.03, startZ * 0.4 - 0.3),
+      new THREE.Vector3(-2.2, 0.04, -0.2 + (l * 0.07))
     ]);
     const lineGeo = new THREE.TubeGeometry(curve, 16, 0.005, 4, false);
     const line = new THREE.Mesh(lineGeo, lineMat);

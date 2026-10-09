@@ -43,6 +43,10 @@ export function computeHardwareBoundingBox(object) {
         child.name.includes('divot') ||
         child.name.includes('soil') ||
         child.name.includes('pebble') ||
+        child.name.includes('furrow') ||
+        child.name.includes('silica') ||
+        child.name.includes('berry') ||
+        child.name.includes('blueberr') ||
         (childSize.y < 0.08 && (childSize.x > 0.5 || childSize.z > 0.5));
 
       // Exclude skybeams / lasers
@@ -446,7 +450,7 @@ export const SHOT_DEFINITIONS = [
     sectionId: 'section-viking1',
     cardSide: 'left',
     subjectTarget: {
-      desktop: { ndcX: 0.38, ndcY: 0.0, heightRatio: 0.55 },
+      desktop: { ndcX: 0.44, ndcY: 0.0, heightRatio: 0.52 },
       mobile:  { ndcX: 0.0, ndcY: 0.28, heightRatio: 0.38 }
     },
     camera: {
@@ -488,7 +492,7 @@ export const SHOT_DEFINITIONS = [
     sectionId: 'section-pathfinder',
     cardSide: 'left',
     subjectTarget: {
-      desktop: { ndcX: 0.38, ndcY: 0.0, heightRatio: 0.54 },
+      desktop: { ndcX: 0.44, ndcY: 0.0, heightRatio: 0.52 },
       mobile:  { ndcX: 0.0, ndcY: 0.28, heightRatio: 0.38 }
     },
     camera: {
@@ -530,7 +534,7 @@ export const SHOT_DEFINITIONS = [
     sectionId: 'section-spirit',
     cardSide: 'right',
     subjectTarget: {
-      desktop: { ndcX: -0.38, ndcY: 0.0, heightRatio: 0.55 },
+      desktop: { ndcX: -0.48, ndcY: 0.0, heightRatio: 0.52 },
       mobile:  { ndcX: 0.0, ndcY: 0.28, heightRatio: 0.38 }
     },
     camera: {
@@ -572,7 +576,7 @@ export const SHOT_DEFINITIONS = [
     sectionId: 'section-opportunity',
     cardSide: 'left',
     subjectTarget: {
-      desktop: { ndcX: 0.38, ndcY: 0.0, heightRatio: 0.55 },
+      desktop: { ndcX: 0.48, ndcY: 0.0, heightRatio: 0.52 },
       mobile:  { ndcX: 0.0, ndcY: 0.28, heightRatio: 0.38 }
     },
     camera: {
@@ -614,7 +618,7 @@ export const SHOT_DEFINITIONS = [
     sectionId: 'section-ingenuity',
     cardSide: 'right',
     subjectTarget: {
-      desktop: { ndcX: -0.38, ndcY: 0.0, heightRatio: 0.54 },
+      desktop: { ndcX: -0.42, ndcY: 0.0, heightRatio: 0.52 },
       mobile:  { ndcX: 0.0, ndcY: 0.28, heightRatio: 0.38 }
     },
     camera: {
@@ -1044,6 +1048,9 @@ export class ShotManager {
 
     // Collision resolution: Sort by screen Y and enforce >= 48px separation (prevent overlapping label cards)
     projectedList.sort((a, b) => a.anchorY - b.anchorY);
+    if (projectedList.length > 0 && projectedList[0].labelY < 85) {
+      projectedList[0].labelY = 85;
+    }
     for (let i = 1; i < projectedList.length; i++) {
       const prev = projectedList[i - 1];
       const curr = projectedList[i];
@@ -1052,26 +1059,38 @@ export class ShotManager {
       }
     }
 
-    // Keep labels strictly inside subject zone (never overlapping the card)
+    // Keep labels strictly inside subject zone (never overlapping the card or header)
     projectedList.forEach((item) => {
       if (isMobile) {
         item.targetX = Math.max(24, Math.min(width - 24, item.anchorX));
-        item.targetY = Math.min(height * 0.52, item.labelY);
+        item.targetY = Math.min(height * 0.52, Math.max(70, item.labelY));
         item.alignClass = '';
       } else if (shot.cardSide === 'right') {
-        // Card is on right half: labels sit safely in left zone, anchored to the left of targetX
+        // Card is on right half: labels sit safely in left zone
         const cardLeft = cardRect ? cardRect.left : width * 0.52;
-        item.targetX = Math.min(cardLeft - 40, item.anchorX - 20);
-        item.targetX = Math.max(160, item.targetX);
-        item.targetY = item.labelY;
-        item.alignClass = 'align-left';
+        // If anchor is near left edge (< 220px), place label to the right of anchor so it doesn't clip offscreen
+        if (item.anchorX < 220 && (item.anchorX + 240) < (cardLeft - 20)) {
+          item.targetX = item.anchorX + 25;
+          item.alignClass = '';
+        } else {
+          item.targetX = Math.min(cardLeft - 40, item.anchorX - 20);
+          item.targetX = Math.max(220, item.targetX);
+          item.alignClass = 'align-left';
+        }
+        item.targetY = Math.max(85, Math.min(height - 80, item.labelY));
       } else {
         // Card is on left half: labels sit safely in right zone
         const cardRight = cardRect ? cardRect.right : width * 0.48;
-        item.targetX = Math.max(cardRight + 40, item.anchorX + 20);
-        item.targetX = Math.min(width - 180, item.targetX);
-        item.targetY = item.labelY;
-        item.alignClass = '';
+        // If anchor is near right edge (> width - 220px), place label to the left of anchor
+        if (item.anchorX > width - 220 && (item.anchorX - 240) > (cardRight + 20)) {
+          item.targetX = item.anchorX - 25;
+          item.alignClass = 'align-left';
+        } else {
+          item.targetX = Math.max(cardRight + 40, item.anchorX + 20);
+          item.targetX = Math.min(width - 220, item.targetX);
+          item.alignClass = '';
+        }
+        item.targetY = Math.max(85, Math.min(height - 80, item.labelY));
       }
     });
 

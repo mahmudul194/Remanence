@@ -66,21 +66,22 @@ export function createDetailedPathfinder() {
   root.add(pathfinderGroup);
 
   // =========================================================================
-  // 1. DEFLATED VECTRAN AIRBAGS (Cushioned the Ares Vallis Touchdown)
+  // 1. DEFLATED VECTRAN AIRBAGS (Retracted and folded under petals)
   // =========================================================================
   const airbagGroup = new THREE.Group();
-  airbagGroup.position.set(0, 0.08, 0);
+  airbagGroup.position.set(0, 0.04, 0);
   pathfinderGroup.add(airbagGroup);
 
-  // Multiple deflated overlapping lobes bunched on the terrain
-  const lobeGeo = new THREE.DodecahedronGeometry(0.55, 1);
-  for (let b = 0; b < 9; b++) {
-    const bAng = (b * 2 * Math.PI) / 9;
+  // Flattened, deflated fabric folds bunched beneath the lander perimeter
+  const lobeGeo = new THREE.DodecahedronGeometry(0.35, 1);
+  for (let b = 0; b < 12; b++) {
+    const bAng = (b * 2 * Math.PI) / 12;
     const lobe = new THREE.Mesh(lobeGeo, airbagMat);
-    const bDist = 0.65 + Math.random() * 0.45;
-    lobe.position.set(Math.sin(bAng) * bDist, 0.08 + Math.random() * 0.08, Math.cos(bAng) * bDist);
-    lobe.scale.set(1.4 + Math.random() * 0.4, 0.35 + Math.random() * 0.2, 1.1 + Math.random() * 0.3);
-    lobe.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+    const bDist = 0.75 + Math.random() * 0.25;
+    lobe.position.set(Math.sin(bAng) * bDist, 0.03 + Math.random() * 0.02, Math.cos(bAng) * bDist);
+    // Flattened horizontally into creased fabric rolls
+    lobe.scale.set(0.65 + Math.random() * 0.2, 0.08 + Math.random() * 0.04, 0.42 + Math.random() * 0.15);
+    lobe.rotation.set(Math.random() * 0.3, Math.random() * Math.PI, Math.random() * 0.2);
     lobe.castShadow = true;
     lobe.receiveShadow = true;
     airbagGroup.add(lobe);

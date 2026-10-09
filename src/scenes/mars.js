@@ -8,40 +8,49 @@
 import * as THREE from 'three';
 import { getOrCreateModel } from './models.js';
 
+// 1. Martian Dune Landscape Mesh & Elevation Calculator
+export function getMarsTerrainElevation(x, z) {
+  // Multi-frequency sand dune ripples and hills
+  const dunes = Math.sin(x * 0.025 + z * 0.035) * 3.2 +
+                Math.sin(x * 0.07 - z * 0.05) * 1.2 +
+                Math.cos(x * 0.15) * 0.45;
+
+  // Small crater depressions (Endeavour Crater depression for Opportunity)
+  const dist = Math.hypot(x - 10, z - 190);
+  let craterMod = 0;
+  if (dist < 45) {
+    const u = dist / 45;
+    craterMod = -4.2 * 0.5 * (1 + Math.cos(u * Math.PI));
+  }
+
+  // Planetary curvature skirt ONLY at distant outer boundaries of the terrain tile
+  const latDist = Math.abs(x);
+  const longDist = Math.max(0, -60 - z, z - 280);
+  const boundaryDist = Math.hypot(Math.max(0, latDist - 120), longDist);
+  let dropMod = 0;
+  if (boundaryDist > 0) {
+    const drop = Math.min(2.5, boundaryDist / 60);
+    dropMod = drop * drop * 18.0;
+  }
+
+  return dunes + craterMod - dropMod;
+}
+
 export async function createMarsScene() {
   const group = new THREE.Group();
   group.name = 'mars_scene';
   group.position.set(0, -10, 650);
 
-  // 1. Martian Dune Landscape Mesh
-  const terrainGeo = new THREE.PlaneGeometry(450, 450, 140, 140);
+  // 1. Martian Dune Landscape Mesh (Spanning entire corridor from z = -140 to +380)
+  const terrainGeo = new THREE.PlaneGeometry(380, 520, 140, 160);
   terrainGeo.rotateX(-Math.PI / 2);
+  terrainGeo.translate(0, 0, 120);
 
   const posAttr = terrainGeo.attributes.position;
   for (let i = 0; i < posAttr.count; i++) {
     const x = posAttr.getX(i);
     const z = posAttr.getZ(i);
-
-    // Multi-frequency sand dune ripples and hills
-    const dunes = Math.sin(x * 0.025 + z * 0.035) * 3.8 +
-                  Math.sin(x * 0.07 - z * 0.05) * 1.4 +
-                  Math.cos(x * 0.15) * 0.45;
-
-    // Small crater depressions
-    const crater1 = Math.hypot(x - 10, z - 190);
-    let craterMod = 0;
-    if (crater1 < 40) {
-      craterMod = -Math.cos((crater1 / 40) * Math.PI) * 4.2;
-    }
-
-    // Planetary curvature skirt: outer rim slopes downward into the underlying Martian globe
-    const distRim = Math.hypot(x, z);
-    if (distRim > 135) {
-      const drop = (distRim - 135) / 85;
-      posAttr.setY(i, (dunes + craterMod) - drop * drop * 38.0);
-    } else {
-      posAttr.setY(i, dunes + craterMod);
-    }
+    posAttr.setY(i, getMarsTerrainElevation(x, z));
   }
   terrainGeo.computeVertexNormals();
 
@@ -71,10 +80,11 @@ export async function createMarsScene() {
   const dummy = new THREE.Object3D();
 
   for (let i = 0; i < rockCount; i++) {
-    const rx = (Math.random() - 0.5) * 360;
-    const rz = (Math.random() - 0.5) * 360;
+    const rx = (Math.random() - 0.5) * 300;
+    const rz = -60 + Math.random() * 360;
     const scale = 0.5 + Math.random() * 2.2;
-    dummy.position.set(rx, scale * 0.35, rz);
+    const rY = getMarsTerrainElevation(rx, rz);
+    dummy.position.set(rx, rY + scale * 0.35, rz);
     dummy.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
     dummy.scale.set(scale, scale * 0.8, scale);
     dummy.updateMatrix();
@@ -87,39 +97,39 @@ export async function createMarsScene() {
   // 3. Machines on Mars (firmly anchored at calculated terrain elevations)
   const machines = {};
 
-  // EDL Descent Debris in crater furrow (y = -3.179)
+  // EDL Descent Debris in crater furrow
   const descentDebris = await getOrCreateModel('descent_debris');
-  descentDebris.position.set(-20, -3.179, -35);
+  descentDebris.position.set(-20, getMarsTerrainElevation(-20, -35), -35);
   group.add(descentDebris);
   machines.descent_debris = descentDebris;
 
-  // Viking 1 Lander on Chryse Planitia ridge (y = 0.45)
+  // Viking 1 Lander on Chryse Planitia ridge
   const viking = await getOrCreateModel('viking_lander');
-  viking.position.set(0, 0.45, 0);
+  viking.position.set(0, getMarsTerrainElevation(0, 0), 0);
   group.add(viking);
   machines.viking1 = viking;
 
-  // Mars Pathfinder & Sojourner at Ares Vallis (y = 0.256)
+  // Mars Pathfinder & Sojourner at Ares Vallis
   const pathfinder = await getOrCreateModel('pathfinder_sojourner');
-  pathfinder.position.set(38, 0.256, 60);
+  pathfinder.position.set(38, getMarsTerrainElevation(38, 60), 60);
   group.add(pathfinder);
   machines.pathfinder = pathfinder;
 
-  // Spirit Rover in Troy sand deposit (y = -1.811)
+  // Spirit Rover in Troy sand deposit
   const spirit = await getOrCreateModel('mer_rover');
-  spirit.position.set(-36, -1.811, 125);
+  spirit.position.set(-36, getMarsTerrainElevation(-36, 125), 125);
   group.add(spirit);
   machines.spirit = spirit;
 
-  // Opportunity Rover in Endeavour Crater depression (y = -1.787)
+  // Opportunity Rover in Endeavour Crater depression
   const opportunity = await getOrCreateModel('mer_rover_oppy');
-  opportunity.position.set(12, -1.787, 195);
+  opportunity.position.set(12, getMarsTerrainElevation(12, 195), 195);
   group.add(opportunity);
   machines.opportunity = opportunity;
 
-  // Ingenuity Mars Helicopter at Valinor Hills crest (y = 2.075)
+  // Ingenuity Mars Helicopter at Valinor Hills crest
   const ingenuity = await getOrCreateModel('ingenuity');
-  ingenuity.position.set(-28, 2.075, 260);
+  ingenuity.position.set(-28, getMarsTerrainElevation(-28, 260), 260);
   group.add(ingenuity);
   machines.ingenuity = ingenuity;
 
@@ -141,10 +151,10 @@ export async function createMarsScene() {
   group.add(marsAmbient);
 
   function setStormDarkness(factor) {
-    marsSun.intensity = THREE.MathUtils.lerp(1.45, 0.08, factor);
-    marsAmbient.intensity = THREE.MathUtils.lerp(0.22, 0.02, factor);
-    marsSun.color.setHex(factor > 0.6 ? 0x551a0d : 0xffecd4);
-    marsAmbient.color.setHex(factor > 0.6 ? 0x180905 : 0x401f12);
+    marsSun.intensity = THREE.MathUtils.lerp(1.45, 0.45, factor);
+    marsAmbient.intensity = THREE.MathUtils.lerp(0.22, 0.14, factor);
+    marsSun.color.setHex(factor > 0.4 ? 0x9e4324 : 0xffecd4);
+    marsAmbient.color.setHex(factor > 0.4 ? 0x241220 : 0x401f12);
   }
 
   return {

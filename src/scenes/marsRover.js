@@ -370,6 +370,46 @@ export function createDetailedMERRover(isOpportunity = true) {
   trackMesh.receiveShadow = true;
   root.add(trackMesh);
 
+  if (!isOpportunity) {
+    // Spirit's excavated pure silica trench trailing behind the seized right-front wheel
+    const silicaGeo = new THREE.PlaneGeometry(0.22, trackLength * 0.85);
+    silicaGeo.rotateX(-Math.PI / 2);
+    const silicaMat = new THREE.MeshStandardMaterial({
+      color: 0xf4f1ea, // Bright white-cream pure amorphous silica
+      roughness: 0.95,
+      metalness: 0.02,
+      transparent: true,
+      opacity: 0.94,
+      depthWrite: false
+    });
+    const silicaTrench = new THREE.Mesh(silicaGeo, silicaMat);
+    silicaTrench.name = 'ground_silica_furrow';
+    silicaTrench.position.set(0.58, 0.015, -trackLength * 0.42);
+    root.add(silicaTrench);
+  } else {
+    // Opportunity's hematite blueberries scattered across the crater floor
+    const berryGeo = new THREE.SphereGeometry(0.014, 8, 8);
+    const berryMat = new THREE.MeshStandardMaterial({
+      color: 0x364052, // Dark blue-grey hematite concretions
+      roughness: 0.65,
+      metalness: 0.55
+    });
+    const berryCount = 50;
+    const berryInstanced = new THREE.InstancedMesh(berryGeo, berryMat, berryCount);
+    berryInstanced.name = 'ground_blueberries';
+    const bDummy = new THREE.Object3D();
+    for (let b = 0; b < berryCount; b++) {
+      const bx = (Math.random() - 0.5) * 3.4;
+      const bz = (Math.random() - 0.5) * 3.4;
+      bDummy.position.set(bx, 0.014, bz);
+      bDummy.scale.setScalar(0.7 + Math.random() * 0.6);
+      bDummy.updateMatrix();
+      berryInstanced.setMatrixAt(b, bDummy.matrix);
+    }
+    berryInstanced.receiveShadow = true;
+    root.add(berryInstanced);
+  }
+
   // Reference anchor for inspection
   const beaconGroup = new THREE.Group();
   beaconGroup.position.set(-0.18, chassisGroundClearance + 0.95, 0.32);

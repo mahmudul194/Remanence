@@ -179,7 +179,8 @@ export class StoryTimeline {
         this.particles.setDustStormIntensity(1.0 + stormIntensity * 3.5);
       }
       if (stormOverlay) {
-        stormOverlay.style.opacity = (stormIntensity * 0.95).toFixed(2);
+        // Subtle cinematic atmospheric dust darkening (max 0.32 opacity so rover and card stay crisp)
+        stormOverlay.style.opacity = (stormIntensity * 0.32).toFixed(2);
       }
     } else {
       if (this.app.marsScene && this.app.marsScene.setStormDarkness) {

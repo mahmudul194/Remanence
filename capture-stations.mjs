@@ -149,11 +149,14 @@ async function main() {
   const stations = [
     { name: '01_earth', s: 0.055, id: 'earth' },
     { name: '02_apollo11', s: 0.205, id: 'apollo11' },
-    { name: '03_alsep', s: 0.275, id: 'alsep' },
-    { name: '04_lrv', s: 0.345, id: 'lrv' },
     { name: '05_hammer_feather', s: 0.415, id: 'hammer_feather' },
     { name: '06_descent_debris', s: 0.745, id: 'descent_debris' },
-    { name: '07_opportunity', s: 0.915, id: 'opportunity' }
+    { name: '07_mars_flight_corridor', s: 0.770, id: 'descent_debris' },
+    { name: '08_viking1', s: 0.795, id: 'viking1' },
+    { name: '09_pathfinder', s: 0.840, id: 'pathfinder' },
+    { name: '10_spirit', s: 0.880, id: 'spirit' },
+    { name: '11_opportunity', s: 0.915, id: 'opportunity' },
+    { name: '12_ingenuity', s: 0.945, id: 'ingenuity' }
   ];
 
   for (const st of stations) {
