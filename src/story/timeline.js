@@ -161,8 +161,8 @@ export class StoryTimeline {
     // Dynamic single-sun celestial lighting coordinator (zero irradiance stacking)
     this.updatePlanetaryLighting(s);
 
-    // When in free flight, hide all cards and flight captions
-    if (isFree) {
+    // When in free flight or 360 inspection, hide all cards and flight captions
+    if (isFree || (this.app.inspection && this.app.inspection.is360Active)) {
       this.hideAllCards();
       if (captionWrap) captionWrap.classList.remove('visible');
       return;

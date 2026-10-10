@@ -711,6 +711,8 @@ export const SHOT_DEFINITIONS = [
   }
 ];
 
+export const SHOTS = SHOT_DEFINITIONS;
+
 /**
  * ShotManager Class: Controls camera framing, card gating, and hotspot telemetry
  */
@@ -997,7 +999,7 @@ export class ShotManager {
   updateHotspots(shot, subject, inHoldPhase, width, height, cardRect, screenBox) {
     if (!this.hotspotsLayer) return;
 
-    if (!inHoldPhase || !shot.hotspots || shot.hotspots.length === 0) {
+    if (!inHoldPhase || !shot.hotspots || shot.hotspots.length === 0 || (this.app.inspection && this.app.inspection.is360Active)) {
       this.hotspotsLayer.innerHTML = '';
       return;
     }

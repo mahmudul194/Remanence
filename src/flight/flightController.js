@@ -64,6 +64,81 @@ export const POI_LOCATIONS = [
   { name: 'Retroreflector', pos: new THREE.Vector3(15, -8.8, -135) }
 ];
 
+export const STATION_ORBIT_CONFIG = {
+  apollo11: {
+    s: 0.205,
+    center: new THREE.Vector3(0, -9.0, -180),
+    sweepSpan: 0.024,
+    sweepAngle: 0.62
+  },
+  alsep: {
+    s: 0.275,
+    center: new THREE.Vector3(14, -9.4, -200),
+    sweepSpan: 0.024,
+    sweepAngle: 0.58
+  },
+  lrv: {
+    s: 0.345,
+    center: new THREE.Vector3(38, -13.8, -235),
+    sweepSpan: 0.024,
+    sweepAngle: 0.62
+  },
+  hammer_feather: {
+    s: 0.415,
+    center: new THREE.Vector3(22.0, -11.2, -252),
+    sweepSpan: 0.022,
+    sweepAngle: 0.55
+  },
+  surveyor3: {
+    s: 0.485,
+    center: new THREE.Vector3(-40, -12.8, -275),
+    sweepSpan: 0.024,
+    sweepAngle: 0.60
+  },
+  descent_debris: {
+    s: 0.745,
+    center: new THREE.Vector3(-19.5, -13.0, 615.0),
+    sweepSpan: 0.024,
+    sweepAngle: 0.65
+  },
+  viking1: {
+    s: 0.795,
+    center: new THREE.Vector3(0.0, -9.3, 650.0),
+    sweepSpan: 0.024,
+    sweepAngle: 0.62
+  },
+  pathfinder: {
+    s: 0.840,
+    center: new THREE.Vector3(38.0, -9.5, 710.0),
+    sweepSpan: 0.024,
+    sweepAngle: 0.62
+  },
+  spirit: {
+    s: 0.880,
+    center: new THREE.Vector3(-36.5, -11.4, 775.0),
+    sweepSpan: 0.024,
+    sweepAngle: 0.60
+  },
+  opportunity: {
+    s: 0.915,
+    center: new THREE.Vector3(12.0, -12.0, 845.0),
+    sweepSpan: 0.024,
+    sweepAngle: 0.64
+  },
+  ingenuity: {
+    s: 0.945,
+    center: new THREE.Vector3(-28.0, -7.7, 910.0),
+    sweepSpan: 0.022,
+    sweepAngle: 0.58
+  },
+  retroreflector: {
+    s: 0.975,
+    center: new THREE.Vector3(15.0, -8.8, -135.0),
+    sweepSpan: 0.020,
+    sweepAngle: 0.52
+  }
+};
+
 export class TimedSpline {
   constructor(keyframes) {
     this.keyframes = keyframes.slice().sort((a, b) => a.s - b.s);
@@ -454,6 +529,11 @@ export class FlightController {
   update(delta) {
     const dt = Math.min(delta, 0.1);
 
+    if (this.app.inspection && this.app.inspection.is360Active) {
+      // 360° Hardware Inspector has exclusive camera orbit control
+      return;
+    }
+
     if (this.isFreeFlight) {
       this.updateFreeFlight(dt);
       return;
@@ -471,8 +551,53 @@ export class FlightController {
 
     // 2. Physical Velocity & Speed Calculation from Timed Master Spline
     const pt = this.timedSpline.evaluate(this.currentProgress);
-    const posCurrent = pt.pos;
-    const lookTarget = pt.look;
+    let posCurrent = pt.pos.clone();
+    let lookTarget = pt.look.clone();
+
+    // 2b. Dynamic Orbital Flyby & Circling Camera Path during Station Arrival & Hold
+    // Curves and sweeps around the hardware in an orbital arc driven by scroll progress
+    let orbitalOffsetPos = null;
+    let orbitalLookTarget = null;
+    let orbitalBlend = 0.0;
+
+    for (const key of Object.keys(STATION_ORBIT_CONFIG)) {
+      const cfg = STATION_ORBIT_CONFIG[key];
+      const diff = this.currentProgress - cfg.s;
+      if (Math.abs(diff) < cfg.sweepSpan) {
+        const u = diff / cfg.sweepSpan; // -1 to +1 across the station window
+        // Smooth cosine bell curve: 1 at station center, 0 at outer edges
+        orbitalBlend = 0.5 * (1 + Math.cos(u * Math.PI));
+
+        // Base hero position from spline keyframe at s = cfg.s
+        const heroPt = this.timedSpline.evaluate(cfg.s);
+        const heroPos = heroPt.pos;
+        const center = cfg.center;
+
+        // Relative vector in horizontal plane
+        const vx = heroPos.x - center.x;
+        const vz = heroPos.z - center.z;
+        const r = Math.hypot(vx, vz);
+        const baseAngle = Math.atan2(vx, vz);
+
+        // Orbital sweep driven by scrolling across the station
+        // plus gentle idle drift when stopped
+        const idleOrbit = (this.speedNormalized < 0.08) ? Math.sin(this.driftAngle) * 0.08 : 0.0;
+        const currentAngle = baseAngle + u * cfg.sweepAngle + idleOrbit;
+
+        orbitalOffsetPos = new THREE.Vector3(
+          center.x + r * Math.sin(currentAngle),
+          heroPos.y + (Math.sin(u * Math.PI * 0.5) * 0.35),
+          center.z + r * Math.cos(currentAngle)
+        );
+        orbitalLookTarget = center.clone();
+        break;
+      }
+    }
+
+    if (orbitalOffsetPos && orbitalBlend > 0.001) {
+      posCurrent.lerp(orbitalOffsetPos, orbitalBlend);
+      lookTarget.lerp(orbitalLookTarget, orbitalBlend);
+    }
 
     // Safety Terrain Elevation Check: Ensure positive clearance above surface everywhere
     const minAlt = this.getMinTerrainAltitude(posCurrent.x, posCurrent.z);
